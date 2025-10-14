@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { Sys_CreateMenuPermissionDto } from './dto/sys_CreateMenuPermission.dto';
 import { Sys_UpdateMenuPermissionDto } from './dto/sys_UpdateMenuPermission.dto';
 import { Sys_ResponseMenuPermissionDto } from './dto/sys_ResponseMenuPermission.dto';
-import { generateIncrementId } from 'src/utils/generateIncrementId';
+import { generateIncrementId } from '../../utils/generateIncrementId';
 
 @Injectable()
 export class sys_MenuPermissionService {

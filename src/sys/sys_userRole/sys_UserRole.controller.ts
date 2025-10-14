@@ -12,7 +12,7 @@ import { Sys_UserRoleService } from './sys_UserRole.service';
 import { Sys_CreateUserRoleDto } from './dto/sys_CreateUserRole.dto';
 import { Sys_UpdateUserRoleDto } from './dto/sys_UpdateUserRole.dto';
 import { Sys_ResponseUserRoleDto } from './dto/sys_ResponseUserRole.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 
 @Controller('sys_user_role')
 export class Sys_UserRoleController {
@@ -63,5 +63,3 @@ export class Sys_UserRoleController {
     return this.userRoleService.remove(id);
   }
 }
-
-

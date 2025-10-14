@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { sys_MenuPermissionService } from './sys_Menu_Permission.service';
 import { sys_MenuPermissionController } from './sys_Menu_Permission.controller';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
 
 @Module({
   controllers: [sys_MenuPermissionController],

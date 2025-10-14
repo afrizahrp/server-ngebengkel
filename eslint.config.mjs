@@ -6,10 +6,11 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: ['eslint.config.mjs', 'dist/**', 'node_modules/**', 'lib/**'],
   },
   eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  // Gunakan recommended biasa, bukan recommendedTypeChecked untuk performa lebih baik
+  ...tseslint.configs.recommended,
   eslintPluginPrettierRecommended,
   {
     languageOptions: {
@@ -19,17 +20,23 @@ export default tseslint.config(
       },
       ecmaVersion: 5,
       sourceType: 'module',
-      parserOptions: {
-        project: './tsconfig.json',
-        tsconfigRootDir: import.meta.dirname,
-      },
+      // Hapus parserOptions untuk menghindari type-checking yang lambat
+      // Uncomment jika Anda benar-benar membutuhkan type-checked rules
+      // parserOptions: {
+      //   project: './tsconfig.json',
+      //   tsconfigRootDir: import.meta.dirname,
+      // },
     },
   },
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/no-floating-promises': 'off', // Changed to 'off' karena butuh type-checking
+      '@typescript-eslint/no-unsafe-argument': 'off', // Changed to 'off' karena butuh type-checking
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_' },
+      ],
     },
   },
 );

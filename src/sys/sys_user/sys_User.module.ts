@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { sys_UserService } from './sys_User.service';
 import { sys_UserController } from './sys_User.controller';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { JwtService } from '@nestjs/jwt';
 
 @Module({

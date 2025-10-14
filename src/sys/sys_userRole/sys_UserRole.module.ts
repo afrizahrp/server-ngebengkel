@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { Sys_UserRoleController } from './sys_UserRole.controller';
 import { Sys_UserRoleService } from './sys_UserRole.service';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
 
 @Module({
   controllers: [Sys_UserRoleController],
@@ -9,5 +9,3 @@ import { PrismaService } from 'src/prisma.service';
   exports: [Sys_UserRoleService],
 })
 export class Sys_UserRoleModule {}
-
-

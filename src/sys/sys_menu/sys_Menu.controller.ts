@@ -8,7 +8,7 @@ import {
   Delete,
   ParseIntPipe,
 } from '@nestjs/common';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 import { sys_MenuService } from './sys_Menu.service';
 import { Sys_CreateMenuDto } from './dto/sys_CreateMenu.dto';
 import { Sys_UpdateMenuDto } from './dto/sys_UpdateMenu.dto';

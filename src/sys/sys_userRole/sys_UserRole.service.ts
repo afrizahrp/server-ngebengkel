@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { Sys_CreateUserRoleDto } from './dto/sys_CreateUserRole.dto';
 import { Sys_UpdateUserRoleDto } from './dto/sys_UpdateUserRole.dto';
 import { Sys_ResponseUserRoleDto } from './dto/sys_ResponseUserRole.dto';

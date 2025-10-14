@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { Sys_CreateMenuDto } from './dto/sys_CreateMenu.dto';
 import { Sys_UpdateMenuDto } from './dto/sys_UpdateMenu.dto';
 import { Sys_ResponseMenuDto } from './dto/sys_ResponseMenu.dto';
 import { Sys_MenuWithPermissionDto } from './dto/sys_MenuWithPermission.dto';
 import { MenuItemDto } from './dto/sys_MenuItem.dto';
-import { generateIncrementId } from 'src/utils/generateIncrementId';
+import { generateIncrementId } from '../../utils/generateIncrementId';
 
 // import { Sys_MenuWithPermissionDto } from './dto/sys_MenuWithPermission.dto';
 

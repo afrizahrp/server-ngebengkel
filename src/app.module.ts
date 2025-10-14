@@ -6,7 +6,7 @@ import { sys_UserModule } from './sys/sys_user/sys_User.module';
 import { Sys_UserRoleModule } from './sys/sys_userRole/sys_UserRole.module';
 import { Sys_UserCompanyRoleModule } from './sys/sys_userCompanyRole/sys_UserCompanyRole.module';
 
-import { AuthModule } from './auth/auth.module';
+import { BetterAuthModule } from './auth/better-auth/better-auth.module';
 import { PrismaService } from './prisma.service';
 
 import { sys_CompanyModule } from './sys/sys_company/sys_Company.module';
@@ -18,7 +18,7 @@ import { sys_MenuPermissionModule } from './sys/sys_menu_permission/sys_Menu_Per
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    AuthModule,
+    BetterAuthModule,
     sys_CompanyModule,
     sys_UserModule,
     Sys_UserRoleModule,

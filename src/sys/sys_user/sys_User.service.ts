@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { Sys_CreateUserDto } from './dto/sys_CreateUser.dto';
 import { Sys_CreateGoogleUserDto } from './dto/sys_CreateGoogleUser.dto';
 import { hash } from 'argon2';
-import { generateIncrementId } from 'src/utils/generateIncrementId';
+import { generateIncrementId } from '../../utils/generateIncrementId';
 
 @Injectable()
 export class sys_UserService {

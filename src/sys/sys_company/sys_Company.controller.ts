@@ -7,7 +7,7 @@ import {
   Put,
   Delete,
 } from '@nestjs/common';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 import { Sys_CompanyService } from './sys_Company.service';
 import { Sys_CreateCompanyDto } from './dto/sys_CreateCompany.dto';
 import { Sys_UpdateCompanyDto } from './dto/sys_UpdateCompany.dto';

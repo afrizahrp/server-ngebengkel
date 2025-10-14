@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { Sys_UserCompanyRoleService } from './sys_UserCompanyRole.service';
 import { Sys_UserCompanyRoleController } from './sys_UserCompanyRole.controller';
 

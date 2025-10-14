@@ -11,7 +11,7 @@ import { sys_MenuPermissionService } from './sys_Menu_Permission.service';
 import { Sys_CreateMenuPermissionDto } from './dto/sys_CreateMenuPermission.dto';
 import { Sys_UpdateMenuPermissionDto } from './dto/sys_UpdateMenuPermission.dto';
 import { Sys_ResponseMenuPermissionDto } from './dto/sys_ResponseMenuPermission.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 
 @Controller(':company_id/sys_menu_permission')
 export class sys_MenuPermissionController {

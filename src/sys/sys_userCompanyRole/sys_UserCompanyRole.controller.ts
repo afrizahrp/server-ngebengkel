@@ -16,7 +16,7 @@ import {
   Sys_AssignUserRoleDto,
   Sys_BulkAssignUserRoleDto,
 } from './dto/sys_AssignUserRole.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 
 @Controller(':company_id/sys_user_company_role')
 export class Sys_UserCompanyRoleController {
