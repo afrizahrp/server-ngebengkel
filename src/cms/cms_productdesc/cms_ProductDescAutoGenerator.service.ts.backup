@@ -1,0 +1,1691 @@
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { PrismaService } from 'src/prisma.service';
+import { Cms_ResponseProductDescDto } from './dto/cms_ResponseProductDesc.dto';
+import { OpenAIService } from './openai.service';
+
+// Type definitions
+interface ProductSpec {
+  [key: string]: string | null | undefined | Date;
+}
+
+interface OpenAIResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+  error?: {
+    message?: string;
+  };
+}
+
+interface GeneratedContent {
+  descriptions: string;
+  descriptions_en: string;
+  benefits: string;
+  benefits_en: string;
+}
+
+@Injectable()
+export class cms_ProductDescAutoGeneratorService {
+  private readonly logger = new Logger(
+    cms_ProductDescAutoGeneratorService.name,
+  );
+
+  constructor(
+    private prisma: PrismaService,
+    private openaiService: OpenAIService,
+  ) {}
+
+  /**
+   * Fetch product specifications by ID
+   */
+  async fetchProductSpecById(
+    id: string,
+    company_id: string,
+  ): Promise<ProductSpec> {
+    try {
+      const productSpec = await this.prisma.imc_ProductSpec.findFirst({
+        where: {
+          id: id,
+          company_id: company_id,
+        },
+      });
+
+      if (!productSpec) {
+        throw new NotFoundException(
+          `Product specification with ID ${id} not found`,
+        );
+      }
+
+      return productSpec;
+    } catch (error) {
+      this.logger.error(`Error fetching product spec for ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Convert product specifications to a combined text format
+   */
+  convertSpecsToText(productSpec: ProductSpec): string {
+    const specFields = [
+      'itemFunctions',
+      'item_type',
+      'item_model',
+      'construction',
+      'mattress',
+      'mattressSize',
+      'mattressThickness',
+      'finishing',
+      'dimension',
+      'powerSupply',
+      'loadCapacity',
+      'systemFilter',
+      'accessories',
+      'sideRail',
+      'ivStand',
+      'wheels',
+      'maxLoad',
+      'size',
+      'weight',
+      'standSize',
+      'position',
+      'base',
+      'basePlate',
+      'cover',
+      'material',
+      'coverMaterial',
+      'typeScreen',
+      'powerConsumption',
+      'lamp',
+      'movers',
+      'rim',
+      'custodyFeet',
+      'foot',
+      'footWear',
+      'pole',
+      'inputVoltage',
+      'outputVoltage',
+      'sideGuard',
+      'footandheadPanel',
+      'temperatureControl',
+      'top',
+      'foodTray',
+      'traycorpse',
+      'pillowthecorpse',
+      'lightPole',
+      'sterilizing',
+      'filter',
+      'bodyFrame',
+      'underPressure',
+      'foundationTray',
+      'door',
+      'handle',
+      'medicineBox',
+      'handleTrolley',
+      'drawer',
+      'systemControl',
+      'bodyFrameWork',
+      'remarks',
+    ];
+
+    const specifications: string[] = [];
+
+    specFields.forEach((field) => {
+      const value = productSpec[field];
+      if (value && typeof value === 'string' && value.trim() !== '') {
+        // Convert camelCase to readable format
+        const readableField = field
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, (str) => str.toUpperCase())
+          .trim();
+        specifications.push(`${readableField}: ${value}`);
+      }
+    });
+
+    return specifications.join('\n');
+  }
+
+  /**
+   * Generate product descriptions and benefits using OpenAI
+   */
+  async generateProductContent(
+    specifications: string,
+  ): Promise<GeneratedContent> {
+    try {
+      this.logger.log('Starting content generation...');
+      this.logger.log(
+        `Specifications length: ${specifications.length} characters`,
+      );
+
+      const systemPrompt = `You are a professional medical equipment copywriter specializing in NHS and UK healthcare equipment catalogs. 
+You create detailed, technical product descriptions that explain WHY specific materials and specifications matter for clinical applications in UK healthcare settings. 
+Focus on NHS compliance, UK medical standards, and evidence-based clinical benefits while avoiding generic marketing language.`;
+
+      const userPrompt = `Generate comprehensive product descriptions and benefits in two languages (Indonesian and English) 
+from the following product specification:
+${specifications}
+
+CRITICAL REQUIREMENTS:
+- Output as JSON with fields: descriptions, descriptions_en, benefits, benefits_en
+- Use rich HTML formatting with <p>, <strong>, <ul>, <li>, <h2>, <h3> tags
+- EXPLAIN WHY each specification matters for medical use
+- Connect technical specs to clinical benefits
+- Write in professional medical terminology
+- Structure content for healthcare professionals and procurement teams
+
+FORMAT SPECIFICATIONS:
+
+descriptions (Indonesian):
+- Start with product name and key technical features
+- For each specification, explain WHY it matters for medical use
+- Example: "Terbuat dari steel hollow, sehingga memberikan daya tahan jangka panjang dan tidak mengurangi kenyamanan pasien"
+- Include construction materials, dimensions, and technical specs with medical context
+- Describe main features with <strong> tags for emphasis
+- Use <p> tags for paragraphs and <ul><li> for feature lists
+- End with comprehensive feature list using <ul><li> structure
+
+descriptions_en (English - UK):
+- Professional British English version of the same content
+- Use NHS and UK medical terminology (British spelling: "colour", "centre", "realise")
+- Maintain same HTML structure as Indonesian version
+- Focus on clinical applications and NHS compliance
+- Use "healthcare professionals" instead of "medical staff"
+- Emphasise "clinical efficacy" and "patient outcomes"
+- Example: "Manufactured from steel hollow construction, ensuring long-term clinical durability without compromising patient comfort in NHS healthcare environments"
+
+benefits (Indonesian):
+- Use <ul><li> structure with <strong> tags for benefit titles
+- Include 5-8 key benefits with detailed explanations
+- Connect each benefit to specific technical specifications
+- Focus on clinical advantages, safety features, and operational benefits
+- Use professional medical language
+
+benefits_en (English - UK):
+- British English version of the same benefits
+- Maintain same structure and detail level
+- Use NHS and UK medical terminology for UK healthcare markets
+- Focus on clinical outcomes and evidence-based benefits
+- Avoid generic marketing language - be specific and clinical
+
+EXAMPLE FORMAT:
+descriptions: "<p>Product Name dengan <strong>konstruksi steel hollow</strong> yang memberikan daya tahan jangka panjang dan tidak mengurangi kenyamanan pasien...</p><ul><li><strong>Konstruksi Kokoh:</strong> Terbuat dari steel hollow 40×40×1.5mm yang memastikan stabilitas maksimal untuk perawatan pasien</li></ul>"
+descriptions_en: "<p><strong>Clinical-Grade Medical Equipment</strong> - Manufactured from steel hollow construction ensuring long-term clinical durability without compromising patient comfort in NHS healthcare environments...</p><ul><li><strong>Robust Clinical Construction:</strong> Constructed from 40×40×1.5mm steel hollow ensuring maximum stability for patient care applications</li></ul>"
+benefits: "<ul><li><strong>Daya Tahan Tinggi:</strong> Konstruksi steel hollow memastikan peralatan dapat digunakan dalam jangka waktu yang lama tanpa kehilangan performa</li></ul>"
+benefits_en: "<ul><li><strong>Clinical Durability:</strong> Steel hollow construction ensures equipment maintains clinical performance over extended periods without degradation</li></ul>"
+
+IMPORTANT: Always explain WHY each specification matters for medical use. Connect technical details to clinical benefits.`;
+
+      this.logger.log('Calling OpenAI API...');
+      const response = await this.callOpenAIAPI(systemPrompt, userPrompt);
+      this.logger.log(`OpenAI response received (${response.length} chars)`);
+
+      // Parse JSON response
+      try {
+        const parsedResponse = JSON.parse(
+          response,
+        ) as Partial<GeneratedContent>;
+        this.logger.log('✅ Successfully parsed OpenAI JSON response');
+
+        return {
+          descriptions: parsedResponse.descriptions || '',
+          descriptions_en: parsedResponse.descriptions_en || '',
+          benefits: parsedResponse.benefits || '',
+          benefits_en: parsedResponse.benefits_en || '',
+        };
+      } catch (parseError) {
+        this.logger.error('Error parsing OpenAI response:', parseError);
+        this.logger.error('Raw response:', response);
+        this.logger.log('Falling back to content extraction...');
+        // Fallback: try to extract content from response
+        return this.extractContentFromResponse(response);
+      }
+    } catch (error) {
+      this.logger.error('Error generating product content:', error);
+      this.logger.error('Error details:', error);
+      throw new Error('Failed to generate product content');
+    }
+  }
+
+  /**
+   * Call OpenAI API with system and user prompts
+   */
+  private async callOpenAIAPI(
+    systemPrompt: string,
+    userPrompt: string,
+  ): Promise<string> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    const baseURL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+    const model = 'gpt-4o';
+
+    this.logger.log(`OpenAI API: ${apiKey ? 'Configured' : 'Not configured'}`);
+
+    if (!apiKey) {
+      this.logger.warn('❌ OpenAI API key not configured, using mock response');
+      this.logger.warn('Please set OPENAI_API_KEY environment variable');
+      this.logger.warn('Example: OPENAI_API_KEY=sk-...');
+      return this.getMockResponse();
+    }
+
+    this.logger.log('✅ Calling OpenAI API...');
+
+    try {
+      const response = await fetch(`${baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              role: 'user',
+              content: userPrompt,
+            },
+          ],
+          max_tokens: 2000,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json()) as OpenAIResponse;
+        this.logger.error(
+          `OpenAI API error: ${response.status} - ${errorData.error?.message || ''}`,
+        );
+        throw new Error(
+          `OpenAI API error: ${response.statusText} - ${errorData.error?.message || ''}`,
+        );
+      }
+
+      const data = (await response.json()) as OpenAIResponse;
+      this.logger.log('✅ OpenAI API response received');
+
+      if (!data.choices || data.choices.length === 0) {
+        throw new Error('No choices returned from OpenAI API');
+      }
+
+      return data.choices[0].message.content;
+    } catch (error) {
+      this.logger.error('❌ OpenAI API call failed:', error);
+      this.logger.error('Error details:', error);
+      this.logger.warn('Falling back to mock response');
+      // Fallback to mock response if API fails
+      return this.getMockResponse();
+    }
+  }
+
+  /**
+   * Extract content from OpenAI response if JSON parsing fails
+   */
+  private extractContentFromResponse(response: string): GeneratedContent {
+    // Try to extract content using regex patterns
+    const descriptionsMatch = response.match(
+      /descriptions["\s]*:["\s]*"([^"]+)"/i,
+    );
+    const descriptionsEnMatch = response.match(
+      /descriptions_en["\s]*:["\s]*"([^"]+)"/i,
+    );
+    const benefitsMatch = response.match(/benefits["\s]*:["\s]*"([^"]+)"/i);
+    const benefitsEnMatch = response.match(
+      /benefits_en["\s]*:["\s]*"([^"]+)"/i,
+    );
+
+    return {
+      descriptions:
+        descriptionsMatch?.[1] ||
+        'Deskripsi produk medis yang dihasilkan berdasarkan spesifikasi yang tersedia.',
+      descriptions_en:
+        descriptionsEnMatch?.[1] ||
+        'Clinical-grade medical equipment description generated based on available specifications for NHS healthcare environments.',
+      benefits:
+        benefitsMatch?.[1] ||
+        '1. Kualitas medis yang tinggi\n2. Standar keamanan yang ketat\n3. Cocok untuk aplikasi klinis',
+      benefits_en:
+        benefitsEnMatch?.[1] ||
+        '1. Clinical-grade medical quality\n2. NHS-compliant safety standards\n3. Suitable for UK healthcare applications',
+    };
+  }
+
+  /**
+   * Get mock response for development/testing
+   */
+  private getMockResponse(): string {
+    return JSON.stringify({
+      descriptions:
+        '<p><strong>Produk Medis Berkualitas Tinggi</strong> - Dirancang khusus untuk lingkungan perawatan kesehatan dengan standar medis internasional. Produk ini menggunakan bahan berkualitas tinggi dan teknologi canggih untuk memastikan performa optimal dalam aplikasi klinis.</p><p><br></p><ul><li><strong>Konstruksi Kokoh:</strong> Terbuat dari bahan berkualitas tinggi untuk ketahanan jangka panjang</li></ul><p><br></p><ul><li><strong>Standar Medis:</strong> Memenuhi standar regulasi medis internasional</li></ul><p><br></p><ul><li><strong>Desain Ergonomis:</strong> Dirancang untuk kemudahan penggunaan oleh tenaga medis</li></ul>',
+      descriptions_en:
+        '<p><strong>Clinical-Grade Medical Equipment</strong> - Engineered specifically for NHS healthcare environments with adherence to UK medical device regulations. This equipment utilises clinical-grade materials and advanced technology to ensure optimal clinical performance in healthcare applications.</p><p><br></p><ul><li><strong>Robust Clinical Construction:</strong> Manufactured from clinical-grade materials ensuring long-term clinical durability</li></ul><p><br></p><ul><li><strong>NHS Compliance:</strong> Meets UK medical device regulatory standards and NHS procurement requirements</li></ul><p><br></p><ul><li><strong>Ergonomic Clinical Design:</strong> Designed for optimal use by healthcare professionals in clinical settings</li></ul>',
+      benefits:
+        '<ul><li><strong>Keamanan dan Keandalan:</strong> Memastikan keamanan pasien dan keandalan operasional dalam lingkungan perawatan kesehatan</li></ul><p><br></p><ul><li><strong>Kualitas Medis Tinggi:</strong> Dibuat dengan standar kualitas medis yang ketat untuk aplikasi klinis</li></ul><p><br></p><ul><li><strong>Mudah Perawatan:</strong> Dirancang untuk kemudahan pembersihan dan perawatan rutin</li></ul><p><br></p><ul><li><strong>Fleksibilitas Penggunaan:</strong> Dapat digunakan dalam berbagai aplikasi perawatan kesehatan</li></ul><p><br></p><ul><li><strong>Kepatuhan Regulasi:</strong> Memenuhi standar regulasi medis internasional</li></ul>',
+      benefits_en:
+        '<ul><li><strong>Clinical Safety and Reliability:</strong> Ensures patient safety and operational reliability in NHS healthcare environments</li></ul><p><br></p><ul><li><strong>Clinical-Grade Medical Quality:</strong> Manufactured with strict NHS-compliant quality standards for clinical applications</li></ul><p><br></p><ul><li><strong>Clinical Maintenance Optimisation:</strong> Designed for efficient cleaning and routine maintenance in healthcare settings</li></ul><p><br></p><ul><li><strong>Clinical Application Versatility:</strong> Suitable for diverse clinical applications across UK healthcare facilities</li></ul><p><br></p><ul><li><strong>NHS Regulatory Compliance:</strong> Meets UK medical device regulatory standards and NHS procurement requirements</li></ul>',
+    });
+  }
+
+  /**
+   * Insert or update product description
+   */
+  async upsertProductDescription(
+    id: string,
+    company_id: string,
+    content: GeneratedContent,
+    createdBy?: string,
+    updatedBy?: string,
+  ): Promise<Cms_ResponseProductDescDto> {
+    try {
+      const existingDesc = await this.prisma.imc_ProductDesc.findUnique({
+        where: { id_company_id: { id, company_id } },
+      });
+
+      const data = {
+        id,
+        company_id,
+        descriptions: content.descriptions,
+        descriptions_en: content.descriptions_en,
+        benefits: content.benefits,
+        benefits_en: content.benefits_en,
+        updatedBy: updatedBy || createdBy,
+        updatedAt: new Date(),
+      };
+
+      let result;
+      if (existingDesc) {
+        // Update existing record
+        result = await this.prisma.imc_ProductDesc.update({
+          where: { id_company_id: { id, company_id } },
+          data,
+        });
+      } else {
+        // Create new record
+        result = await this.prisma.imc_ProductDesc.create({
+          data: {
+            ...data,
+            createdBy: createdBy || 'system',
+            createdAt: new Date(),
+            branch_id: '', // Default branch_id
+          },
+        });
+      }
+
+      return result as Cms_ResponseProductDescDto;
+    } catch (error) {
+      this.logger.error(
+        `Error upserting product description for ID ${id}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Main orchestration function to generate content automatically
+   */
+  async generateAutomaticContent(
+    id: string,
+    company_id: string,
+    createdBy?: string,
+    updatedBy?: string,
+  ): Promise<Cms_ResponseProductDescDto> {
+    const startTime = Date.now();
+    const timings = {
+      fetchSpec: 0,
+      convertSpec: 0,
+      generateContent: 0,
+      saveToDb: 0,
+      total: 0,
+    };
+
+    try {
+      this.logger.log(`🚀 Starting content generation for product ID: ${id}`);
+
+      // Step 1: Fetch product specifications
+      const fetchStart = Date.now();
+      const productSpec = await this.fetchProductSpecById(id, company_id);
+      timings.fetchSpec = Date.now() - fetchStart;
+      this.logger.log(`✅ Fetched product spec (${timings.fetchSpec}ms)`);
+
+      // Step 2: Convert specifications to text
+      const convertStart = Date.now();
+      const specifications = this.convertSpecsToText(productSpec);
+      timings.convertSpec = Date.now() - convertStart;
+      this.logger.log(
+        `✅ Converted specifications (${specifications.length} chars, ${timings.convertSpec}ms)`,
+      );
+
+      if (!specifications.trim()) {
+        throw new Error('No valid specifications found for content generation');
+      }
+
+      // Step 3: Generate content using OpenAI
+      const generateStart = Date.now();
+      const generatedContent =
+        await this.generateProductContent(specifications);
+      timings.generateContent = Date.now() - generateStart;
+      this.logger.log(`✅ Generated content (${timings.generateContent}ms)`);
+
+      // Step 4: Save to database
+      const saveStart = Date.now();
+      const result = await this.upsertProductDescription(
+        id,
+        company_id,
+        generatedContent,
+        createdBy,
+        updatedBy,
+      );
+      timings.saveToDb = Date.now() - saveStart;
+      timings.total = Date.now() - startTime;
+
+      this.logger.log(
+        `🎉 Successfully generated and saved content for product ID: ${id}`,
+      );
+      this.logger.log(`⏱️  PERFORMANCE TIMING:`);
+      this.logger.log(`   📊 Fetch Specs: ${timings.fetchSpec}ms`);
+      this.logger.log(`   🔄 Convert Specs: ${timings.convertSpec}ms`);
+      this.logger.log(`   🤖 Generate Content: ${timings.generateContent}ms`);
+      this.logger.log(`   💾 Save to DB: ${timings.saveToDb}ms`);
+      this.logger.log(
+        `   ⚡ TOTAL TIME: ${timings.total}ms (${(timings.total / 1000).toFixed(2)}s)`,
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `Error in automatic content generation for ID ${id}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Count bullet points in text
+   */
+  private countBulletPoints(text: string): number {
+    if (!text || typeof text !== 'string') return 0;
+    const liMatches = text.match(/<li>/g);
+    return liMatches ? liMatches.length : 0;
+  }
+
+  /**
+   * Extract introductory paragraph from descriptions
+   */
+  private extractIntroParagraph(descriptions: string): string {
+    if (!descriptions || typeof descriptions !== 'string') return '';
+
+    const beforeUlMatch = descriptions.match(/^(.*?)(<ul>|<li>)/s);
+    if (beforeUlMatch) {
+      const introText = beforeUlMatch[1].trim();
+      return introText
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    return '';
+  }
+
+  /**
+   * Extract all bullet points from descriptions or benefits
+   */
+  private extractBulletPoints(descriptions: string): string[] {
+    if (!descriptions || typeof descriptions !== 'string') return [];
+
+    const liMatches = descriptions.match(/<li>(.*?)<\/li>/g);
+    if (!liMatches) return [];
+
+    return liMatches.map((match) => match.replace(/<\/?li>/g, ''));
+  }
+
+  /**
+   * Simple translation method for individual components
+   */
+  private async simpleTranslate(text: string): Promise<string> {
+    try {
+      const prompt = `Translate the following Indonesian text to American English. Keep the HTML formatting intact.
+
+${text}`;
+
+      const response = await this.callOpenAIAPI('', prompt);
+      return response.trim();
+    } catch (error) {
+      this.logger.error('Error in simple translation:', error);
+      return text;
+    }
+  }
+
+  /**
+   * Get bullet count information for a product
+   */
+  async getBulletCountInfo(
+    id: string,
+    company_id: string,
+  ): Promise<{
+    id: string;
+    descriptions_bullet_count: number;
+    descriptions_en_bullet_count: number;
+    benefits_bullet_count: number;
+    benefits_en_bullet_count: number;
+    is_consistent: boolean;
+  }> {
+    try {
+      const product = await this.prisma.imc_ProductDesc.findUnique({
+        where: { id_company_id: { id, company_id } },
+        select: {
+          id: true,
+          descriptions: true,
+          descriptions_en: true,
+          benefits: true,
+          benefits_en: true,
+        },
+      });
+
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${id} not found`);
+      }
+
+      const descriptionsBulletCount = this.countBulletPoints(
+        product.descriptions || '',
+      );
+      const descriptionsEnBulletCount = this.countBulletPoints(
+        product.descriptions_en || '',
+      );
+      const benefitsBulletCount = this.countBulletPoints(
+        product.benefits || '',
+      );
+      const benefitsEnBulletCount = this.countBulletPoints(
+        product.benefits_en || '',
+      );
+
+      const isConsistent =
+        descriptionsBulletCount === descriptionsEnBulletCount &&
+        benefitsBulletCount === benefitsEnBulletCount;
+
+      return {
+        id: product.id,
+        descriptions_bullet_count: descriptionsBulletCount,
+        descriptions_en_bullet_count: descriptionsEnBulletCount,
+        benefits_bullet_count: benefitsBulletCount,
+        benefits_en_bullet_count: benefitsEnBulletCount,
+        is_consistent: isConsistent,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting bullet count info for ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all products that need formatting normalization
+   */
+  async getProductsNeedingNormalization(company_id: string): Promise<
+    {
+      id: string;
+      needs_descriptions_normalization: boolean;
+      needs_descriptions_en_normalization: boolean;
+      needs_benefits_normalization: boolean;
+      needs_benefits_en_normalization: boolean;
+      total_needs_normalization: boolean;
+    }[]
+  > {
+    try {
+      const allProducts = await this.prisma.imc_ProductDesc.findMany({
+        where: {
+          company_id: company_id,
+          OR: [
+            { descriptions: { not: null } },
+            { descriptions_en: { not: null } },
+            { benefits: { not: null } },
+            { benefits_en: { not: null } },
+          ],
+        },
+        select: {
+          id: true,
+          descriptions: true,
+          descriptions_en: true,
+          benefits: true,
+          benefits_en: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
+
+      return allProducts.map((product) => {
+        const needsDescriptionsNormalization = product.descriptions
+          ? this.ensureSingleUlFormat(product.descriptions) !==
+            product.descriptions
+          : false;
+        const needsDescriptionsEnNormalization = product.descriptions_en
+          ? this.ensureSingleUlFormat(product.descriptions_en) !==
+            product.descriptions_en
+          : false;
+        const needsBenefitsNormalization = product.benefits
+          ? this.ensureSingleUlFormat(product.benefits) !== product.benefits
+          : false;
+        const needsBenefitsEnNormalization = product.benefits_en
+          ? this.ensureSingleUlFormat(product.benefits_en) !==
+            product.benefits_en
+          : false;
+
+        const totalNeedsNormalization =
+          needsDescriptionsNormalization ||
+          needsDescriptionsEnNormalization ||
+          needsBenefitsNormalization ||
+          needsBenefitsEnNormalization;
+
+        return {
+          id: product.id,
+          needs_descriptions_normalization: needsDescriptionsNormalization,
+          needs_descriptions_en_normalization: needsDescriptionsEnNormalization,
+          needs_benefits_normalization: needsBenefitsNormalization,
+          needs_benefits_en_normalization: needsBenefitsEnNormalization,
+          total_needs_normalization: totalNeedsNormalization,
+        };
+      });
+    } catch (error) {
+      this.logger.error('Error getting products needing normalization:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all products that need translation
+   */
+  async getProductsNeedingTranslation(company_id: string): Promise<
+    {
+      id: string;
+      has_descriptions: boolean;
+      has_descriptions_en: boolean;
+      has_benefits: boolean;
+      has_benefits_en: boolean;
+      needs_translation: boolean;
+    }[]
+  > {
+    try {
+      const allProducts = await this.prisma.imc_ProductDesc.findMany({
+        where: {
+          company_id: company_id,
+          OR: [
+            { descriptions: { not: null } },
+            { descriptions_en: { not: null } },
+            { benefits: { not: null } },
+            { benefits_en: { not: null } },
+          ],
+        },
+        select: {
+          id: true,
+          descriptions: true,
+          descriptions_en: true,
+          benefits: true,
+          benefits_en: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
+
+      return allProducts.map((product) => {
+        const hasDescriptions = !!product.descriptions;
+        const hasDescriptionsEn = !!product.descriptions_en;
+        const hasBenefits = !!product.benefits;
+        const hasBenefitsEn = !!product.benefits_en;
+
+        const needsTranslation =
+          (hasDescriptions && !hasDescriptionsEn) ||
+          (hasBenefits && !hasBenefitsEn);
+
+        return {
+          id: product.id,
+          has_descriptions: hasDescriptions,
+          has_descriptions_en: hasDescriptionsEn,
+          has_benefits: hasBenefits,
+          has_benefits_en: hasBenefitsEn,
+          needs_translation: needsTranslation,
+        };
+      });
+    } catch (error) {
+      this.logger.error('Error getting products needing translation:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all products that need complete translation (including paragraphs)
+   */
+  async getProductsNeedingCompleteTranslation(company_id: string): Promise<
+    {
+      id: string;
+      has_descriptions: boolean;
+      has_descriptions_en: boolean;
+      has_benefits: boolean;
+      has_benefits_en: boolean;
+      needs_complete_translation: boolean;
+      bullet_count_consistent: boolean;
+    }[]
+  > {
+    try {
+      const allProducts = await this.prisma.imc_ProductDesc.findMany({
+        where: {
+          company_id: company_id,
+          OR: [
+            { descriptions: { not: null } },
+            { descriptions_en: { not: null } },
+            { benefits: { not: null } },
+            { benefits_en: { not: null } },
+          ],
+        },
+        select: {
+          id: true,
+          descriptions: true,
+          descriptions_en: true,
+          benefits: true,
+          benefits_en: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
+
+      return allProducts.map((product) => {
+        const hasDescriptions = !!product.descriptions;
+        const hasDescriptionsEn = !!product.descriptions_en;
+        const hasBenefits = !!product.benefits;
+        const hasBenefitsEn = !!product.benefits_en;
+
+        // Check if bullet counts are consistent
+        const descriptionsBulletCount = this.countBulletPoints(
+          product.descriptions || '',
+        );
+        const descriptionsEnBulletCount = this.countBulletPoints(
+          product.descriptions_en || '',
+        );
+        const benefitsBulletCount = this.countBulletPoints(
+          product.benefits || '',
+        );
+        const benefitsEnBulletCount = this.countBulletPoints(
+          product.benefits_en || '',
+        );
+
+        const bulletCountConsistent =
+          descriptionsBulletCount === descriptionsEnBulletCount &&
+          benefitsBulletCount === benefitsEnBulletCount;
+
+        // Check if needs complete translation
+        const needsCompleteTranslation =
+          (hasDescriptions && !hasDescriptionsEn) ||
+          (hasBenefits && !hasBenefitsEn) ||
+          !bulletCountConsistent;
+
+        return {
+          id: product.id,
+          has_descriptions: hasDescriptions,
+          has_descriptions_en: hasDescriptionsEn,
+          has_benefits: hasBenefits,
+          has_benefits_en: hasBenefitsEn,
+          needs_complete_translation: needsCompleteTranslation,
+          bullet_count_consistent: bulletCountConsistent,
+        };
+      });
+    } catch (error) {
+      this.logger.error(
+        'Error getting products needing complete translation:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Ensure single <ul> format by combining multiple <ul> blocks
+   */
+  private ensureSingleUlFormat(text: string): string {
+    if (!text || typeof text !== 'string') return text;
+
+    // Extract all <li> content
+    const liMatches = text.match(/<li>(.*?)<\/li>/g);
+    if (!liMatches || liMatches.length === 0) return text;
+
+    // Create single <ul> with all <li>
+    const liContents = liMatches.map((match) => match.replace(/<\/?li>/g, ''));
+    const singleUl = `<ul>${liContents.map((content) => `<li>${content}</li>`).join('')}</ul>`;
+
+    return singleUl;
+  }
+
+  /**
+   * Get all products that need complete translation (including paragraphs)
+   */
+  async getProductsNeedingCompleteTranslation(company_id: string): Promise<
+    {
+      id: string;
+      has_descriptions: boolean;
+      has_descriptions_en: boolean;
+      has_benefits: boolean;
+      has_benefits_en: boolean;
+      needs_complete_translation: boolean;
+      bullet_count_consistent: boolean;
+    }[]
+  > {
+    try {
+      const allProducts = await this.prisma.imc_ProductDesc.findMany({
+        where: {
+          company_id: company_id,
+          OR: [
+            { descriptions: { not: null } },
+            { descriptions_en: { not: null } },
+            { benefits: { not: null } },
+            { benefits_en: { not: null } },
+          ],
+        },
+        select: {
+          id: true,
+          descriptions: true,
+          descriptions_en: true,
+          benefits: true,
+          benefits_en: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
+
+      return allProducts.map((product) => {
+        const hasDescriptions = !!product.descriptions;
+        const hasDescriptionsEn = !!product.descriptions_en;
+        const hasBenefits = !!product.benefits;
+        const hasBenefitsEn = !!product.benefits_en;
+
+        // Check if bullet counts are consistent
+        const descriptionsBulletCount = this.countBulletPoints(
+          product.descriptions || '',
+        );
+        const descriptionsEnBulletCount = this.countBulletPoints(
+          product.descriptions_en || '',
+        );
+        const benefitsBulletCount = this.countBulletPoints(
+          product.benefits || '',
+        );
+        const benefitsEnBulletCount = this.countBulletPoints(
+          product.benefits_en || '',
+        );
+
+        const bulletCountConsistent =
+          descriptionsBulletCount === descriptionsEnBulletCount &&
+          benefitsBulletCount === benefitsEnBulletCount;
+
+        // Check if needs complete translation
+        const needsCompleteTranslation =
+          (hasDescriptions && !hasDescriptionsEn) ||
+          (hasBenefits && !hasBenefitsEn) ||
+          !bulletCountConsistent;
+
+        return {
+          id: product.id,
+          has_descriptions: hasDescriptions,
+          has_descriptions_en: hasDescriptionsEn,
+          has_benefits: hasBenefits,
+          has_benefits_en: hasBenefitsEn,
+          needs_complete_translation: needsCompleteTranslation,
+          bullet_count_consistent: bulletCountConsistent,
+        };
+      });
+    } catch (error) {
+      this.logger.error(
+        'Error getting products needing complete translation:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get all products that need complete translation (including paragraphs)
+   */
+  async getProductsNeedingCompleteTranslation(company_id: string): Promise<
+    {
+      id: string;
+      has_descriptions: boolean;
+      has_descriptions_en: boolean;
+      has_benefits: boolean;
+      has_benefits_en: boolean;
+      needs_complete_translation: boolean;
+      bullet_count_consistent: boolean;
+    }[]
+  > {
+    try {
+      const allProducts = await this.prisma.imc_ProductDesc.findMany({
+        where: {
+          company_id: company_id,
+          OR: [
+            { descriptions: { not: null } },
+            { descriptions_en: { not: null } },
+            { benefits: { not: null } },
+            { benefits_en: { not: null } },
+          ],
+        },
+        select: {
+          id: true,
+          descriptions: true,
+          descriptions_en: true,
+          benefits: true,
+          benefits_en: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
+
+      return allProducts.map((product) => {
+        const hasDescriptions = !!product.descriptions;
+        const hasDescriptionsEn = !!product.descriptions_en;
+        const hasBenefits = !!product.benefits;
+        const hasBenefitsEn = !!product.benefits_en;
+
+        // Check if bullet counts are consistent
+        const descriptionsBulletCount = this.countBulletPoints(
+          product.descriptions || '',
+        );
+        const descriptionsEnBulletCount = this.countBulletPoints(
+          product.descriptions_en || '',
+        );
+        const benefitsBulletCount = this.countBulletPoints(
+          product.benefits || '',
+        );
+        const benefitsEnBulletCount = this.countBulletPoints(
+          product.benefits_en || '',
+        );
+
+        const bulletCountConsistent =
+          descriptionsBulletCount === descriptionsEnBulletCount &&
+          benefitsBulletCount === benefitsEnBulletCount;
+
+        // Check if needs complete translation
+        const needsCompleteTranslation =
+          (hasDescriptions && !hasDescriptionsEn) ||
+          (hasBenefits && !hasBenefitsEn) ||
+          !bulletCountConsistent;
+
+        return {
+          id: product.id,
+          has_descriptions: hasDescriptions,
+          has_descriptions_en: hasDescriptionsEn,
+          has_benefits: hasBenefits,
+          has_benefits_en: hasBenefitsEn,
+          needs_complete_translation: needsCompleteTranslation,
+          bullet_count_consistent: bulletCountConsistent,
+        };
+      });
+    } catch (error) {
+      this.logger.error(
+        'Error getting products needing complete translation:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get all products that need complete translation (including paragraphs)
+   */
+  async getProductsNeedingCompleteTranslation(company_id: string): Promise<
+    {
+      id: string;
+      has_descriptions: boolean;
+      has_descriptions_en: boolean;
+      has_benefits: boolean;
+      has_benefits_en: boolean;
+      needs_complete_translation: boolean;
+      bullet_count_consistent: boolean;
+    }[]
+  > {
+    try {
+      const allProducts = await this.prisma.imc_ProductDesc.findMany({
+        where: {
+          company_id: company_id,
+          OR: [
+            { descriptions: { not: null } },
+            { descriptions_en: { not: null } },
+            { benefits: { not: null } },
+            { benefits_en: { not: null } },
+          ],
+        },
+        select: {
+          id: true,
+          descriptions: true,
+          descriptions_en: true,
+          benefits: true,
+          benefits_en: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
+
+      return allProducts.map((product) => {
+        const hasDescriptions = !!product.descriptions;
+        const hasDescriptionsEn = !!product.descriptions_en;
+        const hasBenefits = !!product.benefits;
+        const hasBenefitsEn = !!product.benefits_en;
+
+        // Check if bullet counts are consistent
+        const descriptionsBulletCount = this.countBulletPoints(
+          product.descriptions || '',
+        );
+        const descriptionsEnBulletCount = this.countBulletPoints(
+          product.descriptions_en || '',
+        );
+        const benefitsBulletCount = this.countBulletPoints(
+          product.benefits || '',
+        );
+        const benefitsEnBulletCount = this.countBulletPoints(
+          product.benefits_en || '',
+        );
+
+        const bulletCountConsistent =
+          descriptionsBulletCount === descriptionsEnBulletCount &&
+          benefitsBulletCount === benefitsEnBulletCount;
+
+        // Check if needs complete translation
+        const needsCompleteTranslation =
+          (hasDescriptions && !hasDescriptionsEn) ||
+          (hasBenefits && !hasBenefitsEn) ||
+          !bulletCountConsistent;
+
+        return {
+          id: product.id,
+          has_descriptions: hasDescriptions,
+          has_descriptions_en: hasDescriptionsEn,
+          has_benefits: hasBenefits,
+          has_benefits_en: hasBenefitsEn,
+          needs_complete_translation: needsCompleteTranslation,
+          bullet_count_consistent: bulletCountConsistent,
+        };
+      });
+    } catch (error) {
+      this.logger.error(
+        'Error getting products needing complete translation:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Translate existing Indonesian content to English with consistent formatting
+   */
+  async translateContentToEnglish(
+    descriptions: string,
+    benefits: string,
+  ): Promise<{ descriptions_en: string; benefits_en: string }> {
+    try {
+      this.logger.log('Starting translation to English...');
+
+      const systemPrompt = `
+      You are a professional medical translator. 
+      Your task is to translate Indonesian text into clear, natural American English.
+      
+      REQUIREMENTS:
+      - Translate ALL Indonesian words (do not leave any Indonesian word untranslated).
+      - Maintain medical terminology accurately in English.
+      - Keep HTML formatting EXACTLY as provided.
+      - Ensure bullet point count matches between Indonesian and English versions.
+      - Output MUST be valid JSON with keys: descriptions_en, benefits_en.
+      - Do not add explanations or extra fields.
+      - Use complete sentences and professional grammar.
+      `;
+
+      const userPrompt = `
+Translate the following Indonesian content into American English. Make sure the number of bullet points matches exactly.
+
+DESCRIPTIONS (Indonesian):
+${descriptions}
+
+BENEFITS (Indonesian):
+${benefits}
+
+EXAMPLE OUTPUT (format only, replace with translation):
+{
+  "descriptions_en": "<p><strong>Medical Equipment</strong> - Professional medical device designed for healthcare facilities...</p><ul><li><strong>Safety:</strong> Advanced safety features ensure patient protection...</li></ul>",
+  "benefits_en": "<ul><li><strong>Safety:</strong> Advanced safety features ensure patient protection...</li></ul>"
+}`;
+
+      this.logger.log('Calling OpenAI for translation...');
+      const response = await this.callOpenAIAPI(systemPrompt, userPrompt);
+      this.logger.log(
+        `Translation response received (${response.length} chars)`,
+      );
+
+      // Parse JSON response
+      try {
+        const parsedResponse = JSON.parse(response) as {
+          descriptions_en?: string;
+          benefits_en?: string;
+        };
+        this.logger.log('✅ Successfully parsed translation JSON response');
+
+        // Ensure single <ul> format
+        const formattedDescriptionsEn = this.ensureSingleUlFormat(
+          parsedResponse.descriptions_en || descriptions,
+        );
+        const formattedBenefitsEn = this.ensureSingleUlFormat(
+          parsedResponse.benefits_en || benefits,
+        );
+
+        // Verify bullet count consistency
+        const originalDescBulletCount = this.countBulletPoints(descriptions);
+        const originalBenefitsBulletCount = this.countBulletPoints(benefits);
+        const newDescEnBulletCount = this.countBulletPoints(
+          formattedDescriptionsEn,
+        );
+        const newBenefitsEnBulletCount =
+          this.countBulletPoints(formattedBenefitsEn);
+
+        this.logger.log(`📊 Bullet count verification:`);
+        this.logger.log(
+          `   - Descriptions: ${originalDescBulletCount} → ${newDescEnBulletCount}`,
+        );
+        this.logger.log(
+          `   - Benefits: ${originalBenefitsBulletCount} → ${newBenefitsEnBulletCount}`,
+        );
+
+        return {
+          descriptions_en: formattedDescriptionsEn,
+          benefits_en: formattedBenefitsEn,
+        };
+      } catch (parseError) {
+        this.logger.error('Error parsing translation response:', parseError);
+        this.logger.error('Raw response:', response);
+        this.logger.log('Falling back to original content...');
+
+        // Fallback: return original content if translation fails
+        return {
+          descriptions_en: descriptions,
+          benefits_en: benefits,
+        };
+      }
+    } catch (error) {
+      this.logger.error('Error translating content:', error);
+      // Fallback: return original content
+      return {
+        descriptions_en: descriptions,
+        benefits_en: benefits,
+      };
+    }
+  }
+
+  /**
+   * Translate content with complete formatting (including paragraphs)
+   */
+  async translateContentWithCompleteFormatting(
+    descriptions: string,
+    benefits: string,
+  ): Promise<{ descriptions_en: string; benefits_en: string }> {
+    try {
+      this.logger.log('Starting complete translation with formatting...');
+
+      // Extract components first
+      const introParagraph = this.extractIntroParagraph(descriptions);
+      const descBulletPoints = this.extractBulletPoints(descriptions);
+      const benefitsBulletPoints = this.extractBulletPoints(benefits);
+
+      this.logger.log(`📊 Extracted components:`);
+      this.logger.log(`   - Intro paragraph: ${introParagraph.length} chars`);
+      this.logger.log(`   - Description bullets: ${descBulletPoints.length}`);
+      this.logger.log(`   - Benefits bullets: ${benefitsBulletPoints.length}`);
+
+      // Translate components separately for better reliability
+      const translatedIntro = await this.simpleTranslate(introParagraph);
+      this.logger.log('✅ Translated intro paragraph');
+
+      // Translate description bullet points
+      const translatedDescBullets: string[] = [];
+      for (let i = 0; i < descBulletPoints.length; i++) {
+        const bullet = descBulletPoints[i];
+        const translatedBullet = await this.simpleTranslate(bullet);
+        translatedDescBullets.push(translatedBullet);
+        this.logger.log(
+          `✅ Translated description bullet ${i + 1}/${descBulletPoints.length}`,
+        );
+
+        // Small delay to avoid rate limiting
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      // Translate benefits bullet points
+      const translatedBenefitsBullets: string[] = [];
+      for (let i = 0; i < benefitsBulletPoints.length; i++) {
+        const bullet = benefitsBulletPoints[i];
+        const translatedBullet = await this.simpleTranslate(bullet);
+        translatedBenefitsBullets.push(translatedBullet);
+        this.logger.log(
+          `✅ Translated benefits bullet ${i + 1}/${benefitsBulletPoints.length}`,
+        );
+
+        // Small delay to avoid rate limiting
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      // Combine results
+      const newDescriptionsEn = `${translatedIntro}\n\n<ul>${translatedDescBullets.map((bullet) => `<li>${bullet}</li>`).join('')}</ul>`;
+      const newBenefitsEn = `<ul>${translatedBenefitsBullets.map((bullet) => `<li>${bullet}</li>`).join('')}</ul>`;
+
+      // Verify bullet count consistency
+      const originalDescBulletCount = this.countBulletPoints(descriptions);
+      const originalBenefitsBulletCount = this.countBulletPoints(benefits);
+      const newDescEnBulletCount = this.countBulletPoints(newDescriptionsEn);
+      const newBenefitsEnBulletCount = this.countBulletPoints(newBenefitsEn);
+
+      this.logger.log(`📊 Complete translation bullet count verification:`);
+      this.logger.log(
+        `   - Descriptions: ${originalDescBulletCount} → ${newDescEnBulletCount}`,
+      );
+      this.logger.log(
+        `   - Benefits: ${originalBenefitsBulletCount} → ${newBenefitsEnBulletCount}`,
+      );
+
+      return {
+        descriptions_en: newDescriptionsEn,
+        benefits_en: newBenefitsEn,
+      };
+    } catch (error) {
+      this.logger.error('Error in complete translation:', error);
+      // Fallback: return original content
+      return {
+        descriptions_en: descriptions,
+        benefits_en: benefits,
+      };
+    }
+  }
+
+  /**
+   * Translate existing product description to English
+   */
+  async translateProductDescription(
+    id: string,
+    company_id: string,
+    updatedBy?: string,
+  ): Promise<Cms_ResponseProductDescDto> {
+    const startTime = Date.now();
+
+    try {
+      this.logger.log(`🔄 Starting translation for product ID: ${id}`);
+
+      // Step 1: Fetch existing product description
+      const fetchStart = Date.now();
+      const existingDesc = await this.prisma.imc_ProductDesc.findUnique({
+        where: { id_company_id: { id, company_id } },
+      });
+      const fetchTime = Date.now() - fetchStart;
+
+      if (!existingDesc) {
+        throw new NotFoundException(
+          `Product description with ID ${id} not found`,
+        );
+      }
+
+      if (!existingDesc.descriptions || !existingDesc.benefits) {
+        throw new Error('No Indonesian content found to translate');
+      }
+
+      this.logger.log(`✅ Fetched existing description (${fetchTime}ms)`);
+
+      // Step 2: Translate content
+      const translateStart = Date.now();
+      const translated = await this.translateContentToEnglish(
+        existingDesc.descriptions,
+        existingDesc.benefits,
+      );
+      const translateTime = Date.now() - translateStart;
+      this.logger.log(`✅ Translated content (${translateTime}ms)`);
+
+      // Step 3: Update with English translations
+      const updateStart = Date.now();
+      const result = await this.prisma.imc_ProductDesc.update({
+        where: { id_company_id: { id, company_id } },
+        data: {
+          descriptions_en: translated.descriptions_en,
+          benefits_en: translated.benefits_en,
+          updatedBy: updatedBy || 'system',
+          updatedAt: new Date(),
+        },
+      });
+      const updateTime = Date.now() - updateStart;
+      const totalTime = Date.now() - startTime;
+
+      this.logger.log(
+        `🎉 Successfully translated content for product ID: ${id}`,
+      );
+      this.logger.log(`⏱️  TRANSLATION TIMING:`);
+      this.logger.log(`   📊 Fetch Description: ${fetchTime}ms`);
+      this.logger.log(`   🔄 Translate Content: ${translateTime}ms`);
+      this.logger.log(`   💾 Update Database: ${updateTime}ms`);
+      this.logger.log(
+        `   ⚡ TOTAL TIME: ${totalTime}ms (${(totalTime / 1000).toFixed(2)}s)`,
+      );
+
+      return result as Cms_ResponseProductDescDto;
+    } catch (error) {
+      this.logger.error(
+        `Error translating product description for ID ${id}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Generate content for multiple products
+   */
+  async generateBulkContent(
+    productIds: string[],
+    company_id: string,
+    createdBy?: string,
+    updatedBy?: string,
+  ): Promise<{
+    successful: Cms_ResponseProductDescDto[];
+    failed: { id: string; error: string }[];
+  }> {
+    const successful: Cms_ResponseProductDescDto[] = [];
+    const failed: { id: string; error: string }[] = [];
+
+    for (const id of productIds) {
+      try {
+        const result = await this.generateAutomaticContent(
+          id,
+          company_id,
+          createdBy,
+          updatedBy,
+        );
+        successful.push(result);
+      } catch (error) {
+        failed.push({
+          id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { successful, failed };
+  }
+
+  /**
+   * Translate product description with complete formatting
+   */
+  async translateProductDescriptionWithCompleteFormatting(
+    id: string,
+    company_id: string,
+    updatedBy?: string,
+  ): Promise<Cms_ResponseProductDescDto> {
+    const startTime = Date.now();
+
+    try {
+      this.logger.log(`🔄 Starting complete translation for product ID: ${id}`);
+
+      // Step 1: Fetch existing product description
+      const fetchStart = Date.now();
+      const existingDesc = await this.prisma.imc_ProductDesc.findUnique({
+        where: { id_company_id: { id, company_id } },
+      });
+      const fetchTime = Date.now() - fetchStart;
+
+      if (!existingDesc) {
+        throw new NotFoundException(
+          `Product description with ID ${id} not found`,
+        );
+      }
+
+      if (!existingDesc.descriptions || !existingDesc.benefits) {
+        throw new Error('No Indonesian content found to translate');
+      }
+
+      this.logger.log(`✅ Fetched existing description (${fetchTime}ms)`);
+
+      // Step 2: Translate content with complete formatting
+      const translateStart = Date.now();
+      const translated = await this.translateContentWithCompleteFormatting(
+        existingDesc.descriptions,
+        existingDesc.benefits,
+      );
+      const translateTime = Date.now() - translateStart;
+      this.logger.log(
+        `✅ Translated content with complete formatting (${translateTime}ms)`,
+      );
+
+      // Step 3: Update with English translations
+      const updateStart = Date.now();
+      const result = await this.prisma.imc_ProductDesc.update({
+        where: { id_company_id: { id, company_id } },
+        data: {
+          descriptions_en: translated.descriptions_en,
+          benefits_en: translated.benefits_en,
+          updatedBy: updatedBy || 'system-complete-translation',
+          updatedAt: new Date(),
+        },
+      });
+      const updateTime = Date.now() - updateStart;
+      const totalTime = Date.now() - startTime;
+
+      this.logger.log(
+        `🎉 Successfully translated content with complete formatting for product ID: ${id}`,
+      );
+      this.logger.log(`⏱️  COMPLETE TRANSLATION TIMING:`);
+      this.logger.log(`   📊 Fetch Description: ${fetchTime}ms`);
+      this.logger.log(`   🔄 Translate Content: ${translateTime}ms`);
+      this.logger.log(`   💾 Update Database: ${updateTime}ms`);
+      this.logger.log(
+        `   ⚡ TOTAL TIME: ${totalTime}ms (${(totalTime / 1000).toFixed(2)}s)`,
+      );
+
+      return result as Cms_ResponseProductDescDto;
+    } catch (error) {
+      this.logger.error(
+        `Error translating product description with complete formatting for ID ${id}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Normalize HTML formatting for all products
+   */
+  async normalizeHtmlFormatting(
+    company_id: string,
+    updatedBy?: string,
+  ): Promise<{
+    successful: { id: string; fields: string[] }[];
+    failed: { id: string; error: string }[];
+  }> {
+    const successful: { id: string; fields: string[] }[] = [];
+    const failed: { id: string; error: string }[] = [];
+
+    try {
+      this.logger.log('🔧 Starting HTML formatting normalization...');
+
+      // Fetch all products
+      const allProducts = await this.prisma.imc_ProductDesc.findMany({
+        where: {
+          company_id: company_id,
+          OR: [
+            { descriptions: { not: null } },
+            { descriptions_en: { not: null } },
+            { benefits: { not: null } },
+            { benefits_en: { not: null } },
+          ],
+        },
+        select: {
+          id: true,
+          descriptions: true,
+          descriptions_en: true,
+          benefits: true,
+          benefits_en: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
+
+      this.logger.log(`📊 Found ${allProducts.length} products to normalize`);
+
+      for (const product of allProducts) {
+        try {
+          let needsUpdate = false;
+          const updateData: any = {};
+
+          // Normalize descriptions
+          if (product.descriptions) {
+            const normalizedDescriptions = this.ensureSingleUlFormat(
+              product.descriptions,
+            );
+            if (normalizedDescriptions !== product.descriptions) {
+              updateData.descriptions = normalizedDescriptions;
+              needsUpdate = true;
+            }
+          }
+
+          // Normalize descriptions_en
+          if (product.descriptions_en) {
+            const normalizedDescriptionsEn = this.ensureSingleUlFormat(
+              product.descriptions_en,
+            );
+            if (normalizedDescriptionsEn !== product.descriptions_en) {
+              updateData.descriptions_en = normalizedDescriptionsEn;
+              needsUpdate = true;
+            }
+          }
+
+          // Normalize benefits
+          if (product.benefits) {
+            const normalizedBenefits = this.ensureSingleUlFormat(
+              product.benefits,
+            );
+            if (normalizedBenefits !== product.benefits) {
+              updateData.benefits = normalizedBenefits;
+              needsUpdate = true;
+            }
+          }
+
+          // Normalize benefits_en
+          if (product.benefits_en) {
+            const normalizedBenefitsEn = this.ensureSingleUlFormat(
+              product.benefits_en,
+            );
+            if (normalizedBenefitsEn !== product.benefits_en) {
+              updateData.benefits_en = normalizedBenefitsEn;
+              needsUpdate = true;
+            }
+          }
+
+          if (needsUpdate) {
+            await this.prisma.imc_ProductDesc.update({
+              where: { id_company_id: { id: product.id, company_id } },
+              data: {
+                ...updateData,
+                updatedBy: updatedBy || 'html-formatting-normalization',
+                updatedAt: new Date(),
+              },
+            });
+
+            successful.push({
+              id: product.id,
+              fields: Object.keys(updateData),
+            });
+
+            this.logger.log(`✅ Normalized formatting for ID: ${product.id}`);
+          }
+        } catch (error) {
+          failed.push({
+            id: product.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+          this.logger.error(
+            `❌ Failed to normalize ID: ${product.id} - ${error}`,
+          );
+        }
+      }
+
+      this.logger.log(`🎉 HTML formatting normalization completed!`);
+      this.logger.log(`   ✅ Successful: ${successful.length}`);
+      this.logger.log(`   ❌ Failed: ${failed.length}`);
+
+      return { successful, failed };
+    } catch (error) {
+      this.logger.error('Error during HTML formatting normalization:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Translate multiple product descriptions to English
+   */
+  async translateBulkProductDescriptions(
+    productIds: string[],
+    company_id: string,
+    updatedBy?: string,
+  ): Promise<{
+    successful: Cms_ResponseProductDescDto[];
+    failed: { id: string; error: string }[];
+  }> {
+    const successful: Cms_ResponseProductDescDto[] = [];
+    const failed: { id: string; error: string }[] = [];
+
+    for (const id of productIds) {
+      try {
+        const result = await this.translateProductDescription(
+          id,
+          company_id,
+          updatedBy,
+        );
+        successful.push(result);
+      } catch (error) {
+        failed.push({
+          id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { successful, failed };
+  }
+
+  /**
+   * Translate multiple product descriptions with complete formatting
+   */
+  async translateBulkProductDescriptionsWithCompleteFormatting(
+    productIds: string[],
+    company_id: string,
+    updatedBy?: string,
+  ): Promise<{
+    successful: Cms_ResponseProductDescDto[];
+    failed: { id: string; error: string }[];
+  }> {
+    const successful: Cms_ResponseProductDescDto[] = [];
+    const failed: { id: string; error: string }[] = [];
+
+    for (const id of productIds) {
+      try {
+        const result =
+          await this.translateProductDescriptionWithCompleteFormatting(
+            id,
+            company_id,
+            updatedBy,
+          );
+        successful.push(result);
+      } catch (error) {
+        failed.push({
+          id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { successful, failed };
+  }
+}
