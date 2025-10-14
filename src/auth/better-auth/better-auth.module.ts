@@ -12,12 +12,14 @@ import { BetterRefreshGuard } from './guards/better-refresh.guard';
 import { PrismaService } from '../../prisma.service';
 import jwtConfig from '../config/jwt.config';
 import refreshConfig from '../config/refresh.config';
+import googleOAuthConfig from '../config/google-oauth.config';
 
 @Module({
   imports: [
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
     ConfigModule.forFeature(refreshConfig),
+    ConfigModule.forFeature(googleOAuthConfig),
   ],
   controllers: [BetterAuthController],
   providers: [
@@ -36,4 +38,3 @@ import refreshConfig from '../config/refresh.config';
   exports: [BetterAuthService],
 })
 export class BetterAuthModule {}
-

@@ -124,7 +124,7 @@ export class BetterAuthController {
   @Public()
   @Get('google/login')
   async googleLogin(@Res() res: Response) {
-    const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile`;
+    const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email%20profile&access_type=offline&prompt=consent`;
     res.redirect(googleOAuthUrl);
   }
 
@@ -134,10 +134,6 @@ export class BetterAuthController {
   @Public()
   @Get('google/callback')
   async googleCallback(@Request() req: any, @Res() res: Response) {
-    // Note: Implementasi Google OAuth callback perlu middleware tambahan
-    // untuk handle authorization code exchange
-    // Untuk saat ini, ini adalah placeholder
-
     try {
       // Ambil code dari query params
       const code = req.query.code;
@@ -146,17 +142,32 @@ export class BetterAuthController {
         throw new UnauthorizedException('No authorization code provided');
       }
 
-      // TODO: Exchange code for access token dengan Google
-      // TODO: Get user info dari Google
-      // TODO: Login atau register user
+      // Exchange code untuk access token
+      const googleAccessToken =
+        await this.betterAuthService.exchangeGoogleCode(code);
 
-      // Placeholder response - harus diganti dengan implementasi sebenarnya
-      res.redirect(
-        `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/google/callback?error=not_implemented`,
-      );
+      // Get user info dari Google
+      const googleUser =
+        await this.betterAuthService.getGoogleUserInfo(googleAccessToken);
+
+      // Login atau register user
+      const loginResult = await this.betterAuthService.loginWithGoogle({
+        email: googleUser.email,
+        name: googleUser.name,
+        image: googleUser.picture,
+      });
+
+      // Redirect ke frontend dengan tokens
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const redirectUrl = `${frontendUrl}/auth/google/callback?accessToken=${loginResult.accessToken}&refreshToken=${loginResult.refreshToken}`;
+
+      res.redirect(redirectUrl);
     } catch (error) {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       res.redirect(
-        `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/error`,
+        `${frontendUrl}/auth/error?message=${encodeURIComponent(errorMessage)}`,
       );
     }
   }
@@ -170,5 +181,3 @@ export class BetterAuthController {
     res.redirect(logoutUrl);
   }
 }
-
-
