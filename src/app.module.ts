@@ -12,12 +12,14 @@ import { PrismaService } from './prisma.service';
 import { sys_CompanyModule } from './sys/sys_company/sys_Company.module';
 import { sys_MenuModule } from './sys/sys_menu/sys_Menu.module';
 import { sys_MenuPermissionModule } from './sys/sys_menu_permission/sys_Menu_Permission.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    EmailModule,
     BetterAuthModule,
     sys_CompanyModule,
     sys_UserModule,

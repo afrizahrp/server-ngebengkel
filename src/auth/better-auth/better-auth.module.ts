@@ -13,6 +13,9 @@ import { PrismaService } from '../../prisma.service';
 import jwtConfig from '../config/jwt.config';
 import refreshConfig from '../config/refresh.config';
 import googleOAuthConfig from '../config/google-oauth.config';
+import { SessionModule } from '../session/session.module';
+import { EmailModule } from '../../email/email.module';
+import { TwoFactorModule } from '../two-factor/two-factor.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import googleOAuthConfig from '../config/google-oauth.config';
     ConfigModule.forFeature(jwtConfig),
     ConfigModule.forFeature(refreshConfig),
     ConfigModule.forFeature(googleOAuthConfig),
+    SessionModule,
+    EmailModule,
+    TwoFactorModule,
   ],
   controllers: [BetterAuthController],
   providers: [

@@ -1,0 +1,16 @@
+saas_SubscriptionPlan
+saas_CompanySubscription
+saas_PlanFeature
+saas_SubscriptionBilling
+saas_UsageTracking
+saas_AddonFeature
+saas_CompanyAddon
+sys_Company
+sys_Branch
+sys_Role
+sys_WhiteListEmail
+sys_User
+sys_Session
+sys_UserRole
+sys_Migration_log
+imc_ProductImage

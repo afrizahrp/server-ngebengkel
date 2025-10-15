@@ -14,6 +14,10 @@ import refreshConfig from '../config/refresh.config';
 import googleOAuthConfig from '../config/google-oauth.config';
 import { generateIncrementId } from '../../utils/generateIncrementId';
 import axios from 'axios';
+import { SessionService } from '../session/session.service';
+import { EmailService } from '../../email/email.service';
+import { TwoFactorService } from '../two-factor/two-factor.service';
+import { randomBytes } from 'crypto';
 
 interface UserPayload {
   sub: number;
@@ -25,6 +29,9 @@ export class BetterAuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly sessionService: SessionService,
+    private readonly emailService: EmailService,
+    private readonly twoFactorService: TwoFactorService,
     @Inject(jwtConfig.KEY)
     private jwtConfiguration: ConfigType<typeof jwtConfig>,
     @Inject(refreshConfig.KEY)
@@ -57,7 +64,7 @@ export class BetterAuthService {
     // Generate manual ID untuk sys_User
     const newId = await generateIncrementId(this.prisma, 'sys_User');
 
-    // Buat user baru
+    // Buat user baru dengan emailVerified = false
     const newUser = await this.prisma.sys_User.create({
       data: {
         id: newId,
@@ -67,24 +74,38 @@ export class BetterAuthService {
         image: data.image,
         iStatus: 'Active',
         isAdmin: false,
+        emailVerified: false,
       },
     });
 
     // Assign default company & role
     await this.assignDefaultCompanyRole(newUser.id);
 
+    // Generate dan kirim verification email
+    await this.sendVerificationEmail(newUser.id, newUser.email, newUser.name);
+
     return {
       id: newUser.id,
       name: newUser.name,
       email: newUser.email,
       image: newUser.image,
+      message:
+        'Registration successful. Please check your email to verify your account.',
     };
   }
 
   /**
    * Login dengan email & password
    */
-  async login(email: string, password: string) {
+  async login(
+    email: string,
+    password: string,
+    deviceInfo?: {
+      deviceName?: string;
+      ipAddress?: string;
+      userAgent?: string;
+    },
+  ) {
     // Cari user
     const user = await this.prisma.sys_User.findUnique({
       where: { email },
@@ -100,6 +121,28 @@ export class BetterAuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Check if email is verified
+    if (!user.emailVerified) {
+      throw new UnauthorizedException(
+        'Please verify your email before logging in. Check your inbox for the verification link.',
+      );
+    }
+
+    // Check if 2FA is enabled
+    if (user.twoFactorEnabled) {
+      // Generate and send OTP
+      await this.twoFactorService.generateAndSendOtp(user.id);
+
+      // Return response indicating 2FA is required
+      return {
+        requires2FA: true,
+        userId: user.id,
+        message:
+          'Two-factor authentication required. Please check your email for the OTP code.',
+      };
+    }
+
+    // Continue with normal login flow (no 2FA)
     // Get user companies & roles
     const userCompanies = await this.getUserCompaniesWithRoles(user.id);
 
@@ -120,7 +163,21 @@ export class BetterAuthService {
       selectedCompany.userRole.role_id,
     );
 
-    // Save hashed refresh token
+    // Calculate expiry date (7 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Create session
+    const session = await this.sessionService.createSession({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+      deviceName: deviceInfo?.deviceName,
+      ipAddress: deviceInfo?.ipAddress,
+      userAgent: deviceInfo?.userAgent,
+      expiresAt,
+    });
+
+    // Save hashed refresh token (backward compatibility)
     const hashedRefreshToken = await hash(tokens.refreshToken);
     await this.prisma.sys_User.update({
       where: { id: user.id },
@@ -148,18 +205,121 @@ export class BetterAuthService {
       },
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
+      sessionId: session.id,
       message: 'Login successful',
+    };
+  }
+
+  /**
+   * Verify OTP dan complete login (untuk 2FA)
+   */
+  async verifyOtpAndLogin(
+    userId: number,
+    otpCode: string,
+    deviceInfo?: {
+      deviceName?: string;
+      ipAddress?: string;
+      userAgent?: string;
+    },
+  ) {
+    // Verify OTP
+    const isValid = await this.twoFactorService.verifyOtp(userId, otpCode);
+
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid or expired OTP code');
+    }
+
+    // Get user
+    const user = await this.prisma.sys_User.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Get user companies & roles
+    const userCompanies = await this.getUserCompaniesWithRoles(user.id);
+
+    if (userCompanies.length === 0) {
+      // Assign default jika belum ada
+      await this.assignDefaultCompanyRole(user.id);
+      const refreshedCompanies = await this.getUserCompaniesWithRoles(user.id);
+      if (refreshedCompanies.length > 0) {
+        userCompanies.push(refreshedCompanies[0]);
+      }
+    }
+
+    const selectedCompany = userCompanies[0];
+
+    // Generate tokens
+    const tokens = await this.generateTokens(
+      user.id,
+      selectedCompany.userRole.role_id,
+    );
+
+    // Calculate expiry date (7 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Create session
+    const session = await this.sessionService.createSession({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+      deviceName: deviceInfo?.deviceName,
+      ipAddress: deviceInfo?.ipAddress,
+      userAgent: deviceInfo?.userAgent,
+      expiresAt,
+    });
+
+    // Save hashed refresh token (backward compatibility)
+    const hashedRefreshToken = await hash(tokens.refreshToken);
+    await this.prisma.sys_User.update({
+      where: { id: user.id },
+      data: { hashedRefreshToken },
+    });
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        company: {
+          company_id: selectedCompany.company_id.trim(),
+          branch_id: selectedCompany.branch_id.trim(),
+          role_id: selectedCompany.userRole.role_id.trim(),
+          role_name: selectedCompany.userRole.role.name,
+        },
+        companies: userCompanies.map((c) => ({
+          company_id: c.company_id.trim(),
+          branch_id: c.branch_id.trim(),
+          role_id: c.userRole.role_id.trim(),
+          role_name: c.userRole.role.name,
+        })),
+      },
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      sessionId: session.id,
+      message: 'Login successful with 2FA',
     };
   }
 
   /**
    * Login dengan Google OAuth
    */
-  async loginWithGoogle(googleUser: {
-    email: string;
-    name: string;
-    image?: string;
-  }) {
+  async loginWithGoogle(
+    googleUser: {
+      email: string;
+      name: string;
+      image?: string;
+    },
+    deviceInfo?: {
+      deviceName?: string;
+      ipAddress?: string;
+      userAgent?: string;
+    },
+  ) {
     let user = await this.prisma.sys_User.findUnique({
       where: { email: googleUser.email },
     });
@@ -193,7 +353,21 @@ export class BetterAuthService {
       selectedCompany?.userRole?.role_id || 'ADMIN',
     );
 
-    // Save hashed refresh token
+    // Calculate expiry date (7 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Create session
+    const session = await this.sessionService.createSession({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+      deviceName: deviceInfo?.deviceName || 'Google OAuth Device',
+      ipAddress: deviceInfo?.ipAddress,
+      userAgent: deviceInfo?.userAgent,
+      expiresAt,
+    });
+
+    // Save hashed refresh token (backward compatibility)
     const hashedRefreshToken = await hash(tokens.refreshToken);
     await this.prisma.sys_User.update({
       where: { id: user.id },
@@ -217,6 +391,7 @@ export class BetterAuthService {
       },
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
+      sessionId: session.id,
     };
   }
 
@@ -224,17 +399,13 @@ export class BetterAuthService {
    * Refresh access token
    */
   async refreshToken(userId: number, refreshToken: string) {
-    const user = await this.prisma.sys_User.findUnique({
-      where: { id: userId },
-    });
+    // Validate session
+    const session = await this.sessionService.getSessionByRefreshToken(
+      userId,
+      refreshToken,
+    );
 
-    if (!user || !user.hashedRefreshToken) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-
-    // Verify refresh token
-    const isValid = await verify(user.hashedRefreshToken, refreshToken);
-    if (!isValid) {
+    if (!session) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
@@ -248,8 +419,17 @@ export class BetterAuthService {
       selectedCompany?.userRole?.role_id || 'USER',
     );
 
-    // Update hashed refresh token
+    // Update session dengan refresh token baru
     const hashedRefreshToken = await hash(tokens.refreshToken);
+    await this.prisma.sys_Session.update({
+      where: { id: session.id },
+      data: {
+        refreshToken: hashedRefreshToken,
+        lastActivityAt: new Date(),
+      },
+    });
+
+    // Update hashed refresh token di user (backward compatibility)
     await this.prisma.sys_User.update({
       where: { id: userId },
       data: { hashedRefreshToken },
@@ -258,13 +438,26 @@ export class BetterAuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
+      sessionId: session.id,
     };
   }
 
   /**
    * Logout
    */
-  async logout(userId: number) {
+  async logout(userId: number, sessionId?: string) {
+    if (sessionId) {
+      // Revoke specific session
+      await this.sessionService.revokeSession(
+        sessionId,
+        'User logged out from this device',
+      );
+    } else {
+      // Revoke all sessions (fallback untuk backward compatibility)
+      await this.sessionService.revokeAllSessions(userId);
+    }
+
+    // Clear refresh token di user (backward compatibility)
     await this.prisma.sys_User.update({
       where: { id: userId },
       data: { hashedRefreshToken: null },
@@ -496,5 +689,126 @@ export class BetterAuthService {
     } catch {
       throw new UnauthorizedException('Failed to get Google user info');
     }
+  }
+
+  /**
+   * Generate verification token dan kirim email
+   */
+  async sendVerificationEmail(
+    userId: number,
+    email: string,
+    name: string,
+  ): Promise<void> {
+    // Generate token
+    const token = this.generateVerificationToken();
+
+    // Set expiry time (1 hour from now)
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    // Delete any existing verification tokens for this user
+    await this.prisma.sys_EmailVerification.deleteMany({
+      where: { user_id: userId },
+    });
+
+    // Save token to database
+    await this.prisma.sys_EmailVerification.create({
+      data: {
+        user_id: userId,
+        token,
+        expiresAt,
+      },
+    });
+
+    // Send email
+    await this.emailService.sendVerificationEmail(email, name, token);
+  }
+
+  /**
+   * Verify email dengan token
+   */
+  async verifyEmail(token: string) {
+    // Find verification record
+    const verification = await this.prisma.sys_EmailVerification.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!verification) {
+      throw new UnauthorizedException('Invalid or expired verification token');
+    }
+
+    // Check if token expired
+    if (new Date() > verification.expiresAt) {
+      throw new UnauthorizedException('Verification token has expired');
+    }
+
+    // Check if email already verified
+    if (verification.user.emailVerified) {
+      return {
+        message: 'Email already verified',
+        user: {
+          id: verification.user.id,
+          name: verification.user.name,
+          email: verification.user.email,
+        },
+      };
+    }
+
+    // Update user email verification status
+    await this.prisma.sys_User.update({
+      where: { id: verification.user_id },
+      data: {
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+      },
+    });
+
+    // Delete verification token
+    await this.prisma.sys_EmailVerification.delete({
+      where: { id: verification.id },
+    });
+
+    return {
+      message: 'Email verified successfully',
+      user: {
+        id: verification.user.id,
+        name: verification.user.name,
+        email: verification.user.email,
+      },
+    };
+  }
+
+  /**
+   * Resend verification email
+   */
+  async resendVerificationEmail(email: string) {
+    // Find user
+    const user = await this.prisma.sys_User.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Check if already verified
+    if (user.emailVerified) {
+      throw new ConflictException('Email already verified');
+    }
+
+    // Send new verification email
+    await this.sendVerificationEmail(user.id, user.email, user.name);
+
+    return {
+      message: 'Verification email sent. Please check your inbox.',
+    };
+  }
+
+  /**
+   * Generate random verification token
+   */
+  private generateVerificationToken(): string {
+    return randomBytes(32).toString('hex');
   }
 }

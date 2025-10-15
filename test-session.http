@@ -1,0 +1,218 @@
+### Session Management API Testing
+### Gunakan REST Client extension di VS Code untuk menjalankan test ini
+### Atau copy-paste ke Postman/Thunder Client
+
+@baseUrl = http://localhost:3000
+@email = test@example.com
+@password = password123
+
+### Variables (akan di-update setelah login)
+# @accessToken = YOUR_ACCESS_TOKEN
+# @accessToken2 = YOUR_ACCESS_TOKEN_2
+# @sessionId = YOUR_SESSION_ID
+# @sessionId2 = YOUR_SESSION_ID_2
+
+################################################################################
+### SCENARIO 1: LOGIN & SESSION CREATION
+################################################################################
+
+### 1.1 Register User Baru (Optional - jika belum ada user)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "image": "https://avatar.iran.liara.run/public"
+}
+
+### 1.2 Login dari Device Pertama (MacBook Pro)
+# @name login1
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "deviceName": "MacBook Pro - Chrome"
+}
+
+### Extract tokens dari response login1
+# Setelah run request di atas, copy accessToken dan sessionId
+# Lalu uncomment dan paste di bawah:
+# @accessToken = paste_your_access_token_here
+# @sessionId = paste_your_session_id_here
+
+### 1.3 Login dari Device Kedua (iPhone)
+# @name login2
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "deviceName": "iPhone 14 Pro - Safari"
+}
+
+### Extract tokens dari response login2
+# @accessToken2 = paste_your_access_token_2_here
+# @sessionId2 = paste_your_session_id_2_here
+
+### 1.4 Login dari Device Ketiga (Windows Desktop)
+# @name login3
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "deviceName": "Windows Desktop - Firefox"
+}
+
+################################################################################
+### SCENARIO 2: GET SESSIONS
+################################################################################
+
+### 2.1 Get All Active Sessions
+GET {{baseUrl}}/sessions?onlyActive=true
+Authorization: Bearer {{accessToken}}
+
+### 2.2 Get All Sessions (Including Inactive)
+GET {{baseUrl}}/sessions?onlyActive=false
+Authorization: Bearer {{accessToken}}
+
+### 2.3 Get Session Statistics
+GET {{baseUrl}}/sessions/stats/me
+Authorization: Bearer {{accessToken}}
+
+### 2.4 Get Specific Session by ID
+GET {{baseUrl}}/sessions/{{sessionId}}
+Authorization: Bearer {{accessToken}}
+
+################################################################################
+### SCENARIO 3: LOGOUT PER DEVICE
+################################################################################
+
+### 3.1 Logout dari Device Kedua (iPhone) - Tanpa Reason
+DELETE {{baseUrl}}/sessions/{{sessionId2}}
+Authorization: Bearer {{accessToken}}
+
+### 3.2 Logout dari Device Tertentu - Dengan Reason
+DELETE {{baseUrl}}/sessions/{{sessionId2}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "reason": "Testing logout from iPhone device"
+}
+
+### 3.3 Verify Session Berkurang (Setelah Logout Device 2)
+GET {{baseUrl}}/sessions?onlyActive=true
+Authorization: Bearer {{accessToken}}
+
+################################################################################
+### SCENARIO 4: LOGOUT OTHER DEVICES
+################################################################################
+
+### 4.1 Logout dari Semua Device Lain (Kecuali Device Saat Ini)
+POST {{baseUrl}}/sessions/revoke-others
+Authorization: Bearer {{accessToken}}
+
+### 4.2 Verify Hanya 1 Session Tersisa
+GET {{baseUrl}}/sessions?onlyActive=true
+Authorization: Bearer {{accessToken}}
+
+################################################################################
+### SCENARIO 5: LOGOUT ALL DEVICES
+################################################################################
+
+### 5.1 Logout dari Semua Device
+POST {{baseUrl}}/sessions/revoke-all
+Authorization: Bearer {{accessToken}}
+
+### 5.2 Verify Tidak Ada Active Sessions
+GET {{baseUrl}}/sessions?onlyActive=true
+Authorization: Bearer {{accessToken}}
+
+################################################################################
+### SCENARIO 6: PROTECTED ROUTES
+################################################################################
+
+### 6.1 Test Protected Route - Get Current User
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+### 6.2 Test Protected Route - Generic
+GET {{baseUrl}}/auth/protected
+Authorization: Bearer {{accessToken}}
+
+################################################################################
+### SCENARIO 7: REFRESH TOKEN
+################################################################################
+
+### 7.1 Refresh Access Token
+# Note: Gunakan refreshToken dari response login
+POST {{baseUrl}}/auth/refresh
+Authorization: Bearer YOUR_REFRESH_TOKEN_HERE
+
+################################################################################
+### SCENARIO 8: LOGOUT NORMAL
+################################################################################
+
+### 8.1 Logout Normal (Dari Device Saat Ini)
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "sessionId": "{{sessionId}}"
+}
+
+### 8.2 Logout Tanpa SessionId (Logout All - Backward Compatibility)
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}}
+
+################################################################################
+### SCENARIO 9: CLEANUP EXPIRED SESSIONS (ADMIN)
+################################################################################
+
+### 9.1 Cleanup Expired Sessions
+POST {{baseUrl}}/sessions/cleanup-expired
+Authorization: Bearer {{accessToken}}
+
+################################################################################
+### SCENARIO 10: ERROR HANDLING
+################################################################################
+
+### 10.1 Login dengan Password Salah
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "wrong_password"
+}
+
+### 10.2 Akses Sessions Tanpa Token
+GET {{baseUrl}}/sessions
+
+### 10.3 Akses Sessions dengan Invalid Token
+GET {{baseUrl}}/sessions
+Authorization: Bearer invalid_token_here
+
+### 10.4 Delete Session dengan ID yang Tidak Ada
+DELETE {{baseUrl}}/sessions/invalid_session_id
+Authorization: Bearer {{accessToken}}
+
+################################################################################
+### UTILITIES
+################################################################################
+
+### Get Server Health Check
+GET {{baseUrl}}/
+
+### Get All Users (if endpoint exists)
+# GET {{baseUrl}}/sys-user
+# Authorization: Bearer {{accessToken}}
+

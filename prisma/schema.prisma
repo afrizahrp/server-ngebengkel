@@ -325,8 +325,20 @@ model sys_Company {
   billingHistory   saas_SubscriptionBilling[]
   usageTracking    saas_UsageTracking[]
   companyAddons    saas_CompanyAddon[]
+  branches         sys_Branch[]
 
   @@index([seq_no], map: "idx_sys_Company_seq_no")
+}
+
+model sys_Branch {
+  id         String                 @id @db.Char(10)
+  name       String                 @db.VarChar(50)
+  iStatus    MasterRecordStatusEnum @default(Active)
+  remarks    String?                @db.VarChar(255)
+  company_id String                 @db.Char(5)
+  company    sys_Company            @relation(fields: [company_id], references: [id])
+
+  @@index([company_id], map: "idx_sys_Branch_company_id")
 }
 
 model sys_Role {
@@ -345,22 +357,80 @@ model sys_WhiteListEmail {
 }
 
 model sys_User {
-  id                 Int                    @id @db.SmallInt
-  name               String                 @db.VarChar(50)
-  email              String                 @unique @db.VarChar(100)
-  isAdmin            Boolean                @default(false)
-  iStatus            MasterRecordStatusEnum @default(Active)
-  image              String?                @db.VarChar(255)
-  password           String                 @db.VarChar(255)
-  hashedRefreshToken String?                @db.VarChar(255)
+  id                 Int                     @id @db.SmallInt
+  name               String                  @db.VarChar(50)
+  email              String                  @unique @db.VarChar(100)
+  emailVerified      Boolean                 @default(false)
+  emailVerifiedAt    DateTime?
+  isAdmin            Boolean                 @default(false)
+  iStatus            MasterRecordStatusEnum  @default(Active)
+  image              String?                 @db.VarChar(255)
+  password           String                  @db.VarChar(255)
+  hashedRefreshToken String?                 @db.VarChar(255)
+  // Two-Factor Authentication
+  twoFactorEnabled   Boolean                 @default(false)
   // Employee Reference (setiap user harus terdaftar sebagai employee)
-  employee_id        String?                @db.Char(20)
-  company_id         String?                @db.Char(5)
+  employee_id        String?                 @db.Char(20)
+  company_id         String?                 @db.Char(5)
   // Relations
-  employee           cmf_Employee?          @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
+  employee           cmf_Employee?           @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
   userRoles          sys_UserRole[]
+  sessions           sys_Session[]
+  emailVerifications sys_EmailVerification[]
+  twoFactorTokens    sys_TwoFactorToken[]
 
   @@unique([company_id, employee_id], map: "unique_user_employee")
+}
+
+model sys_EmailVerification {
+  id        String   @id @default(cuid()) @db.VarChar(50)
+  user_id   Int      @db.SmallInt
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  // Relations
+  user      sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model sys_TwoFactorToken {
+  id        String   @id @default(cuid()) @db.VarChar(50)
+  user_id   Int      @db.SmallInt
+  code      String   @db.VarChar(6) // 6-digit OTP
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  // Relations
+  user      sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([code])
+}
+
+model sys_Session {
+  id             String                 @id @default(cuid()) @db.VarChar(50)
+  user_id        Int                    @db.Integer
+  refreshToken   String                 @unique @db.VarChar(500)
+  deviceName     String?                @db.VarChar(255)
+  deviceType     String?                @db.VarChar(50) // mobile, desktop, tablet
+  browser        String?                @db.VarChar(100)
+  os             String?                @db.VarChar(100)
+  ipAddress      String?                @db.VarChar(45) // IPv6 support
+  userAgent      String?                @db.Text
+  isActive       Boolean                @default(true)
+  lastActivityAt DateTime               @default(now())
+  expiresAt      DateTime
+  createdAt      DateTime               @default(now())
+  revokedAt      DateTime?
+  revokedReason  String?                @db.VarChar(255)
+  iStatus        MasterRecordStatusEnum @default(Active)
+  // Relations
+  user           sys_User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([refreshToken])
+  @@index([isActive])
 }
 
 model sys_UserRole {

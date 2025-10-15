@@ -1,0 +1,246 @@
+### ============================================================================
+### EMAIL VERIFICATION TESTING
+### ============================================================================
+### File ini berisi contoh request untuk testing fitur Email Verification
+### Gunakan REST Client extension di VS Code untuk menjalankan request ini
+### ============================================================================
+
+@baseUrl = http://localhost:4000
+@contentType = application/json
+
+### ============================================================================
+### 1. REGISTER USER BARU
+### ============================================================================
+### User akan dibuat dengan emailVerified = false
+### Email verification akan dikirim otomatis
+
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Test User Email Verification",
+  "email": "test-email-verify@example.com",
+  "password": "TestPassword123",
+  "image": "https://example.com/avatar.jpg"
+}
+
+### Expected Response:
+### {
+###   "id": 123,
+###   "name": "Test User Email Verification",
+###   "email": "test-email-verify@example.com",
+###   "image": "https://example.com/avatar.jpg",
+###   "message": "Registration successful. Please check your email to verify your account."
+### }
+
+### ============================================================================
+### 2. TEST LOGIN SEBELUM EMAIL VERIFIED
+### ============================================================================
+### Ini akan GAGAL karena email belum diverifikasi
+
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "test-email-verify@example.com",
+  "password": "TestPassword123"
+}
+
+### Expected Error Response (401):
+### {
+###   "statusCode": 401,
+###   "message": "Please verify your email before logging in. Check your inbox for the verification link."
+### }
+
+### ============================================================================
+### 3. VERIFY EMAIL
+### ============================================================================
+### Copy token dari email yang diterima dan replace TOKEN_FROM_EMAIL
+### Token expired setelah 1 jam
+
+GET {{baseUrl}}/auth/verify-email?token=TOKEN_FROM_EMAIL
+
+### Example:
+### GET {{baseUrl}}/auth/verify-email?token=a1b2c3d4e5f6...
+
+### Expected Success Response:
+### {
+###   "message": "Email verified successfully",
+###   "user": {
+###     "id": 123,
+###     "name": "Test User Email Verification",
+###     "email": "test-email-verify@example.com"
+###   }
+### }
+
+### Expected Error Response - Invalid Token (401):
+### {
+###   "statusCode": 401,
+###   "message": "Invalid or expired verification token"
+### }
+
+### Expected Error Response - Token Expired (401):
+### {
+###   "statusCode": 401,
+###   "message": "Verification token has expired"
+### }
+
+### ============================================================================
+### 4. TEST LOGIN SETELAH EMAIL VERIFIED
+### ============================================================================
+### Setelah email diverifikasi, login akan BERHASIL
+
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "test-email-verify@example.com",
+  "password": "TestPassword123"
+}
+
+### Expected Success Response:
+### {
+###   "user": {
+###     "id": 123,
+###     "name": "Test User Email Verification",
+###     "email": "test-email-verify@example.com",
+###     ...
+###   },
+###   "accessToken": "eyJhbGc...",
+###   "refreshToken": "eyJhbGc...",
+###   "sessionId": "ckm1x...",
+###   "message": "Login successful"
+### }
+
+### ============================================================================
+### 5. RESEND VERIFICATION EMAIL
+### ============================================================================
+### Jika user tidak menerima email atau token sudah expired,
+### gunakan endpoint ini untuk mengirim ulang
+
+POST {{baseUrl}}/auth/resend-verification-email
+Content-Type: {{contentType}}
+
+{
+  "email": "test-email-verify@example.com"
+}
+
+### Expected Success Response:
+### {
+###   "message": "Verification email sent. Please check your inbox."
+### }
+
+### Expected Error - User Not Found (401):
+### {
+###   "statusCode": 401,
+###   "message": "User not found"
+### }
+
+### Expected Error - Already Verified (409):
+### {
+###   "statusCode": 409,
+###   "message": "Email already verified"
+### }
+
+### ============================================================================
+### 6. TEST MULTIPLE RESEND (untuk testing rate limiting - jika diimplementasi)
+### ============================================================================
+
+POST {{baseUrl}}/auth/resend-verification-email
+Content-Type: {{contentType}}
+
+{
+  "email": "test-email-verify@example.com"
+}
+
+###
+
+POST {{baseUrl}}/auth/resend-verification-email
+Content-Type: {{contentType}}
+
+{
+  "email": "test-email-verify@example.com"
+}
+
+###
+
+POST {{baseUrl}}/auth/resend-verification-email
+Content-Type: {{contentType}}
+
+{
+  "email": "test-email-verify@example.com"
+}
+
+### ============================================================================
+### EDGE CASES & ERROR SCENARIOS
+### ============================================================================
+
+### 7. Test Verify dengan Token Kosong
+
+GET {{baseUrl}}/auth/verify-email?token=
+
+### Expected Error (401):
+### {
+###   "statusCode": 401,
+###   "message": "Verification token is required"
+### }
+
+### ============================================================================
+
+### 8. Test Verify dengan Token Invalid
+
+GET {{baseUrl}}/auth/verify-email?token=invalid-token-123
+
+### Expected Error (401):
+### {
+###   "statusCode": 401,
+###   "message": "Invalid or expired verification token"
+### }
+
+### ============================================================================
+
+### 9. Test Resend tanpa Email
+
+POST {{baseUrl}}/auth/resend-verification-email
+Content-Type: {{contentType}}
+
+{
+}
+
+### Expected Error (401):
+### {
+###   "statusCode": 401,
+###   "message": "Email is required"
+### }
+
+### ============================================================================
+
+### 10. Test Resend dengan Email yang Tidak Terdaftar
+
+POST {{baseUrl}}/auth/resend-verification-email
+Content-Type: {{contentType}}
+
+{
+  "email": "nonexistent@example.com"
+}
+
+### Expected Error (401):
+### {
+###   "statusCode": 401,
+###   "message": "User not found"
+### }
+
+### ============================================================================
+### TESTING WORKFLOW (Complete Flow)
+### ============================================================================
+### 
+### 1. Register user baru (request #1)
+### 2. Check email inbox untuk verification link
+### 3. Copy token dari email
+### 4. Test login sebelum verify (request #2) - harus gagal
+### 5. Verify email dengan token (request #3)
+### 6. Test login setelah verify (request #4) - harus berhasil
+### 7. (Optional) Test resend untuk user yang sudah verified (request #5) - harus error
+###
+### ============================================================================
+
