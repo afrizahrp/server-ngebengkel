@@ -1,0 +1,107 @@
+### Test Cleanup Endpoints
+### Pastikan sudah login sebagai ADMIN untuk mendapatkan access token
+
+@baseUrl = http://localhost:3001
+@adminToken = YOUR_ADMIN_ACCESS_TOKEN_HERE
+
+### 1. Get Cleanup Statistics
+GET {{baseUrl}}/cleanup/stats
+Authorization: Bearer {{adminToken}}
+
+### 2. Dry Run - Cleanup Unverified Users
+### Preview user yang akan dihapus tanpa actually delete
+POST {{baseUrl}}/cleanup/unverified-users?dryRun=true
+Authorization: Bearer {{adminToken}}
+
+### 3. Cleanup Unverified Users (Actual)
+### Hapus user dengan verification expired > 24 jam
+POST {{baseUrl}}/cleanup/unverified-users
+Authorization: Bearer {{adminToken}}
+
+### 4. Cleanup Unverified Users (Custom Expiration)
+### Hapus user dengan verification expired > 48 jam
+POST {{baseUrl}}/cleanup/unverified-users?expirationHours=48
+Authorization: Bearer {{adminToken}}
+
+### 5. Dry Run - Cleanup Never-Verified Users
+POST {{baseUrl}}/cleanup/never-verified-users?dryRun=true
+Authorization: Bearer {{adminToken}}
+
+### 6. Cleanup Never-Verified Users (Actual)
+### Hapus user yang tidak pernah verify email > 7 hari
+POST {{baseUrl}}/cleanup/never-verified-users
+Authorization: Bearer {{adminToken}}
+
+### 7. Cleanup Expired Verification Tokens
+POST {{baseUrl}}/cleanup/expired-verification-tokens
+Authorization: Bearer {{adminToken}}
+
+### 8. Cleanup Expired 2FA Tokens
+POST {{baseUrl}}/cleanup/expired-2fa-tokens
+Authorization: Bearer {{adminToken}}
+
+### 9. Dry Run - Run All Cleanup Tasks
+POST {{baseUrl}}/cleanup/run-all?dryRun=true
+Authorization: Bearer {{adminToken}}
+
+### 10. Run All Cleanup Tasks (Actual)
+### HATI-HATI: Ini akan menjalankan semua cleanup sekaligus!
+POST {{baseUrl}}/cleanup/run-all
+Authorization: Bearer {{adminToken}}
+
+### 11. Check Stats After Cleanup
+GET {{baseUrl}}/cleanup/stats
+Authorization: Bearer {{adminToken}}
+
+###############################################
+### Testing Flow - Complete Scenario
+###############################################
+
+### Step 1: Check stats sebelum cleanup
+GET {{baseUrl}}/cleanup/stats
+Authorization: Bearer {{adminToken}}
+
+### Step 2: Dry run untuk preview
+POST {{baseUrl}}/cleanup/unverified-users?dryRun=true
+Authorization: Bearer {{adminToken}}
+
+### Step 3: Review hasil dry run
+### Jika OK, lanjut ke step 4
+
+### Step 4: Execute cleanup
+POST {{baseUrl}}/cleanup/unverified-users
+Authorization: Bearer {{adminToken}}
+
+### Step 5: Check stats sesudah cleanup
+GET {{baseUrl}}/cleanup/stats
+Authorization: Bearer {{adminToken}}
+
+###############################################
+### Create Test User (untuk testing cleanup)
+###############################################
+
+### 1. Register test user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User Cleanup",
+  "email": "test-cleanup@example.com",
+  "password": "password123"
+}
+
+### 2. Check user terbuat (akan unverified)
+### User ini akan otomatis di-cleanup setelah 24 jam jika tidak verify
+
+### 3. Untuk testing, bisa manually update expiration di database:
+### UPDATE sys_EmailVerification 
+### SET expiresAt = NOW() - INTERVAL '25 hours'
+### WHERE user_id = (SELECT id FROM sys_User WHERE email = 'test-cleanup@example.com');
+
+### 4. Run cleanup
+POST {{baseUrl}}/cleanup/unverified-users
+Authorization: Bearer {{adminToken}}
+
+### 5. Verify user terhapus
+### Check di database atau coba login dengan user tersebut (harusnya gagal)
+

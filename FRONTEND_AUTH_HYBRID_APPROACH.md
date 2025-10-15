@@ -1317,4 +1317,3 @@ export default function AdminPage() {
 3. **Guards** untuk protection → Easy to implement
 
 Pendekatan ini memberikan **best of both worlds**: keamanan server-side dengan user experience client-side! 🎉
-
