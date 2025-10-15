@@ -378,6 +378,7 @@ model sys_User {
   sessions           sys_Session[]
   emailVerifications sys_EmailVerification[]
   twoFactorTokens    sys_TwoFactorToken[]
+  passwordResets     sys_PasswordReset[]
 
   @@unique([company_id, employee_id], map: "unique_user_employee")
 }
@@ -406,6 +407,20 @@ model sys_TwoFactorToken {
 
   @@index([user_id])
   @@index([code])
+}
+
+model sys_PasswordReset {
+  id        Int      @id @default(autoincrement())
+  user_id   Int      @db.SmallInt
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+  // Relations
+  user      sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([user_id])
 }
 
 model sys_Session {

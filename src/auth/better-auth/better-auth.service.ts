@@ -467,7 +467,112 @@ export class BetterAuthService {
   }
 
   /**
-   * Reset password
+   * Forgot Password - Step 1: Request password reset
+   * Generate token dan kirim email
+   */
+  async forgotPassword(email: string) {
+    // 1. Find user by email
+    const user = await this.prisma.sys_User.findUnique({
+      where: { email },
+    });
+
+    // Don't reveal if email exists or not (security best practice)
+    if (!user) {
+      return {
+        message:
+          'Jika email terdaftar, link reset password akan dikirim ke email Anda.',
+      };
+    }
+
+    // 2. Generate reset token (32 bytes = 64 hex characters)
+    const token = randomBytes(32).toString('hex');
+
+    // 3. Set expiry (1 hour from now)
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    // 4. Delete old reset tokens for this user
+    await this.prisma.sys_PasswordReset.deleteMany({
+      where: { user_id: user.id },
+    });
+
+    // 5. Save new token
+    await this.prisma.sys_PasswordReset.create({
+      data: {
+        user_id: user.id,
+        token,
+        expiresAt,
+      },
+    });
+
+    // 6. Send email dengan reset link
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}`;
+
+    await this.emailService.sendPasswordResetEmail(
+      user.email,
+      user.name,
+      resetUrl,
+    );
+
+    return {
+      message:
+        'Jika email terdaftar, link reset password akan dikirim ke email Anda.',
+    };
+  }
+
+  /**
+   * Reset Password - Step 2: Verify token dan update password
+   */
+  async resetPasswordWithToken(token: string, newPassword: string) {
+    // 1. Find valid reset token
+    const resetToken = await this.prisma.sys_PasswordReset.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!resetToken) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    // 2. Check if token expired
+    if (new Date() > resetToken.expiresAt) {
+      throw new UnauthorizedException('Reset token has expired');
+    }
+
+    // 3. Check if already used
+    if (resetToken.used) {
+      throw new UnauthorizedException('Reset token already used');
+    }
+
+    // 4. Hash new password
+    const hashedPassword = await hash(newPassword);
+
+    // 5. Update password
+    await this.prisma.sys_User.update({
+      where: { id: resetToken.user_id },
+      data: { password: hashedPassword },
+    });
+
+    // 6. Mark token as used
+    await this.prisma.sys_PasswordReset.update({
+      where: { id: resetToken.id },
+      data: { used: true },
+    });
+
+    // 7. Revoke all sessions untuk security
+    await this.sessionService.revokeAllSessions(resetToken.user_id);
+
+    return {
+      message:
+        'Password berhasil direset. Silakan login dengan password baru Anda.',
+    };
+  }
+
+  /**
+   * @deprecated Use forgotPassword() and resetPasswordWithToken() instead
+   * Reset password (INSECURE - for backward compatibility only)
+   * WARNING: This allows anyone to reset password with just email!
    */
   async resetPassword(email: string, newPassword: string) {
     const user = await this.prisma.sys_User.findUnique({

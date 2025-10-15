@@ -101,11 +101,47 @@ export class BetterAuthController {
   }
 
   /**
-   * Reset password
+   * Forgot Password - Step 1: Request password reset
+   * User input email, sistem kirim link reset password
+   */
+  @Public()
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: { email: string }) {
+    const { email } = body;
+
+    if (!email) {
+      throw new UnauthorizedException('Email is required');
+    }
+
+    return await this.betterAuthService.forgotPassword(email);
+  }
+
+  /**
+   * Reset Password - Step 2: Verify token dan set new password
+   * User klik link dari email, input password baru
    */
   @Public()
   @Post('reset-password')
-  async resetPassword(@Body() body: { email: string; password: string }) {
+  async resetPasswordWithToken(
+    @Body() body: { token: string; password: string },
+  ) {
+    const { token, password } = body;
+
+    if (!token || !password) {
+      throw new UnauthorizedException('Token and password are required');
+    }
+
+    return await this.betterAuthService.resetPasswordWithToken(token, password);
+  }
+
+  /**
+   * @deprecated Legacy endpoint - INSECURE!
+   * Reset password tanpa token verification
+   * WARNING: Only for backward compatibility, will be removed!
+   */
+  @Public()
+  @Post('reset-password-legacy')
+  async resetPasswordLegacy(@Body() body: { email: string; password: string }) {
     const { email, password } = body;
 
     if (!email || !password) {

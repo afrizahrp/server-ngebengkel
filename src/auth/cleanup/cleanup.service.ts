@@ -341,6 +341,46 @@ export class CleanupService {
   }
 
   /**
+   * Cleanup expired password reset tokens
+   */
+  async cleanupExpiredPasswordResetTokens() {
+    this.logger.log('Starting cleanup expired password reset tokens');
+
+    try {
+      const result = await this.prisma.sys_PasswordReset.deleteMany({
+        where: {
+          OR: [
+            {
+              expiresAt: {
+                lt: new Date(),
+              },
+            },
+            {
+              used: true,
+              createdAt: {
+                // Delete used tokens older than 24 hours
+                lt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+              },
+            },
+          ],
+        },
+      });
+
+      this.logger.log(
+        `Cleanup completed: ${result.count} expired password reset tokens deleted`,
+      );
+
+      return {
+        success: true,
+        count: result.count,
+      };
+    } catch (error) {
+      this.logger.error(`Cleanup failed: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
    * Get statistics tentang unverified users
    */
   async getUnverifiedUsersStats() {
@@ -431,8 +471,12 @@ export class CleanupService {
       // 3. Cleanup expired 2FA tokens
       const twoFactorResult = await this.cleanupExpired2FATokens();
 
+      // 4. Cleanup expired password reset tokens
+      const passwordResetResult =
+        await this.cleanupExpiredPasswordResetTokens();
+
       this.logger.log(
-        `Daily cleanup completed - Users: ${unverifiedResult.count}, Verification Tokens: ${tokensResult.count}, 2FA Tokens: ${twoFactorResult.count}`,
+        `Daily cleanup completed - Users: ${unverifiedResult.count}, Verification Tokens: ${tokensResult.count}, 2FA Tokens: ${twoFactorResult.count}, Password Reset Tokens: ${passwordResetResult.count}`,
       );
     } catch (error) {
       this.logger.error(`Daily cleanup failed: ${error.message}`, error.stack);

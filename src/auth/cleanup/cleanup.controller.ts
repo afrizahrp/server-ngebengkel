@@ -94,6 +94,23 @@ export class CleanupController {
   }
 
   /**
+   * Cleanup expired password reset tokens
+   * Admin only
+   */
+  @Roles('ADMIN')
+  @Post('expired-password-reset-tokens')
+  @HttpCode(HttpStatus.OK)
+  async cleanupExpiredPasswordResetTokens() {
+    const result =
+      await this.cleanupService.cleanupExpiredPasswordResetTokens();
+
+    return {
+      message: `Successfully deleted ${result.count} expired password reset tokens`,
+      ...result,
+    };
+  }
+
+  /**
    * Get statistics tentang unverified users
    * Admin only
    */
@@ -118,20 +135,26 @@ export class CleanupController {
   async runAllCleanup(@Query('dryRun') dryRun?: string) {
     const isDryRun = dryRun === 'true';
 
-    const [unverifiedResult, tokensResult, twoFactorResult] = await Promise.all(
-      [
-        this.cleanupService.cleanupUnverifiedUsers({
-          dryRun: isDryRun,
-          expirationHours: 24,
-        }),
-        isDryRun
-          ? { success: true, count: 0 }
-          : this.cleanupService.cleanupExpiredVerificationTokens(),
-        isDryRun
-          ? { success: true, count: 0 }
-          : this.cleanupService.cleanupExpired2FATokens(),
-      ],
-    );
+    const [
+      unverifiedResult,
+      tokensResult,
+      twoFactorResult,
+      passwordResetResult,
+    ] = await Promise.all([
+      this.cleanupService.cleanupUnverifiedUsers({
+        dryRun: isDryRun,
+        expirationHours: 24,
+      }),
+      isDryRun
+        ? { success: true, count: 0 }
+        : this.cleanupService.cleanupExpiredVerificationTokens(),
+      isDryRun
+        ? { success: true, count: 0 }
+        : this.cleanupService.cleanupExpired2FATokens(),
+      isDryRun
+        ? { success: true, count: 0 }
+        : this.cleanupService.cleanupExpiredPasswordResetTokens(),
+    ]);
 
     return {
       message: isDryRun
@@ -151,9 +174,16 @@ export class CleanupController {
           count: twoFactorResult.count,
           success: twoFactorResult.success,
         },
+        expiredPasswordResetTokens: {
+          count: passwordResetResult.count,
+          success: passwordResetResult.success,
+        },
       },
       totalDeleted:
-        unverifiedResult.count + tokensResult.count + twoFactorResult.count,
+        unverifiedResult.count +
+        tokensResult.count +
+        twoFactorResult.count +
+        passwordResetResult.count,
     };
   }
 }
