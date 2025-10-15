@@ -52,3 +52,4 @@ fs.writeFileSync(
   modelsWithoutBranchId.join('\n'),
 );
 console.log('\n✓ List saved to: models-without-branch-id.txt');
+

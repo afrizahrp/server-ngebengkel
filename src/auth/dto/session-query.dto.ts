@@ -11,3 +11,4 @@ export class SessionQueryDto {
   @IsString()
   deviceType?: string;
 }
+

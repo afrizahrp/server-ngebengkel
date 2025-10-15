@@ -8,3 +8,4 @@ export class RevokeSessionDto {
   @IsString()
   reason?: string;
 }
+
