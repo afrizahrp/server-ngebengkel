@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma.service';
 import { Sys_CreateUserRoleDto } from './dto/sys_CreateUserRole.dto';
 import { Sys_UpdateUserRoleDto } from './dto/sys_UpdateUserRole.dto';
 import { Sys_ResponseUserRoleDto } from './dto/sys_ResponseUserRole.dto';
+import { generateIncrementId } from '../../utils/generateIncrementId';
 
 @Injectable()
 export class Sys_UserRoleService {
@@ -46,8 +47,11 @@ export class Sys_UserRoleService {
       throw new ConflictException(`User already has this role assigned`);
     }
 
+    const newId = await generateIncrementId(this.prisma, 'sys_UserRole');
+
     const userRole = await this.prisma.sys_UserRole.create({
       data: {
+        id: newId,
         ...createUserRoleDto,
         iStatus: createUserRoleDto.iStatus || 'Active',
       },

@@ -12,6 +12,7 @@ import { Sys_CompanyService } from './sys_Company.service';
 import { Sys_CreateCompanyDto } from './dto/sys_CreateCompany.dto';
 import { Sys_UpdateCompanyDto } from './dto/sys_UpdateCompany.dto';
 import { Sys_ResponseCompanyDto } from './dto/sys_ResponseCompany.dto';
+import { Sys_ResponseCompanyWithBranchesDto } from './dto/sys_ResponseCompanyWithBranches.dto';
 
 @Controller('sys_company')
 export class sys_CompanyController {
@@ -33,6 +34,21 @@ export class sys_CompanyController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseCompanyDto> {
     return this.companyService.findOne(id);
+  }
+
+  /**
+   * Get company with branches
+   * Endpoint khusus untuk login flow
+   */
+  @Public()
+  @Get(':id/with-branches')
+  async findOneWithBranches(
+    @Param('id') id: string,
+  ): Promise<Sys_ResponseCompanyWithBranchesDto> {
+    console.log(
+      `GET /sys_company/${id}/with-branches - Get company with branches`,
+    );
+    return this.companyService.findOneWithBranches(id);
   }
 
   @Put(':id')

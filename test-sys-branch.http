@@ -1,0 +1,38 @@
+### Variables
+@baseUrl = http://localhost:3003
+@branchId = BRANCH0001
+@companyId = COMP1
+
+### Create Branch
+POST {{baseUrl}}/sys_branch
+Content-Type: application/json
+
+{
+  "id": "{{branchId}}",
+  "name": "Cabang Jakarta Pusat",
+  "iStatus": "Active",
+  "remarks": "Kantor pusat Jakarta",
+  "company_id": "{{companyId}}"
+}
+
+### Get All Branches
+GET {{baseUrl}}/sys_branch
+
+### Get Branches by Company ID
+GET {{baseUrl}}/sys_branch/company/{{companyId}}
+
+### Get Branch by ID
+GET {{baseUrl}}/sys_branch/{{branchId}}
+
+### Update Branch
+PUT {{baseUrl}}/sys_branch/{{branchId}}
+Content-Type: application/json
+
+{
+  "name": "Cabang Jakarta Pusat - Updated",
+  "remarks": "Kantor pusat Jakarta - diperbarui"
+}
+
+### Delete Branch
+DELETE {{baseUrl}}/sys_branch/{{branchId}}
+

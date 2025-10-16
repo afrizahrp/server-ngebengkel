@@ -9,6 +9,18 @@ import { BetterJwtAuthGuard } from './guards/better-jwt-auth.guard';
 import { BetterRolesGuard } from './guards/better-roles.guard';
 import { BetterRefreshGuard } from './guards/better-refresh.guard';
 
+// Import new services
+import { AuthTokenService } from './services/auth-token.service';
+import { PasswordService } from './services/password.service';
+import { EmailVerificationService } from './services/email-verification.service';
+import { OAuthProviderService } from './services/oauth-provider.service';
+import { UserCompanyService } from './services/user-company.service';
+
+// Import strategies
+import { EmailLoginStrategy } from './strategies/email-login.strategy';
+import { OAuthLoginStrategy } from './strategies/oauth-login.strategy';
+import { TwoFactorLoginStrategy } from './strategies/two-factor-login.strategy';
+
 import { PrismaService } from '../../prisma.service';
 import jwtConfig from '../config/jwt.config';
 import refreshConfig from '../config/refresh.config';
@@ -29,9 +41,21 @@ import { TwoFactorModule } from '../two-factor/two-factor.module';
   ],
   controllers: [BetterAuthController],
   providers: [
+    // Main service
     BetterAuthService,
     PrismaService,
     BetterRefreshGuard,
+    // New services
+    AuthTokenService,
+    PasswordService,
+    EmailVerificationService,
+    OAuthProviderService,
+    UserCompanyService,
+    // Strategies
+    EmailLoginStrategy,
+    OAuthLoginStrategy,
+    TwoFactorLoginStrategy,
+    // Guards
     {
       provide: APP_GUARD,
       useClass: BetterJwtAuthGuard,

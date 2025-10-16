@@ -1,0 +1,26 @@
+### Test Branch Endpoints (Public Access)
+
+@baseUrl = http://localhost:4000
+
+### 1. Test GET All Branches (should be public)
+GET {{baseUrl}}/sys_branch
+
+### 2. Test GET Branches by Company ID (should be public)
+GET {{baseUrl}}/sys_branch/company/COMP1
+
+### 3. Test if server is running
+GET {{baseUrl}}/sys_company
+
+### Expected Results:
+# 1. GET /sys_branch → Should return all branches (200 OK) or empty array
+# 2. GET /sys_branch/company/COMP1 → Should return branches for COMP1 or empty array
+# 3. GET /sys_company → Should return companies (to confirm server is running)
+
+### If you get 404:
+# - Module might not be registered in app.module.ts
+# - Server needs restart
+
+### If you get 401 Unauthorized:
+# - Missing @Public() decorator
+# - Auth guard blocking request
+

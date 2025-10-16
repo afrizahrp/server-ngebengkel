@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma.service';
 import { Sys_CreateCompanyDto } from './dto/sys_CreateCompany.dto';
 import { Sys_UpdateCompanyDto } from './dto/sys_UpdateCompany.dto';
 import { Sys_ResponseCompanyDto } from './dto/sys_ResponseCompany.dto';
+import { Sys_ResponseCompanyWithBranchesDto } from './dto/sys_ResponseCompanyWithBranches.dto';
 
 @Injectable()
 export class Sys_CompanyService {
@@ -37,6 +38,46 @@ export class Sys_CompanyService {
       throw new NotFoundException(`Company with ID ${id} not found`);
     }
     return company as Sys_ResponseCompanyDto;
+  }
+
+  /**
+   * Get company with branches
+   * Useful for login flow - frontend gets company + branches in one call
+   */
+  async findOneWithBranches(
+    id: string,
+  ): Promise<Sys_ResponseCompanyWithBranchesDto> {
+    const company = await this.prisma.sys_Company.findUnique({
+      where: { id },
+      include: {
+        branches: {
+          where: {
+            iStatus: 'Active', // Only return active branches
+          },
+          select: {
+            id: true,
+            name: true,
+            iStatus: true,
+          },
+          orderBy: {
+            name: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException(`Company with ID ${id} not found`);
+    }
+
+    return {
+      ...this.mapToResponseDto(company),
+      branches: company.branches.map((branch) => ({
+        id: branch.id.trim(),
+        name: branch.name.trim(),
+        iStatus: branch.iStatus,
+      })),
+    } as Sys_ResponseCompanyWithBranchesDto;
   }
 
   async update(

@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma.service';
 import { Sys_CreateUserCompanyRoleDto } from './dto/sys_CreateUserCompanyRole.dto';
 import { Sys_UpdateUserCompanyRoleDto } from './dto/sys_UpdateUserCompanyRole.dto';
 import { Sys_ResponseUserCompanyRoleDto } from './dto/sys_ResponseUserCompanyRole.dto';
+import { generateIncrementId } from '../../utils/generateIncrementId';
 
 @Injectable()
 export class Sys_UserCompanyRoleService {
@@ -47,8 +48,11 @@ export class Sys_UserCompanyRoleService {
       throw new ConflictException(`UserRole already assigned to this company`);
     }
 
+    const newId = await generateIncrementId(this.prisma, 'sys_UserCompanyRole');
+
     const userCompanyRole = await this.prisma.sys_UserCompanyRole.create({
       data: {
+        id: newId,
         ...createUserCompanyRoleDto,
         iStatus: createUserCompanyRoleDto.iStatus || 'Active',
       },
@@ -288,8 +292,11 @@ export class Sys_UserCompanyRoleService {
       throw new ConflictException(`UserRole already assigned to this company`);
     }
 
+    const newId = await generateIncrementId(this.prisma, 'sys_UserCompanyRole');
+
     const userCompanyRole = await this.prisma.sys_UserCompanyRole.create({
       data: {
+        id: newId,
         userRole_id,
         company_id,
         branch_id,
@@ -350,9 +357,14 @@ export class Sys_UserCompanyRoleService {
 
     // Create assignments
     const assignments = await Promise.all(
-      userRole_ids.map((userRole_id, index) =>
-        this.prisma.sys_UserCompanyRole.create({
+      userRole_ids.map(async (userRole_id, index) => {
+        const newId = await generateIncrementId(
+          this.prisma,
+          'sys_UserCompanyRole',
+        );
+        return this.prisma.sys_UserCompanyRole.create({
           data: {
+            id: newId,
             userRole_id,
             company_id,
             branch_id,
@@ -369,8 +381,8 @@ export class Sys_UserCompanyRoleService {
             company: true,
             permissions: true,
           },
-        }),
-      ),
+        });
+      }),
     );
 
     return assignments.map(this.mapToResponseDto);

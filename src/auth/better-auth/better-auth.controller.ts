@@ -34,8 +34,14 @@ export class BetterAuthController {
       email: string;
       password: string;
       image?: string;
+      company_id?: string;
+      branch_id?: string;
     },
   ) {
+    console.log('=== REGISTER CONTROLLER ===');
+    console.log('Received data:', body);
+    console.log('company_id:', body.company_id);
+    console.log('branch_id:', body.branch_id);
     return await this.betterAuthService.register(body);
   }
 

@@ -1,0 +1,52 @@
+### Variables
+@baseUrl = http://localhost:4000
+@email = test-{{$timestamp}}@example.com
+
+### 1. Test Registration WITH Company & Branch
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User With Branch",
+  "email": "{{email}}",
+  "password": "SecurePass123!",
+  "company_id": "COMP1",
+  "branch_id": "BR001"
+}
+
+### 2. Test Registration WITH Company Only (No Branch)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User No Branch",
+  "email": "test-nobranch-{{$timestamp}}@example.com",
+  "password": "SecurePass123!",
+  "company_id": "COMP1"
+}
+
+### 3. Test Registration WITHOUT Company & Branch (Should still work)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User No Company",
+  "email": "test-nocompany-{{$timestamp}}@example.com",
+  "password": "SecurePass123!"
+}
+
+### 4. Query Database - Check last user created
+# Jalankan di SQL Server Management Studio atau tools SQL lainnya:
+# SELECT TOP 5 id, name, email, company_id, branch_id, emailVerified 
+# FROM sys_User 
+# ORDER BY id DESC;
+
+### 5. Get All Companies (untuk cek company_id yang valid)
+GET {{baseUrl}}/sys_company
+
+### 6. Get All Branches (untuk cek branch_id yang valid)
+GET {{baseUrl}}/sys_branch
+
+### 7. Get Branches by Company ID
+GET {{baseUrl}}/sys_branch/company/COMP1
+

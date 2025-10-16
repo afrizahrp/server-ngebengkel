@@ -1,0 +1,42 @@
+### Test Company with Branches Endpoint
+
+@baseUrl = http://localhost:4000
+
+### 1. Get Company with Branches (Efficient for Login)
+GET {{baseUrl}}/sys_company/COMP1/with-branches
+
+### Expected Response:
+# {
+#   "id": "COMP1",
+#   "name": "PT. Test Company",
+#   "companyLogo": "...",
+#   "branches": [
+#     {
+#       "id": "BR001",
+#       "name": "Cabang Jakarta",
+#       "iStatus": "Active"
+#     },
+#     {
+#       "id": "BR002",
+#       "name": "Cabang Bandung",
+#       "iStatus": "Active"
+#     }
+#   ],
+#   ... (other company fields)
+# }
+
+### 2. Compare with Separate Calls (Old Way)
+# First get company
+GET {{baseUrl}}/sys_company/COMP1
+
+###
+# Then get branches
+GET {{baseUrl}}/sys_branch/company/COMP1
+
+### Benefits of /with-branches endpoint:
+# ✅ Single HTTP request instead of 2
+# ✅ Atomic operation - guaranteed consistency
+# ✅ Lower latency
+# ✅ Only returns active branches
+# ✅ Branches already sorted by name
+
