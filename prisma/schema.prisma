@@ -67,6 +67,7 @@ model saas_CompanySubscription {
   id                   String                     @db.Char(30) // Manual: SUB/2025/10/00001
   subscriptionNumber   String                     @db.VarChar(30)
   company_id           String                     @db.Char(5)
+  branch_id            String                     @db.Char(10)
   plan_id              String                     @db.Char(10)
   // Subscription Period
   startDate            DateTime                   @db.Date
@@ -142,6 +143,7 @@ model saas_SubscriptionBilling {
   dueDate           DateTime                 @db.Date
   subscription_id   String                   @db.Char(30)
   company_id        String                   @db.Char(5)
+  branch_id         String                   @db.Char(10)
   // Billing Period
   periodStart       DateTime                 @db.Date
   periodEnd         DateTime                 @db.Date
@@ -186,6 +188,7 @@ model saas_UsageTracking {
   id                    String                   @db.Char(30)
   subscription_id       String                   @db.Char(30)
   company_id            String                   @db.Char(5)
+  branch_id             String                   @db.Char(10)
   trackingDate          DateTime                 @default(now()) @db.Date
   // Usage Metrics
   totalUsers            Int?                     @default(0)
@@ -257,6 +260,7 @@ model saas_CompanyAddon {
   id              String                   @db.Char(30)
   subscription_id String                   @db.Char(30)
   company_id      String                   @db.Char(5)
+  branch_id       String                   @db.Char(10)
   addon_id        String                   @db.Char(10)
   // Activation
   activatedDate   DateTime                 @default(now())
@@ -294,10 +298,12 @@ model saas_CompanyAddon {
 /// Module untuk manage company, user, role, menu, dan permissions
 
 model sys_Company {
-  seq_no           Int                        @db.SmallInt
-  id               String                     @id @db.Char(5)
-  name             String?                    @db.VarChar(50)
-  iStatus          MasterRecordStatusEnum     @default(Active)
+  seq_no  Int                    @db.SmallInt
+  id      String                 @id @db.Char(5)
+  name    String?                @db.VarChar(50)
+  iStatus MasterRecordStatusEnum @default(Active)
+  isMain  Boolean?               @default(false)
+
   province         String?                    @db.VarChar(50)
   district         String?                    @db.VarChar(50)
   city             String?                    @db.VarChar(50)
@@ -342,11 +348,13 @@ model sys_Branch {
 }
 
 model sys_Role {
-  id        String                 @id @db.Char(20)
-  name      String                 @db.VarChar(20)
-  iStatus   MasterRecordStatusEnum @default(Active)
-  remarks   String?                @db.VarChar(255)
-  userRoles sys_UserRole[]
+  id         String                 @id @db.Char(20)
+  name       String                 @db.VarChar(20)
+  iStatus    MasterRecordStatusEnum @default(Active)
+  remarks    String?                @db.VarChar(255)
+  company_id String?                @db.Char(5)
+  branch_id  String?                @db.Char(10)
+  userRoles  sys_UserRole[]
 }
 
 model sys_WhiteListEmail {
@@ -372,6 +380,7 @@ model sys_User {
   // Employee Reference (setiap user harus terdaftar sebagai employee)
   employee_id        String?                 @db.Char(20)
   company_id         String?                 @db.Char(5)
+  branch_id          String?                 @db.Char(10)
   // Relations
   employee           cmf_Employee?           @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
   userRoles          sys_UserRole[]
@@ -384,40 +393,46 @@ model sys_User {
 }
 
 model sys_EmailVerification {
-  id        String   @id @default(cuid()) @db.VarChar(50)
-  user_id   Int      @db.SmallInt
-  token     String   @unique @db.VarChar(255)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid()) @db.VarChar(50)
+  user_id    Int      @db.SmallInt
+  token      String   @unique @db.VarChar(255)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  company_id String?  @db.Char(5)
+  branch_id  String?  @db.Char(10)
   // Relations
-  user      sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user       sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
 }
 
 model sys_TwoFactorToken {
-  id        String   @id @default(cuid()) @db.VarChar(50)
-  user_id   Int      @db.SmallInt
-  code      String   @db.VarChar(6) // 6-digit OTP
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid()) @db.VarChar(50)
+  user_id    Int      @db.SmallInt
+  code       String   @db.VarChar(6) // 6-digit OTP
+  expiresAt  DateTime
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  company_id String?  @db.Char(5)
+  branch_id  String?  @db.Char(10)
   // Relations
-  user      sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user       sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
   @@index([code])
 }
 
 model sys_PasswordReset {
-  id        Int      @id @default(autoincrement())
-  user_id   Int      @db.SmallInt
-  token     String   @unique @db.VarChar(255)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  used      Boolean  @default(false)
+  id         Int      @id @default(autoincrement())
+  user_id    Int      @db.SmallInt
+  token      String   @unique @db.VarChar(255)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  used       Boolean  @default(false)
+  company_id String?  @db.Char(5)
+  branch_id  String?  @db.Char(10)
   // Relations
-  user      sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user       sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([user_id])
@@ -440,6 +455,8 @@ model sys_Session {
   revokedAt      DateTime?
   revokedReason  String?                @db.VarChar(255)
   iStatus        MasterRecordStatusEnum @default(Active)
+  company_id     String?                @db.Char(5)
+  branch_id      String?                @db.Char(10)
   // Relations
   user           sys_User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -454,6 +471,8 @@ model sys_UserRole {
   role_id       String                 @db.Char(20)
   iStatus       MasterRecordStatusEnum @default(Active)
   isDefault     Boolean?               @default(false)
+  company_id    String?                @db.Char(5)
+  branch_id     String?                @db.Char(10)
   role          sys_Role               @relation(fields: [role_id], references: [id])
   user          sys_User               @relation(fields: [user_id], references: [id])
   userCompanies sys_UserCompanyRole[]
@@ -468,9 +487,10 @@ model sys_UserCompanyRole {
   branch_id   String                 @db.Char(10)
   iStatus     MasterRecordStatusEnum @default(Active)
   isDefault   Boolean?               @default(false)
+
   permissions sys_Menu_Permission[]
-  userRole    sys_UserRole           @relation(fields: [userRole_id], references: [id], onDelete: NoAction)
-  company     sys_Company            @relation(fields: [company_id], references: [id])
+  userRole    sys_UserRole          @relation(fields: [userRole_id], references: [id], onDelete: NoAction)
+  company     sys_Company           @relation(fields: [company_id], references: [id])
 
   @@unique([userRole_id, company_id], map: "unique_userRole_company")
 }
@@ -489,8 +509,6 @@ model sys_Menu {
   createdAt        DateTime              @default(now())
   updatedBy        String?               @db.Char(10)
   updatedAt        DateTime?
-  company_id       String                @db.Char(5)
-  branch_id        String                @db.Char(10)
   parent           sys_Menu?             @relation("SubMenu", fields: [parent_id], references: [id], onDelete: NoAction)
   child            sys_Menu[]            @relation("SubMenu")
   permissions      sys_Menu_Permission[] @relation("MenuPermissions")
@@ -511,8 +529,6 @@ model sys_Menu_Permission {
   createdAt          DateTime               @default(now())
   updatedBy          String?                @db.Char(10)
   updatedAt          DateTime?
-  company_id         String                 @db.Char(5)
-  branch_id          String                 @db.Char(10)
   menu               sys_Menu               @relation("MenuPermissions", fields: [menu_id], references: [id], onDelete: NoAction)
   userCompanyRole    sys_UserCompanyRole    @relation(fields: [userCompanyRole_id], references: [id], onDelete: NoAction)
 
@@ -882,6 +898,7 @@ model imc_ProductImage {
   updatedBy  String      @db.Char(10)
   updatedAt  DateTime
   company_id String      @db.Char(5)
+  branch_id  String      @db.Char(10)
   products   imc_Product @relation(fields: [product_id, company_id], references: [id, company_id], onUpdate: NoAction)
   // cms_Product cms_Product[]
 
@@ -1082,20 +1099,18 @@ model cmf_Employee {
 
 // Master Tipe Kendaraan (Mobil, Motor, Truk, dll)
 model wks_VehicleType {
-  id         String                 @db.Char(5)
-  name       String                 @db.VarChar(50) // Mobil, Motor, Truk, Bus, dll
-  iStatus    MasterRecordStatusEnum @default(Active)
-  remarks    String?                @db.VarChar(250)
-  seq        Int?                   @default(0)
-  createdBy  String?                @db.Char(10)
-  createdAt  DateTime               @default(now())
-  updatedBy  String?                @db.Char(10)
-  updatedAt  DateTime
-  company_id String                 @db.Char(5)
-  branch_id  String                 @db.Char(10)
-  brands     wks_VehicleBrand[]
+  id        String                 @db.Char(5)
+  name      String                 @db.VarChar(50) // Mobil, Motor, Truk, Bus, dll
+  iStatus   MasterRecordStatusEnum @default(Active)
+  remarks   String?                @db.VarChar(250)
+  seq       Int?                   @default(0)
+  createdBy String?                @db.Char(10)
+  createdAt DateTime               @default(now())
+  updatedBy String?                @db.Char(10)
+  updatedAt DateTime
+  brands    wks_VehicleBrand[]
 
-  @@id([company_id, id], map: "pk_wks_VehicleType")
+  @@id([id], map: "pk_wks_VehicleType")
 }
 
 // Master Merk Kendaraan (Toyota, Honda, Yamaha, dll)
@@ -1112,13 +1127,11 @@ model wks_VehicleBrand {
   createdAt      DateTime               @default(now())
   updatedBy      String?                @db.Char(10)
   updatedAt      DateTime
-  company_id     String                 @db.Char(5)
-  branch_id      String                 @db.Char(10)
-  vehicleType    wks_VehicleType        @relation(fields: [company_id, vehicleType_id], references: [company_id, id], onUpdate: NoAction)
+  vehicleType    wks_VehicleType        @relation(fields: [vehicleType_id], references: [id], onUpdate: NoAction)
   models         wks_VehicleModel[]
   vehicles       cmf_CustomerVehicle[]
 
-  @@id([company_id, vehicleType_id, id], map: "pk_wks_VehicleBrand")
+  @@id([vehicleType_id, id], map: "pk_wks_VehicleBrand")
 }
 
 // Master Model Kendaraan (Avanza, Xenia, Vario, Beat, dll)
@@ -1140,12 +1153,11 @@ model wks_VehicleModel {
   createdAt      DateTime               @default(now())
   updatedBy      String?                @db.Char(10)
   updatedAt      DateTime
-  company_id     String                 @db.Char(5)
-  branch_id      String                 @db.Char(10)
-  brand          wks_VehicleBrand       @relation(fields: [company_id, vehicleType_id, brand_id], references: [company_id, vehicleType_id, id], onUpdate: NoAction)
-  vehicles       cmf_CustomerVehicle[]
 
-  @@id([company_id, vehicleType_id, brand_id, id], map: "pk_wks_VehicleModel")
+  brand    wks_VehicleBrand      @relation(fields: [vehicleType_id, brand_id], references: [vehicleType_id, id], onUpdate: NoAction)
+  vehicles cmf_CustomerVehicle[]
+
+  @@id([vehicleType_id, brand_id, id], map: "pk_wks_VehicleModel")
 }
 
 // Master Customer
@@ -1314,8 +1326,8 @@ model cmf_CustomerVehicle {
   branch_id           String                  @db.Char(10)
   // Relations
   customer            cmf_Customer            @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
-  brand               wks_VehicleBrand        @relation(fields: [company_id, vehicleType_id, brand_id], references: [company_id, vehicleType_id, id], onUpdate: NoAction)
-  model               wks_VehicleModel        @relation(fields: [company_id, vehicleType_id, brand_id, model_id], references: [company_id, vehicleType_id, brand_id, id], onUpdate: NoAction)
+  brand               wks_VehicleBrand        @relation(fields: [vehicleType_id, brand_id], references: [vehicleType_id, id], onUpdate: NoAction)
+  model               wks_VehicleModel        @relation(fields: [vehicleType_id, brand_id, model_id], references: [vehicleType_id, brand_id, id], onUpdate: NoAction)
   serviceOrders       wks_ServiceOrder[]
   serviceHistory      wks_ServiceHistory[]
   complaints          wks_CustomerComplaint[]
@@ -2376,27 +2388,23 @@ model cmf_TransactionType {
   createdAt       DateTime               @default(now())
   updatedBy       String?                @db.Char(10)
   updatedAt       DateTime
-  company_id      String                 @db.Char(5)
-  branch_id       String                 @db.Char(10)
 
-  @@id([company_id, id], map: "pk_cmf_TransactionType")
+  @@id([id], map: "pk_cmf_TransactionType")
 }
 
 // Master Transaction Class (Kelas Transaksi)
 model cmf_TransactionClass {
-  id         String                 @db.Char(10) // SALES, PURCHASE, CASH, BANK, INVENTORY, JOURNAL
-  name       String                 @db.VarChar(50)
-  seq        Int?                   @default(0)
-  iStatus    MasterRecordStatusEnum @default(Active)
-  remarks    String?                @db.VarChar(250)
-  createdBy  String?                @db.Char(10)
-  createdAt  DateTime               @default(now())
-  updatedBy  String?                @db.Char(10)
-  updatedAt  DateTime
-  company_id String                 @db.Char(5)
-  branch_id  String                 @db.Char(10)
+  id        String                 @db.Char(10) // SALES, PURCHASE, CASH, BANK, INVENTORY, JOURNAL
+  name      String                 @db.VarChar(50)
+  seq       Int?                   @default(0)
+  iStatus   MasterRecordStatusEnum @default(Active)
+  remarks   String?                @db.VarChar(250)
+  createdBy String?                @db.Char(10)
+  createdAt DateTime               @default(now())
+  updatedBy String?                @db.Char(10)
+  updatedAt DateTime
 
-  @@id([company_id, id], map: "pk_cmf_TransactionClass")
+  @@id([id], map: "pk_cmf_TransactionClass")
 }
 
 // Master Payment Method (Metode Pembayaran)
@@ -2415,14 +2423,12 @@ model cmf_PaymentMethod {
   createdAt          DateTime               @default(now())
   updatedBy          String?                @db.Char(10)
   updatedAt          DateTime
-  company_id         String                 @db.Char(5)
-  branch_id          String                 @db.Char(10)
   payments           arm_Payment[]
   paymentDetails     arm_PaymentDetail[]
   apPayments         apm_Payment[]
   apPaymentDetails   apm_PaymentDetail[]
 
-  @@id([company_id, id], map: "pk_cmf_PaymentMethod")
+  @@id([id], map: "pk_cmf_PaymentMethod")
 }
 
 // Chart of Account (COA)
@@ -2733,7 +2739,7 @@ model arm_Payment {
   // Relations
   invoice           arm_Invoice              @relation(fields: [company_id, invoice_id], references: [company_id, id], onUpdate: NoAction)
   customer          cmf_Customer             @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
-  paymentMethod     cmf_PaymentMethod        @relation(fields: [company_id, paymentMethod_id], references: [company_id, id], onUpdate: NoAction)
+  paymentMethod     cmf_PaymentMethod        @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
   bankAccount       acc_BankAccount?         @relation(fields: [company_id, bankAccount_id], references: [company_id, id], onUpdate: NoAction)
   paymentDetails    arm_PaymentDetail[]
   glTrans           acc_GLTrans[]
@@ -2761,7 +2767,7 @@ model arm_PaymentDetail {
   branch_id        String                 @db.Char(10)
   // Relations
   payment          arm_Payment            @relation(fields: [company_id, payment_id], references: [company_id, id], onUpdate: NoAction)
-  paymentMethod    cmf_PaymentMethod      @relation(fields: [company_id, paymentMethod_id], references: [company_id, id], onUpdate: NoAction)
+  paymentMethod    cmf_PaymentMethod      @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_arm_PaymentDetail")
   @@index([company_id, payment_id], map: "idx_payment_detail")
@@ -2988,7 +2994,7 @@ model apm_Payment {
   // Relations
   apInvoice         apm_Invoice                @relation(fields: [company_id, apInvoice_id], references: [company_id, id], onUpdate: NoAction)
   supplier          prc_Supplier               @relation(fields: [company_id, supplier_id], references: [company_id, id], onUpdate: NoAction)
-  paymentMethod     cmf_PaymentMethod          @relation(fields: [company_id, paymentMethod_id], references: [company_id, id], onUpdate: NoAction)
+  paymentMethod     cmf_PaymentMethod          @relation(fields: [id], onUpdate: NoAction, references: [id])
   bankAccount       acc_BankAccount?           @relation(fields: [company_id, bankAccount_id], references: [company_id, id], onUpdate: NoAction)
   paymentDetails    apm_PaymentDetail[]
   glTrans           acc_GLTrans[]
@@ -3016,7 +3022,7 @@ model apm_PaymentDetail {
   branch_id        String                 @db.Char(10)
   // Relations
   apPayment        apm_Payment            @relation(fields: [company_id, apPayment_id], references: [company_id, id], onUpdate: NoAction)
-  paymentMethod    cmf_PaymentMethod      @relation(fields: [company_id, paymentMethod_id], references: [company_id, id], onUpdate: NoAction)
+  paymentMethod    cmf_PaymentMethod      @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_apm_PaymentDetail")
   @@index([company_id, apPayment_id], map: "idx_ap_payment_detail")

@@ -655,3 +655,5 @@ WHERE "isActive" = true
 GROUP BY "deviceType";
 ```
 
+
+

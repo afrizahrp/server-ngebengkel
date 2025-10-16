@@ -33,9 +33,8 @@ export class sys_MenuService {
     return this.mapToResponseDto(menu);
   }
 
-  async findAll(company_id: string): Promise<Sys_MenuWithPermissionDto[]> {
+  async findAll(): Promise<Sys_MenuWithPermissionDto[]> {
     const menus = await this.prisma.sys_Menu.findMany({
-      where: { company_id },
       include: {
         permissions: true,
         child: {

@@ -59,12 +59,4 @@ export class Sys_UpdateMenuPermissionDto {
   @IsDate()
   @IsOptional()
   updatedAt?: Date;
-
-  @IsString()
-  @IsOptional()
-  company_id?: string;
-
-  @IsString()
-  @IsOptional()
-  branch_id?: string;
 }

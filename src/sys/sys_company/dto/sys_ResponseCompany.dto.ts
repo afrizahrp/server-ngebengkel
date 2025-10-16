@@ -81,6 +81,10 @@ export class Sys_ResponseCompanyDto {
 
   @IsString()
   @IsOptional()
+  companyLogo?: string;
+
+  @IsString()
+  @IsOptional()
   createdBy?: string;
 
   @IsDate()

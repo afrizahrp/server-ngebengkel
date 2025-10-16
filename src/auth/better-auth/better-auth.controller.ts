@@ -14,14 +14,9 @@ import { Public } from '../decorators/public.decorator';
 import { Roles } from '../decorators/roles.decorator';
 import { BetterRefreshGuard } from './guards/better-refresh.guard';
 import { Response } from 'express';
-
-interface AuthRequest {
-  user: {
-    id: number;
-    role_id: string;
-  };
-  refreshToken?: string;
-}
+import { AuthRequest } from '../types/auth-request.interface';
+import { CurrentUser } from '../decorators/current-user.decorator';
+import { AuthenticatedUser } from '../types/auth-request.interface';
 
 @Controller('auth')
 export class BetterAuthController {
@@ -172,6 +167,44 @@ export class BetterAuthController {
   }
 
   /**
+   * Test endpoint untuk company & branch dari JWT
+   */
+  @Get('test-company-branch')
+  testCompanyBranch(@CurrentUser() user: AuthenticatedUser) {
+    return {
+      message: 'Company ID and Branch ID are available from JWT token',
+      user: {
+        id: user.id,
+        role_id: user.role_id,
+        company_id: user.company_id,
+        branch_id: user.branch_id,
+      },
+    };
+  }
+
+  /**
+   * Test endpoint - hanya ambil company_id
+   */
+  @Get('test-company-only')
+  testCompanyOnly(@CurrentUser('company_id') companyId: string) {
+    return {
+      message: 'Get company_id only from decorator',
+      company_id: companyId,
+    };
+  }
+
+  /**
+   * Test endpoint - hanya ambil branch_id
+   */
+  @Get('test-branch-only')
+  testBranchOnly(@CurrentUser('branch_id') branchId: string) {
+    return {
+      message: 'Get branch_id only from decorator',
+      branch_id: branchId,
+    };
+  }
+
+  /**
    * Google OAuth Login - Initiate
    */
   @Public()
@@ -225,7 +258,22 @@ export class BetterAuthController {
 
       // Redirect ke frontend dengan tokens
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const redirectUrl = `${frontendUrl}/auth/google/callback?accessToken=${loginResult.accessToken}&refreshToken=${loginResult.refreshToken}&sessionId=${loginResult.sessionId}`;
+
+      // Build URL dengan semua parameter yang diperlukan
+      const params = new URLSearchParams({
+        accessToken: loginResult.accessToken,
+        refreshToken: loginResult.refreshToken,
+        sessionId: loginResult.sessionId,
+        userId: loginResult.user.id.toString(),
+        name: loginResult.user.name,
+        email: loginResult.user.email,
+        image: loginResult.user.image || '',
+        company_id: loginResult.user.company?.company_id || 'BIS',
+        role_id: loginResult.user.company?.role_id || 'ADMIN',
+        role_name: loginResult.user.company?.role_name || 'ADMINISTRATOR',
+      });
+
+      const redirectUrl = `${frontendUrl}/auth/google/callback?${params.toString()}`;
 
       res.redirect(redirectUrl);
     } catch (error) {

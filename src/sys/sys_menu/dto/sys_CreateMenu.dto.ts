@@ -54,10 +54,4 @@ export class Sys_CreateMenuDto {
   @IsDate()
   @IsOptional()
   updatedAt?: Date;
-
-  @IsString()
-  company_id: string;
-
-  @IsString()
-  branch_id: string;
 }

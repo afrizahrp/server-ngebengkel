@@ -91,9 +91,9 @@ export class Sys_CompanyService {
       email2: company.email2?.trim(),
       email3: company.email3?.trim(),
       officialWebsite: company.officialWebsite?.trim(),
+      companyLogo: company.companyLogo?.trim(),
       createdBy: company.createdBy?.trim(),
       updatedBy: company.updatedBy?.trim(),
-      image: company.image?.trim(),
     };
   }
 }

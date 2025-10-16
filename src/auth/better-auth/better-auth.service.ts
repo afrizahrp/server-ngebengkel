@@ -22,6 +22,8 @@ import { randomBytes } from 'crypto';
 interface UserPayload {
   sub: number;
   role_id: string;
+  company_id: string;
+  branch_id: string;
 }
 
 @Injectable()
@@ -161,6 +163,8 @@ export class BetterAuthService {
     const tokens = await this.generateTokens(
       user.id,
       selectedCompany.userRole.role_id,
+      selectedCompany.company_id,
+      selectedCompany.branch_id,
     );
 
     // Calculate expiry date (7 days from now)
@@ -256,6 +260,8 @@ export class BetterAuthService {
     const tokens = await this.generateTokens(
       user.id,
       selectedCompany.userRole.role_id,
+      selectedCompany.company_id,
+      selectedCompany.branch_id,
     );
 
     // Calculate expiry date (7 days from now)
@@ -351,6 +357,8 @@ export class BetterAuthService {
     const tokens = await this.generateTokens(
       user.id,
       selectedCompany?.userRole?.role_id || 'ADMIN',
+      selectedCompany?.company_id || '',
+      selectedCompany?.branch_id || '',
     );
 
     // Calculate expiry date (7 days from now)
@@ -417,6 +425,8 @@ export class BetterAuthService {
     const tokens = await this.generateTokens(
       userId,
       selectedCompany?.userRole?.role_id || 'USER',
+      selectedCompany?.company_id || '',
+      selectedCompany?.branch_id || '',
     );
 
     // Update session dengan refresh token baru
@@ -640,10 +650,17 @@ export class BetterAuthService {
   /**
    * Generate JWT access & refresh tokens
    */
-  private async generateTokens(userId: number, roleId: string) {
+  private async generateTokens(
+    userId: number,
+    roleId: string,
+    companyId: string,
+    branchId: string,
+  ) {
     const payload: UserPayload = {
       sub: userId,
       role_id: roleId,
+      company_id: companyId,
+      branch_id: branchId,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -693,13 +710,18 @@ export class BetterAuthService {
       throw new ConflictException('No active company found');
     }
 
-    // Get default role (MANAGER)
+    // Get default role (USER untuk Google OAuth)
     const defaultRole = await this.prisma.sys_Role.findFirst({
-      where: { iStatus: 'Active' },
+      where: {
+        iStatus: 'Active',
+        name: 'USER',
+      },
     });
 
     if (!defaultRole) {
-      throw new ConflictException('No active role found');
+      throw new ConflictException(
+        'USER role not found. Please create USER role first.',
+      );
     }
 
     // Create or get user role

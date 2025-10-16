@@ -57,10 +57,4 @@ export class Sys_CreateMenuPermissionDto {
   @IsDate()
   @IsOptional()
   updatedAt?: Date;
-
-  @IsString()
-  company_id: string;
-
-  @IsString()
-  branch_id: string;
 }

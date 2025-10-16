@@ -44,6 +44,8 @@ export class BetterJwtAuthGuard implements CanActivate {
       request.user = {
         id: payload.sub,
         role_id: payload.role_id,
+        company_id: payload.company_id,
+        branch_id: payload.branch_id,
       };
 
       return true;
@@ -62,5 +64,3 @@ export class BetterJwtAuthGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 }
-
-

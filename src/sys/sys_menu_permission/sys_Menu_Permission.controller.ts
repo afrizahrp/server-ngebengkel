@@ -13,7 +13,7 @@ import { Sys_UpdateMenuPermissionDto } from './dto/sys_UpdateMenuPermission.dto'
 import { Sys_ResponseMenuPermissionDto } from './dto/sys_ResponseMenuPermission.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 
-@Controller(':company_id/sys_menu_permission')
+@Controller(':sys_menu_permission')
 export class sys_MenuPermissionController {
   constructor(
     private readonly menuPermissionService: sys_MenuPermissionService,
@@ -28,10 +28,8 @@ export class sys_MenuPermissionController {
 
   @Public()
   @Get()
-  async findAll(
-    @Param('company_id') company_id: string,
-  ): Promise<Sys_ResponseMenuPermissionDto[]> {
-    return this.menuPermissionService.findAll(company_id);
+  async findAll(): Promise<Sys_ResponseMenuPermissionDto[]> {
+    return this.menuPermissionService.findAll();
   }
 
   @Get(':id')

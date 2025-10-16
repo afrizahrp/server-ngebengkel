@@ -53,10 +53,4 @@ export class Sys_ResponseMenuPermissionDto {
   @IsDate()
   @IsOptional()
   updatedAt?: Date;
-
-  @IsString()
-  company_id: string;
-
-  @IsString()
-  branch_id: string;
 }

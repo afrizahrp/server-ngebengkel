@@ -31,6 +31,8 @@ export class BetterRefreshGuard implements CanActivate {
       request.user = {
         id: payload.sub,
         role_id: payload.role_id,
+        company_id: payload.company_id,
+        branch_id: payload.branch_id,
       };
       request.refreshToken = token;
 
@@ -50,5 +52,3 @@ export class BetterRefreshGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 }
-
-

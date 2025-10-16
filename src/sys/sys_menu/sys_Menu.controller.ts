@@ -13,27 +13,23 @@ import { sys_MenuService } from './sys_Menu.service';
 import { Sys_CreateMenuDto } from './dto/sys_CreateMenu.dto';
 import { Sys_UpdateMenuDto } from './dto/sys_UpdateMenu.dto';
 import { Sys_ResponseMenuDto } from './dto/sys_ResponseMenu.dto';
-import { Sys_MenuWithPermissionDto } from './dto/sys_MenuWithPermission.dto';
 import { MenuItemDto } from './dto/sys_MenuItem.dto';
 
-@Controller(':company_id/sys_menu')
+@Controller(':sys_menu')
 export class sys_MenuController {
   constructor(private readonly menuService: sys_MenuService) {}
 
   @Post()
   async create(
-    @Param('company_id') company_id: string,
     @Body() createMenuDto: Sys_CreateMenuDto,
   ): Promise<Sys_ResponseMenuDto> {
-    return this.menuService.create({ ...createMenuDto, company_id });
+    return this.menuService.create({ ...createMenuDto });
   }
 
   @Public()
   @Get()
-  async findAll(
-    @Param('company_id') company_id: string,
-  ): Promise<Sys_ResponseMenuDto[]> {
-    return this.menuService.findAll(company_id);
+  async findAll(): Promise<Sys_ResponseMenuDto[]> {
+    return this.menuService.findAll();
   }
 
   @Get(':id')

@@ -13,14 +13,7 @@ import {
 import { SessionService } from './session.service';
 import { SessionQueryDto } from '../dto/session-query.dto';
 import { RevokeSessionDto } from '../dto/revoke-session.dto';
-
-interface AuthRequest {
-  user: {
-    id: number;
-    role_id: string;
-  };
-  sessionId?: string;
-}
+import { AuthRequest } from '../types/auth-request.interface';
 
 @Controller('sessions')
 export class SessionController {
@@ -145,4 +138,3 @@ export class SessionController {
     };
   }
 }
-
