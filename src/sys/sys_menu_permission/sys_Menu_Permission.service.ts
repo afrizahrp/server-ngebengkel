@@ -82,8 +82,6 @@ export class sys_MenuPermissionService {
       createdAt: menuPermission.createdAt,
       updatedBy: menuPermission.updatedBy,
       updatedAt: menuPermission.updatedAt,
-      company_id: menuPermission.company_id,
-      branch_id: menuPermission.branch_id,
     };
   }
 }

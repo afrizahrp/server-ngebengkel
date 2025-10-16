@@ -60,6 +60,29 @@ export class BetterAuthService {
       throw new ConflictException('User already exists');
     }
 
+    // Cek apakah role USER ada sebelum membuat user baru
+    const defaultRole = await this.prisma.sys_Role.findFirst({
+      where: {
+        iStatus: 'Active',
+        id: 'USER',
+      },
+    });
+
+    if (!defaultRole) {
+      throw new ConflictException(
+        'USER role not found. Please create USER role first.',
+      );
+    }
+
+    // Cek apakah ada company active
+    const defaultCompany = await this.prisma.sys_Company.findFirst({
+      where: { iStatus: 'Active' },
+    });
+
+    if (!defaultCompany) {
+      throw new ConflictException('No active company found');
+    }
+
     // Hash password
     const hashedPassword = await hash(data.password);
 
@@ -733,8 +756,11 @@ export class BetterAuthService {
     });
 
     if (!userRole) {
+      const userRoleId = await generateIncrementId(this.prisma, 'sys_UserRole');
+
       userRole = await this.prisma.sys_UserRole.create({
         data: {
+          id: userRoleId,
           user_id: userId,
           role_id: defaultRole.id.trim(),
           iStatus: 'Active',

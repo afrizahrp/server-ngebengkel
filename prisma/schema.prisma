@@ -466,7 +466,7 @@ model sys_Session {
 }
 
 model sys_UserRole {
-  id            Int                    @id @default(autoincrement()) @db.SmallInt
+  id            Int                    @id @db.SmallInt
   user_id       Int                    @db.SmallInt
   role_id       String                 @db.Char(20)
   iStatus       MasterRecordStatusEnum @default(Active)
@@ -481,7 +481,7 @@ model sys_UserRole {
 }
 
 model sys_UserCompanyRole {
-  id          Int                    @id @default(autoincrement()) @db.SmallInt
+  id          Int                    @id @db.SmallInt
   userRole_id Int                    @db.SmallInt
   company_id  String                 @db.Char(5)
   branch_id   String                 @db.Char(10)
