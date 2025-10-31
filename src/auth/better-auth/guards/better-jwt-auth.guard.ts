@@ -7,6 +7,9 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
+import { AuthTokenService } from '../services/auth-token.service';
+import { SessionService } from '../../session/session.service';
 import { IS_PUBLIC_KEY } from '../../decorators/public.decorator';
 
 @Injectable()
@@ -15,6 +18,8 @@ export class BetterJwtAuthGuard implements CanActivate {
     private reflector: Reflector,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private readonly authTokenService: AuthTokenService,
+    private readonly sessionService: SessionService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,7 +33,9 @@ export class BetterJwtAuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const http = context.switchToHttp();
+    const request = http.getRequest();
+    const response: Response = http.getResponse();
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
@@ -50,7 +57,69 @@ export class BetterJwtAuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Invalid token');
+      // Jika token expired, coba auto-refresh menggunakan refresh token
+      const expiredByName =
+        error && (error as any).name === 'TokenExpiredError';
+      const expiredByMessage =
+        error &&
+        typeof (error as any).message === 'string' &&
+        (error as any).message.includes('expired');
+      const isExpired = Boolean(expiredByName || expiredByMessage);
+      if (!isExpired) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      // Ambil refresh token dari header Authorization: Bearer <refresh>
+      // atau header khusus 'x-refresh-token'
+      const refreshToken =
+        this.extractTokenFromHeader(request) ||
+        request.headers['x-refresh-token'];
+
+      if (!refreshToken || typeof refreshToken !== 'string') {
+        throw new UnauthorizedException('Access token expired');
+      }
+
+      // Verify refresh token dan rotasi token
+      const refreshPayload =
+        await this.authTokenService.verifyRefreshToken(refreshToken);
+
+      // Validasi session berdasarkan refresh token
+      const session = await this.sessionService.getSessionByRefreshToken(
+        refreshPayload.sub,
+        refreshToken,
+      );
+
+      // Generate token baru
+      const tokens = await this.authTokenService.generateTokens(
+        refreshPayload.sub,
+        refreshPayload.role_id,
+        refreshPayload.company_id,
+        refreshPayload.branch_id,
+      );
+
+      // Update session: hash refresh token baru, set hasRefreshedToken = true
+      const { hash } = await import('argon2');
+      const hashedRefreshToken = await hash(tokens.refreshToken);
+      await this.sessionService.rotateRefreshTokenAndFlag(
+        session.id,
+        hashedRefreshToken,
+        true,
+      );
+
+      // Set header untuk mengembalikan token baru ke client
+      response.setHeader('x-access-token', tokens.accessToken);
+      response.setHeader('x-refresh-token', tokens.refreshToken);
+      response.setHeader('x-token-refreshed', 'true');
+
+      // Attach user baru ke request
+      request.user = {
+        id: refreshPayload.sub,
+        role_id: refreshPayload.role_id,
+        company_id: refreshPayload.company_id,
+        branch_id: refreshPayload.branch_id,
+      };
+
+      return true;
     }
   }
 

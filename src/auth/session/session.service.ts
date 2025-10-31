@@ -80,6 +80,7 @@ export class SessionService {
         os,
         ipAddress,
         userAgent,
+        hasRefreshedToken: false,
         expiresAt,
         isActive: true,
         iStatus: 'Active',
@@ -196,6 +197,26 @@ export class SessionService {
     return await this.prisma.sys_Session.update({
       where: { id: sessionId },
       data: {
+        lastActivityAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Rotasi refresh token dan set flag hasRefreshedToken
+   */
+  async rotateRefreshTokenAndFlag(
+    sessionId: string,
+    hashedRefreshToken: string,
+    hasRefreshedToken = true,
+  ) {
+    // gunakan any agar kompatibel dengan tipe Prisma lama sebelum generate ulang
+    const prismaAny = this.prisma as any;
+    return await prismaAny.sys_Session.update({
+      where: { id: sessionId },
+      data: {
+        refreshToken: hashedRefreshToken,
+        hasRefreshedToken,
         lastActivityAt: new Date(),
       },
     });

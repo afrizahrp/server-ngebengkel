@@ -16,6 +16,9 @@ import { sys_MenuModule } from './sys/sys_menu/sys_Menu.module';
 import { sys_MenuPermissionModule } from './sys/sys_menu_permission/sys_Menu_Permission.module';
 import { EmailModule } from './email/email.module';
 import { CleanupModule } from './auth/cleanup/cleanup.module';
+import { BookingModule } from './wks/booking/booking.module';
+import { ServiceOrderModule } from './wks/service-order/service-order.module';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -24,6 +27,7 @@ import { CleanupModule } from './auth/cleanup/cleanup.module';
     }),
     ScheduleModule.forRoot(),
     EmailModule,
+    WhatsAppModule,
     BetterAuthModule,
     CleanupModule,
     sys_CompanyModule,
@@ -33,6 +37,8 @@ import { CleanupModule } from './auth/cleanup/cleanup.module';
     Sys_UserCompanyRoleModule,
     sys_MenuModule,
     sys_MenuPermissionModule,
+    BookingModule,
+    ServiceOrderModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -439,26 +439,27 @@ model sys_PasswordReset {
 }
 
 model sys_Session {
-  id             String                 @id @default(cuid()) @db.VarChar(50)
-  user_id        Int                    @db.Integer
-  refreshToken   String                 @unique @db.VarChar(500)
-  deviceName     String?                @db.VarChar(255)
-  deviceType     String?                @db.VarChar(50) // mobile, desktop, tablet
-  browser        String?                @db.VarChar(100)
-  os             String?                @db.VarChar(100)
-  ipAddress      String?                @db.VarChar(45) // IPv6 support
-  userAgent      String?                @db.Text
-  isActive       Boolean                @default(true)
-  lastActivityAt DateTime               @default(now())
-  expiresAt      DateTime
-  createdAt      DateTime               @default(now())
-  revokedAt      DateTime?
-  revokedReason  String?                @db.VarChar(255)
-  iStatus        MasterRecordStatusEnum @default(Active)
-  company_id     String?                @db.Char(5)
-  branch_id      String?                @db.Char(10)
+  id                String                 @id @default(cuid()) @db.VarChar(50)
+  user_id           Int                    @db.Integer
+  refreshToken      String                 @unique @db.VarChar(500)
+  deviceName        String?                @db.VarChar(255)
+  deviceType        String?                @db.VarChar(50) // mobile, desktop, tablet
+  browser           String?                @db.VarChar(100)
+  os                String?                @db.VarChar(100)
+  ipAddress         String?                @db.VarChar(45) // IPv6 support
+  userAgent         String?                @db.Text
+  isActive          Boolean                @default(true)
+  lastActivityAt    DateTime               @default(now())
+  expiresAt         DateTime
+  createdAt         DateTime               @default(now())
+  revokedAt         DateTime?
+  revokedReason     String?                @db.VarChar(255)
+  hasRefreshedToken Boolean                @default(false)
+  iStatus           MasterRecordStatusEnum @default(Active)
+  company_id        String?                @db.Char(5)
+  branch_id         String?                @db.Char(10)
   // Relations
-  user           sys_User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user              sys_User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
   @@index([refreshToken])
@@ -1240,6 +1241,7 @@ model cmf_Customer {
   contactPersons            cmf_CustomerContactPerson[]
   serviceReworks            wks_ServiceRework[]
   creditNotes               arm_CreditNote[]
+  wks_ServiceBooking        wks_ServiceBooking[]
 
   @@id([company_id, id], map: "pk_cmf_Customer")
   @@unique([company_id, mobile1], map: "unique_customer_mobile")
@@ -1334,6 +1336,7 @@ model cmf_CustomerVehicle {
   invoices            arm_Invoice[]
   serviceReworks      wks_ServiceRework[]
   creditNotes         arm_CreditNote[]
+  wks_ServiceBooking  wks_ServiceBooking[]
 
   @@id([company_id, customer_id, id], map: "pk_cmf_CustomerVehicle")
   @@unique([company_id, licensePlate], map: "unique_license_plate")
@@ -1366,6 +1369,7 @@ model wks_ServiceType {
   company_id          String                   @db.Char(5)
   branch_id           String                   @db.Char(10)
   serviceOrderDetails wks_ServiceOrderDetail[]
+  wks_ServiceBooking  wks_ServiceBooking[]
 
   @@id([company_id, id], map: "pk_wks_ServiceType")
 }
@@ -1373,28 +1377,30 @@ model wks_ServiceType {
 // Master Mekanik/Teknisi
 // Mechanic Profile - Extended dari cmf_Employee
 model cmf_Mechanic {
-  id                  String                   @db.Char(10)
-  employee_id         String                   @db.Char(20) // Reference ke cmf_Employee
-  specialization      String?                  @db.VarChar(100) // Mesin, Body, Elektrik, AC, dll
-  level               MechanicLevelEnum?       @default(JUNIOR) // JUNIOR, SENIOR, MASTER, FOREMAN
+  id                       String                     @db.Char(10)
+  employee_id              String                     @db.Char(20) // Reference ke cmf_Employee
+  specialization           String?                    @db.VarChar(100) // Mesin, Body, Elektrik, AC, dll
+  level                    MechanicLevelEnum?         @default(JUNIOR) // JUNIOR, SENIOR, MASTER, FOREMAN
   // Performance Tracking
-  totalJobs           Int?                     @default(0)
-  averageRating       Decimal?                 @db.Decimal(3, 2) // Rating 0.00 - 5.00
+  totalJobs                Int?                       @default(0)
+  averageRating            Decimal?                   @db.Decimal(3, 2) // Rating 0.00 - 5.00
   // Status
-  iStatus             MasterRecordStatusEnum   @default(Active)
-  isAvailable         Boolean?                 @default(true)
-  remarks             String?                  @db.VarChar(250)
-  createdBy           String?                  @db.Char(10)
-  createdAt           DateTime                 @default(now())
-  updatedBy           String?                  @db.Char(10)
-  updatedAt           DateTime
-  company_id          String                   @db.Char(5)
-  branch_id           String                   @db.Char(10)
+  iStatus                  MasterRecordStatusEnum     @default(Active)
+  isAvailable              Boolean?                   @default(true)
+  remarks                  String?                    @db.VarChar(250)
+  createdBy                String?                    @db.Char(10)
+  createdAt                DateTime                   @default(now())
+  updatedBy                String?                    @db.Char(10)
+  updatedAt                DateTime
+  company_id               String                     @db.Char(5)
+  branch_id                String                     @db.Char(10)
   // Relations
-  employee            cmf_Employee             @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
-  serviceOrders       wks_ServiceOrder[]
-  serviceOrderDetails wks_ServiceOrderDetail[]
-  serviceReworks      wks_ServiceRework[]
+  employee                 cmf_Employee               @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
+  serviceOrders            wks_ServiceOrder[]
+  serviceOrderDetails      wks_ServiceOrderDetail[]
+  serviceReworks           wks_ServiceRework[]
+  wks_MechanicAvailability wks_MechanicAvailability[]
+  wks_ServiceBooking       wks_ServiceBooking[]
 
   @@id([company_id, id], map: "pk_cmf_Mechanic")
   @@unique([company_id, employee_id], map: "unique_mechanic_employee")
@@ -1403,23 +1409,196 @@ model cmf_Mechanic {
 
 // Master Service Bay/Stall (Tempat Service)
 model wks_ServiceBay {
-  id             String                 @db.Char(10)
-  name           String                 @db.VarChar(50) // Bay 1, Bay 2, Stall A, dll
-  bayType        ServiceBayTypeEnum? // GENERAL, HEAVY_DUTY, QUICK_SERVICE, BODYWORK, WASH
-  capacity       Int?                   @default(1) // Jumlah kendaraan yang muat
-  iStatus        MasterRecordStatusEnum @default(Active)
-  isOccupied     Boolean?               @default(false)
-  remarks        String?                @db.VarChar(250)
-  createdBy      String?                @db.Char(10)
-  createdAt      DateTime               @default(now())
-  updatedBy      String?                @db.Char(10)
-  updatedAt      DateTime
-  company_id     String                 @db.Char(5)
-  branch_id      String                 @db.Char(10)
-  serviceOrders  wks_ServiceOrder[]
-  serviceReworks wks_ServiceRework[]
+  id                 String                 @db.Char(10)
+  name               String                 @db.VarChar(50) // Bay 1, Bay 2, Stall A, dll
+  bayType            ServiceBayTypeEnum? // GENERAL, HEAVY_DUTY, QUICK_SERVICE, BODYWORK, WASH
+  capacity           Int?                   @default(1) // Jumlah kendaraan yang muat
+  iStatus            MasterRecordStatusEnum @default(Active)
+  isOccupied         Boolean?               @default(false)
+  remarks            String?                @db.VarChar(250)
+  createdBy          String?                @db.Char(10)
+  createdAt          DateTime               @default(now())
+  updatedBy          String?                @db.Char(10)
+  updatedAt          DateTime
+  company_id         String                 @db.Char(5)
+  branch_id          String                 @db.Char(10)
+  serviceOrders      wks_ServiceOrder[]
+  serviceReworks     wks_ServiceRework[]
+  wks_BayBlock       wks_BayBlock[]
+  wks_BookingSlot    wks_BookingSlot[]
+  wks_ServiceBooking wks_ServiceBooking[]
 
   @@id([company_id, id], map: "pk_wks_ServiceBay")
+}
+
+// ============================================================================
+// SERVICE BOOKING & SCHEDULING
+// ============================================================================
+
+enum BookingStatusEnum {
+  PENDING    @map("0") // Baru dibuat, menunggu konfirmasi
+  CONFIRMED  @map("1") // Sudah dikonfirmasi dan terjadwal
+  CHECKED_IN @map("2") // Customer sudah datang
+  IN_SERVICE @map("3") // Sedang dikerjakan
+  COMPLETED  @map("4") // Selesai (biasanya lanjut ke Service Order)
+  NO_SHOW    @map("5") // Customer tidak datang
+  CANCELLED  @map("9") // Dibatalkan
+}
+
+enum BookingSourceEnum {
+  WEB    @map("WEB")
+  APP    @map("APP")
+  PHONE  @map("PHONE")
+  WALKIN @map("WALKIN")
+}
+
+enum SlotStatusEnum {
+  OPEN    @map("OPEN") // Slot tersedia
+  BLOCKED @map("BLOCKED") // Ditutup (maintenance/libur)
+  FULL    @map("FULL") // Penuh (kapasitas terpenuhi)
+}
+
+// Jam kerja per hari (per branch)
+model wks_BranchWorkingHour {
+  company_id           String  @db.Char(5)
+  branch_id            String  @db.Char(10)
+  weekday              Int     @db.SmallInt // 0=Sun, 1=Mon, ... 6=Sat
+  isOpen               Boolean @default(true)
+  openTime             String? @db.Char(5) // "08:00"
+  closeTime            String? @db.Char(5) // "17:00"
+  bookingBufferMinutes Int?    @default(0) // buffer antar booking dalam menit
+  remarks              String? @db.VarChar(250)
+
+  @@id([company_id, branch_id, weekday], map: "pk_wks_BranchWorkingHour")
+  @@index([company_id, branch_id], map: "idx_branch_workinghour_branch")
+}
+
+// Hari libur/pengecualian jadwal (per branch)
+model wks_BranchHoliday {
+  id         String   @db.Char(20)
+  company_id String   @db.Char(5)
+  branch_id  String?  @db.Char(10)
+  date       DateTime @db.Date
+  name       String?  @db.VarChar(100)
+  isClosed   Boolean  @default(true)
+  remarks    String?  @db.VarChar(250)
+  createdAt  DateTime @default(now())
+
+  @@id([company_id, id], map: "pk_wks_BranchHoliday")
+  @@index([company_id, branch_id, date], map: "idx_branch_holiday_date")
+}
+
+// Ketersediaan mekanik per tanggal (override jam kerja umum)
+model wks_MechanicAvailability {
+  id             String   @db.Char(20)
+  company_id     String   @db.Char(5)
+  mechanic_id    String   @db.Char(10)
+  date           DateTime @db.Date
+  availableStart String?  @db.Char(5) // "09:00"
+  availableEnd   String?  @db.Char(5) // "16:00"
+  isAvailable    Boolean  @default(true)
+  reason         String?  @db.VarChar(100) // Cuti, Training, Sakit, dll
+  remarks        String?  @db.VarChar(250)
+  createdAt      DateTime @default(now())
+
+  mechanic cmf_Mechanic @relation(fields: [company_id, mechanic_id], references: [company_id, id], onUpdate: NoAction)
+
+  @@id([company_id, id], map: "pk_wks_MechanicAvailability")
+  @@index([company_id, mechanic_id, date], map: "idx_mechanic_availability_date")
+}
+
+// Blokir bay (maintenance, cleaning, dipakai internal, dll)
+model wks_BayBlock {
+  id         String   @db.Char(20)
+  company_id String   @db.Char(5)
+  branch_id  String   @db.Char(10)
+  bay_id     String   @db.Char(10)
+  startTime  DateTime
+  endTime    DateTime
+  reason     String?  @db.VarChar(100)
+  remarks    String?  @db.VarChar(250)
+  createdAt  DateTime @default(now())
+
+  bay wks_ServiceBay @relation(fields: [company_id, bay_id], references: [company_id, id], onUpdate: NoAction)
+
+  @@id([company_id, id], map: "pk_wks_BayBlock")
+  @@index([company_id, branch_id, bay_id, startTime, endTime], map: "idx_bayblock_range")
+}
+
+// Slot jadwal opsional (untuk pre-generate time slots per cabang/bay)
+model wks_BookingSlot {
+  id          String         @db.Char(20)
+  company_id  String         @db.Char(5)
+  branch_id   String         @db.Char(10)
+  bay_id      String?        @db.Char(10)
+  date        DateTime       @db.Date
+  startTime   DateTime
+  endTime     DateTime
+  capacity    Int            @default(1)
+  bookedCount Int            @default(0)
+  slotStatus  SlotStatusEnum @default(OPEN)
+  remarks     String?        @db.VarChar(250)
+  createdAt   DateTime       @default(now())
+
+  bay wks_ServiceBay? @relation(fields: [company_id, bay_id], references: [company_id, id], onUpdate: NoAction)
+
+  @@id([company_id, id], map: "pk_wks_BookingSlot")
+  @@index([company_id, branch_id, date], map: "idx_bookingslot_date")
+  @@index([company_id, bay_id, startTime, endTime], map: "idx_bookingslot_bay_range")
+}
+
+// Inti booking service oleh customer
+model wks_ServiceBooking {
+  id                  String                 @db.Char(20)
+  bookingNumber       String                 @db.VarChar(30) // BKG-2025-00001
+  bookingDate         DateTime               @default(now())
+  company_id          String                 @db.Char(5)
+  branch_id           String                 @db.Char(10)
+  // Customer & Vehicle
+  customer_id         String                 @db.Char(20)
+  customerVehicle_id  String                 @db.Char(20)
+  vehicle_customer_id String                 @db.Char(20) // FK untuk composite key
+  // Preferensi waktu dari customer
+  preferredDate       DateTime?              @db.Date
+  preferredStartTime  String?                @db.Char(5) // "10:00"
+  preferredEndTime    String?                @db.Char(5) // "11:00"
+  // Jadwal terkonfirmasi (akan dipakai saat CONFIRMED)
+  scheduledStart      DateTime?
+  scheduledEnd        DateTime?
+  // Alokasi resource (opsional saat booking)
+  bay_id              String?                @db.Char(10)
+  mechanic_id         String?                @db.Char(10)
+  // Informasi layanan
+  serviceType_id      String?                @db.Char(10)
+  complaintNotes      String?                @db.Text
+  additionalRequest   String?                @db.Text
+  // Status & Sumber
+  status              BookingStatusEnum      @default(PENDING)
+  source              BookingSourceEnum      @default(WEB)
+  // Reminder & kehadiran
+  reminderSent        Boolean?               @default(false)
+  checkInAt           DateTime?
+  cancelledAt         DateTime?
+  cancelReason        String?                @db.VarChar(250)
+  // Metadata
+  iStatus             MasterRecordStatusEnum @default(Active)
+  remarks             String?                @db.VarChar(250)
+  createdBy           String?                @db.Char(10)
+  createdAt           DateTime               @default(now())
+  updatedBy           String?                @db.Char(10)
+  updatedAt           DateTime
+  // Relations
+  customer            cmf_Customer           @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
+  customerVehicle     cmf_CustomerVehicle    @relation(fields: [company_id, customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
+  mechanic            cmf_Mechanic?          @relation(fields: [company_id, mechanic_id], references: [company_id, id], onUpdate: NoAction)
+  bay                 wks_ServiceBay?        @relation(fields: [company_id, bay_id], references: [company_id, id], onUpdate: NoAction)
+  serviceType         wks_ServiceType?       @relation(fields: [company_id, serviceType_id], references: [company_id, id], onUpdate: NoAction)
+
+  @@id([company_id, id], map: "pk_wks_ServiceBooking")
+  @@unique([company_id, bookingNumber], map: "unique_booking_number")
+  @@index([company_id, branch_id, bookingDate], map: "idx_booking_date")
+  @@index([company_id, status], map: "idx_booking_status")
+  @@index([company_id, scheduledStart], map: "idx_booking_scheduled_start")
 }
 
 // Service Order / Work Order

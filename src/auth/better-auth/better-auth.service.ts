@@ -160,6 +160,7 @@ export class BetterAuthService {
       where: { id: session.id },
       data: {
         refreshToken: hashedRefreshToken,
+        hasRefreshedToken: true,
         lastActivityAt: new Date(),
       },
     });
