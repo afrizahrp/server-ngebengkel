@@ -55,7 +55,10 @@ import { TwoFactorModule } from '../two-factor/two-factor.module';
     EmailLoginStrategy,
     OAuthLoginStrategy,
     TwoFactorLoginStrategy,
-    // Guards
+    // Guards - must be added as regular providers to be exportable
+    BetterJwtAuthGuard,
+    BetterRolesGuard,
+    // Also add as APP_GUARD for global usage
     {
       provide: APP_GUARD,
       useClass: BetterJwtAuthGuard,
@@ -65,6 +68,14 @@ import { TwoFactorModule } from '../two-factor/two-factor.module';
       useClass: BetterRolesGuard,
     },
   ],
-  exports: [BetterAuthService],
+  exports: [
+    BetterAuthService,
+    BetterJwtAuthGuard,
+    BetterRolesGuard,
+    BetterRefreshGuard,
+    JwtModule,
+    AuthTokenService,
+    SessionModule,
+  ],
 })
 export class BetterAuthModule {}

@@ -31,6 +31,7 @@ export interface LoginResponse {
     image: string | null;
     company: UserCompanyInfo;
     companies: UserCompanyInfo[];
+    userCompanyRole_id?: number; // ID dari sys_UserCompanyRole untuk menu permissions
   };
   accessToken: string;
   refreshToken: string;

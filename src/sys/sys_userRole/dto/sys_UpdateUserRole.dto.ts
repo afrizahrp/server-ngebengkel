@@ -24,5 +24,3 @@ export class Sys_UpdateUserRoleDto {
   @IsOptional()
   isDefault?: boolean;
 }
-
-

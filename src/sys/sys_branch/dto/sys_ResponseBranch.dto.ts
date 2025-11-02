@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsBoolean } from 'class-validator';
 import { MasterRecordStatusEnum } from '@prisma/client';
 
 export class Sys_ResponseBranchDto {
@@ -17,6 +17,10 @@ export class Sys_ResponseBranchDto {
 
   @IsString()
   company_id: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isMain?: boolean;
 
   @IsOptional()
   company?: {

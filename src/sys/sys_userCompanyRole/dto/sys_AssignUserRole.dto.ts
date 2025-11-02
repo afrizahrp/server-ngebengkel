@@ -26,5 +26,3 @@ export class Sys_BulkAssignUserRoleDto {
   @IsString()
   branch_id: string;
 }
-
-

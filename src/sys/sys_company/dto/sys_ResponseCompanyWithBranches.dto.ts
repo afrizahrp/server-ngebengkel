@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsInt, IsDate, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  IsDate,
+  IsArray,
+  IsBoolean,
+} from 'class-validator';
 
 export class Sys_BranchBasicDto {
   @IsString()
@@ -10,6 +17,10 @@ export class Sys_BranchBasicDto {
   @IsString()
   @IsOptional()
   iStatus?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isMain?: boolean;
 }
 
 export class Sys_ResponseCompanyWithBranchesDto {

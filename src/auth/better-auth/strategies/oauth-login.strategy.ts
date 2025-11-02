@@ -83,6 +83,7 @@ export class OAuthLoginStrategy implements LoginStrategy<GoogleUserData> {
           role_name: selectedCompany?.userRole?.role.name || '',
         },
         companies: this.userCompanyService.formatCompanies(userCompanies),
+        userCompanyRole_id: selectedCompany?.id, // ID dari sys_UserCompanyRole untuk menu permissions
       },
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,

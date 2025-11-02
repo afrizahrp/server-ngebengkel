@@ -22,5 +22,3 @@ export class Sys_CreateUserRoleDto {
   @IsOptional()
   isDefault?: boolean;
 }
-
-

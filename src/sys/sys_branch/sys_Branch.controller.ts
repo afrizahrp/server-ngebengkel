@@ -13,7 +13,7 @@ import { Sys_CreateBranchDto } from './dto/sys_CreateBranch.dto';
 import { Sys_UpdateBranchDto } from './dto/sys_UpdateBranch.dto';
 import { Sys_ResponseBranchDto } from './dto/sys_ResponseBranch.dto';
 
-@Controller('sys_branch')
+@Controller(':sys_branch')
 export class sys_BranchController {
   constructor(private readonly branchService: Sys_BranchService) {}
 

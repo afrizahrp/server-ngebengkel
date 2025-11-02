@@ -10,6 +10,3 @@ export interface LoginStrategy<T = any> {
     deviceInfo?: DeviceInfo,
   ): Promise<LoginResponse | TwoFactorLoginResponse>;
 }
-
-
-

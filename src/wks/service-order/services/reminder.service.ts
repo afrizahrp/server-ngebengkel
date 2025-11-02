@@ -6,8 +6,8 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 @Injectable()
-export class ReminderService {
-  private readonly logger = new Logger(ReminderService.name);
+export class ServiceOrderReminderService {
+  private readonly logger = new Logger(ServiceOrderReminderService.name);
 
   constructor(
     private readonly prisma: PrismaService,
@@ -121,7 +121,6 @@ export class ReminderService {
     const {
       orderNumber,
       scheduledStartDate,
-      scheduledEndDate,
       customer,
       vehicle,
       customerComplaint,

@@ -78,6 +78,3 @@ export class OAuthProviderService {
     return userInfo;
   }
 }
-
-
-

@@ -302,21 +302,7 @@ model sys_Company {
   id      String                 @id @db.Char(5)
   name    String?                @db.VarChar(50)
   iStatus MasterRecordStatusEnum @default(Active)
-  isMain  Boolean?               @default(false)
-
-  province         String?                    @db.VarChar(50)
-  district         String?                    @db.VarChar(50)
-  city             String?                    @db.VarChar(50)
-  address1         String?                    @db.VarChar(250)
-  address2         String?                    @db.VarChar(250)
-  address3         String?                    @db.VarChar(250)
-  postalCode       String?                    @db.Char(6)
-  phone1           String?                    @db.VarChar(20)
-  phone2           String?                    @db.VarChar(20)
-  phone3           String?                    @db.VarChar(20)
-  mobile1          String?                    @db.VarChar(20)
-  mobile2          String?                    @db.VarChar(20)
-  mobile3          String?                    @db.VarChar(20)
+  isMain  Boolean?               @default(false) 
   email1           String?                    @db.VarChar(100)
   email2           String?                    @db.VarChar(100)
   email3           String?                    @db.VarChar(100)
@@ -337,12 +323,30 @@ model sys_Company {
 }
 
 model sys_Branch {
+  company_id String                 @db.Char(5)
   id         String                 @id @db.Char(10)
   name       String                 @db.VarChar(50)
+  isMain     Boolean?               @default(false)
   iStatus    MasterRecordStatusEnum @default(Active)
   remarks    String?                @db.VarChar(255)
-  company_id String                 @db.Char(5)
   company    sys_Company            @relation(fields: [company_id], references: [id])
+  province         String?                    @db.VarChar(50)
+  district         String?                    @db.VarChar(50)
+  city             String?                    @db.VarChar(50)
+  address1         String?                    @db.VarChar(250)
+  address2         String?                    @db.VarChar(250)
+  address3         String?                    @db.VarChar(250)
+  postalCode       String?                    @db.Char(6)
+  phone1           String?                    @db.VarChar(20)
+  phone2           String?                    @db.VarChar(20)
+  phone3           String?                    @db.VarChar(20)
+  mobile1          String?                    @db.VarChar(20)
+  mobile2          String?                    @db.VarChar(20)
+  mobile3          String?                    @db.VarChar(20)
+  createdBy        String?                    @db.Char(10)
+  createdAt        DateTime
+  updatedBy        String?                    @db.Char(10)
+  updatedAt        DateTime
 
   @@index([company_id], map: "idx_sys_Branch_company_id")
 }
@@ -544,11 +548,18 @@ model sys_Migration_log {
   status         String
 }
 
-// Document Numbering Configuration
-model sys_DocumentNumber {
-  counterCode    String                 @db.VarChar(10) // PCO, PCR, SO, INV, CR, CP, dll
+model sys_Module {
+  id            String          @id @db.Char(3)
+  name          String          @db.VarChar(50)
+  sys_Numbering sys_Numbering[]
+}
+
+//  Numbering Configuration
+
+model sys_Numbering {
+  module_id      String                 @db.VarChar(3) // PRC,WKS,SLS,IMC,ACC
+  id             String                 @db.VarChar(10) // PCO, PCR, SO, INV, CR, CP, dll
   description    String?                @db.VarChar(100) // Purchase Order, Service Order, dll
-  module         String?                @db.VarChar(20) // PROCUREMENT, SERVICE, ACCOUNTING, dll
   prefix         String?                @db.VarChar(10) // Prefix tambahan (opsional)
   delimiter      String                 @default("/") @db.VarChar(5) // Pemisah: / atau -
   includeYear    Boolean                @default(true) // Include tahun di format
@@ -569,10 +580,11 @@ model sys_DocumentNumber {
   updatedAt      DateTime
   company_id     String                 @db.Char(5)
   branch_id      String                 @db.Char(10)
+  module         sys_Module             @relation(fields: [module_id], references: [id], onDelete: NoAction)
 
-  @@id([company_id, counterCode], map: "pk_sys_DocumentNumber")
-  @@unique([company_id, counterCode], map: "unique_counter_code")
-  @@index([company_id, module], map: "idx_doc_number_module")
+  @@id([company_id, branch_id, id], map: "pk_sys_Numbering")
+  @@unique([company_id, branch_id, id], map: "unique_numbering")
+  @@index([company_id, branch_id, module_id], map: "idx_numbering_module")
 }
 
 /// ============================================================================
@@ -1242,6 +1254,7 @@ model cmf_Customer {
   serviceReworks            wks_ServiceRework[]
   creditNotes               arm_CreditNote[]
   wks_ServiceBooking        wks_ServiceBooking[]
+  reminders                 sys_Reminder[]
 
   @@id([company_id, id], map: "pk_cmf_Customer")
   @@unique([company_id, mobile1], map: "unique_customer_mobile")
@@ -1549,50 +1562,55 @@ model wks_BookingSlot {
 
 // Inti booking service oleh customer
 model wks_ServiceBooking {
-  id                  String                 @db.Char(20)
-  bookingNumber       String                 @db.VarChar(30) // BKG-2025-00001
-  bookingDate         DateTime               @default(now())
-  company_id          String                 @db.Char(5)
-  branch_id           String                 @db.Char(10)
+  id                  String                @db.Char(30)
+  bookingNumber       String                @db.VarChar(30) // BKG-2025-00001
+  bookingDate         DateTime              @default(now())
+  company_id          String                @db.Char(5)
+  branch_id           String                @db.Char(10)
   // Customer & Vehicle
-  customer_id         String                 @db.Char(20)
-  customerVehicle_id  String                 @db.Char(20)
-  vehicle_customer_id String                 @db.Char(20) // FK untuk composite key
+  customer_id         String                @db.Char(20)
+  customerVehicle_id  String                @db.Char(20)
+  vehicle_customer_id String                @db.Char(20) // FK untuk composite key
   // Preferensi waktu dari customer
-  preferredDate       DateTime?              @db.Date
-  preferredStartTime  String?                @db.Char(5) // "10:00"
-  preferredEndTime    String?                @db.Char(5) // "11:00"
+  preferredDate       DateTime?             @db.Date
+  preferredStartTime  String?               @db.Char(5) // "10:00"
+  preferredEndTime    String?               @db.Char(5) // "11:00"
   // Jadwal terkonfirmasi (akan dipakai saat CONFIRMED)
   scheduledStart      DateTime?
   scheduledEnd        DateTime?
   // Alokasi resource (opsional saat booking)
-  bay_id              String?                @db.Char(10)
-  mechanic_id         String?                @db.Char(10)
+  bay_id              String?               @db.Char(10)
+  mechanic_id         String?               @db.Char(10)
   // Informasi layanan
-  serviceType_id      String?                @db.Char(10)
-  complaintNotes      String?                @db.Text
-  additionalRequest   String?                @db.Text
+  serviceType_id      String?               @db.Char(10)
+  complaintNotes      String?               @db.Text
+  additionalRequest   String?               @db.Text
   // Status & Sumber
-  status              BookingStatusEnum      @default(PENDING)
-  source              BookingSourceEnum      @default(WEB)
+  status              BookingStatusEnum     @default(PENDING)
+  source              BookingSourceEnum     @default(WEB)
   // Reminder & kehadiran
-  reminderSent        Boolean?               @default(false)
+  reminderSent        Boolean?              @default(false)
   checkInAt           DateTime?
   cancelledAt         DateTime?
-  cancelReason        String?                @db.VarChar(250)
+  cancelReason        String?               @db.VarChar(250)
+  // Transaction Status
+  transactionStatus   TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted           Boolean               @default(false)
+  deletedAt           DateTime?
+  deletedBy           String?               @db.Char(10)
   // Metadata
-  iStatus             MasterRecordStatusEnum @default(Active)
-  remarks             String?                @db.VarChar(250)
-  createdBy           String?                @db.Char(10)
-  createdAt           DateTime               @default(now())
-  updatedBy           String?                @db.Char(10)
+  remarks             String?               @db.VarChar(250)
+  createdBy           String?               @db.Char(10)
+  createdAt           DateTime              @default(now())
+  updatedBy           String?               @db.Char(10)
   updatedAt           DateTime
   // Relations
-  customer            cmf_Customer           @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
-  customerVehicle     cmf_CustomerVehicle    @relation(fields: [company_id, customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
-  mechanic            cmf_Mechanic?          @relation(fields: [company_id, mechanic_id], references: [company_id, id], onUpdate: NoAction)
-  bay                 wks_ServiceBay?        @relation(fields: [company_id, bay_id], references: [company_id, id], onUpdate: NoAction)
-  serviceType         wks_ServiceType?       @relation(fields: [company_id, serviceType_id], references: [company_id, id], onUpdate: NoAction)
+  customer            cmf_Customer          @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
+  customerVehicle     cmf_CustomerVehicle   @relation(fields: [company_id, customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
+  mechanic            cmf_Mechanic?         @relation(fields: [company_id, mechanic_id], references: [company_id, id], onUpdate: NoAction)
+  bay                 wks_ServiceBay?       @relation(fields: [company_id, bay_id], references: [company_id, id], onUpdate: NoAction)
+  serviceType         wks_ServiceType?      @relation(fields: [company_id, serviceType_id], references: [company_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_wks_ServiceBooking")
   @@unique([company_id, bookingNumber], map: "unique_booking_number")
@@ -1603,7 +1621,7 @@ model wks_ServiceBooking {
 
 // Service Order / Work Order
 model wks_ServiceOrder {
-  id                     String                   @db.Char(20)
+  id                     String                   @db.Char(30)
   orderNumber            String                   @db.VarChar(30) // SO-2024-0001
   orderDate              DateTime                 @default(now())
   customer_id            String                   @db.Char(20)
@@ -1648,8 +1666,13 @@ model wks_ServiceOrder {
   customerRating         Int?                     @db.SmallInt // Rating 1-5
   customerFeedback       String?                  @db.Text
   customerSignature      String?                  @db.VarChar(250) // URL signature image
+  // Transaction Status
+  transactionStatus      TransactionStatusEnum    @default(ENTRY)
+  // Soft Delete
+  isDeleted              Boolean                  @default(false)
+  deletedAt              DateTime?
+  deletedBy              String?                  @db.Char(10)
   // Metadata
-  iStatus                MasterRecordStatusEnum   @default(Active)
   remarks                String?                  @db.VarChar(250)
   createdBy              String?                  @db.Char(10)
   createdAt              DateTime                 @default(now())
@@ -1678,48 +1701,53 @@ model wks_ServiceOrder {
 
 // Detail Service Order (Pekerjaan & Parts yang digunakan)
 model wks_ServiceOrderDetail {
-  id                 String                 @db.Char(30) // Manual: SOD/2025/10/00001
-  serviceOrder_id    String                 @db.Char(20)
-  lineNumber         Int                    @db.SmallInt // Nomor urut item
+  id                 String                @db.Char(30) // Manual: SOD/2025/10/00001
+  serviceOrder_id    String                @db.Char(20)
+  lineNumber         Int                   @db.SmallInt // Nomor urut item
   detailType         DetailTypeEnum // SERVICE atau PART
   // Untuk Service
-  serviceType_id     String?                @db.Char(10)
-  serviceName        String?                @db.VarChar(100) // Nama pekerjaan
-  serviceDescription String?                @db.Text
+  serviceType_id     String?               @db.Char(10)
+  serviceName        String?               @db.VarChar(100) // Nama pekerjaan
+  serviceDescription String?               @db.Text
   // Untuk Parts
-  product_id         String?                @db.Char(20)
-  productVariant_id  String?                @db.Char(30)
-  partName           String?                @db.VarChar(250)
-  partNumber         String?                @db.VarChar(50)
+  product_id         String?               @db.Char(20)
+  productVariant_id  String?               @db.Char(30)
+  partName           String?               @db.VarChar(250)
+  partNumber         String?               @db.VarChar(50)
   // Mekanik yang mengerjakan
-  mechanic_id        String?                @db.Char(10)
+  mechanic_id        String?               @db.Char(10)
   // Quantity & Harga
-  quantity           Decimal                @default(1) @db.Decimal(12, 4)
-  unitPrice          Decimal                @db.Decimal(21, 4)
-  discountPercent    Decimal?               @default(0) @db.Decimal(5, 2)
-  discountAmount     Decimal?               @default(0) @db.Decimal(21, 4)
-  taxPercent         Decimal?               @default(0) @db.Decimal(5, 2)
-  taxAmount          Decimal?               @default(0) @db.Decimal(21, 4)
-  subtotal           Decimal                @db.Decimal(21, 4)
+  quantity           Decimal               @default(1) @db.Decimal(12, 4)
+  unitPrice          Decimal               @db.Decimal(21, 4)
+  discountPercent    Decimal?              @default(0) @db.Decimal(5, 2)
+  discountAmount     Decimal?              @default(0) @db.Decimal(21, 4)
+  taxPercent         Decimal?              @default(0) @db.Decimal(5, 2)
+  taxAmount          Decimal?              @default(0) @db.Decimal(21, 4)
+  subtotal           Decimal               @db.Decimal(21, 4)
   // Waktu Pengerjaan
   startTime          DateTime?
   endTime            DateTime?
   duration           Int? // Durasi dalam menit
   // Status
-  detailStatus       DetailStatusEnum?      @default(PENDING) // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
-  iStatus            MasterRecordStatusEnum @default(Active)
-  remarks            String?                @db.VarChar(250)
-  createdBy          String?                @db.Char(10)
-  createdAt          DateTime               @default(now())
-  updatedBy          String?                @db.Char(10)
+  detailStatus       DetailStatusEnum?     @default(PENDING) // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  transactionStatus  TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted          Boolean               @default(false)
+  deletedAt          DateTime?
+  deletedBy          String?               @db.Char(10)
+  // Metadata
+  remarks            String?               @db.VarChar(250)
+  createdBy          String?               @db.Char(10)
+  createdAt          DateTime              @default(now())
+  updatedBy          String?               @db.Char(10)
   updatedAt          DateTime
-  company_id         String                 @db.Char(5)
-  branch_id          String                 @db.Char(10)
+  company_id         String                @db.Char(5)
+  branch_id          String                @db.Char(10)
   // Relations
-  serviceOrder       wks_ServiceOrder       @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
-  serviceType        wks_ServiceType?       @relation(fields: [company_id, serviceType_id], references: [company_id, id], onUpdate: NoAction)
-  mechanic           cmf_Mechanic?          @relation(fields: [company_id, mechanic_id], references: [company_id, id], onUpdate: NoAction)
-  product            imc_Product?           @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
+  serviceOrder       wks_ServiceOrder      @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
+  serviceType        wks_ServiceType?      @relation(fields: [company_id, serviceType_id], references: [company_id, id], onUpdate: NoAction)
+  mechanic           cmf_Mechanic?         @relation(fields: [company_id, mechanic_id], references: [company_id, id], onUpdate: NoAction)
+  product            imc_Product?          @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_wks_ServiceOrderDetail")
   @@index([company_id, serviceOrder_id], map: "idx_service_order_detail")
@@ -1727,46 +1755,172 @@ model wks_ServiceOrderDetail {
 
 // Service History - History lengkap semua service kendaraan
 model wks_ServiceHistory {
-  id                  String                 @db.Char(30)
-  serviceOrder_id     String                 @db.Char(20)
-  customer_id         String                 @db.Char(20)
-  customerVehicle_id  String                 @db.Char(20)
-  vehicle_customer_id String                 @db.Char(20)
+  id                  String                @db.Char(30)
+  serviceOrder_id     String                @db.Char(20)
+  customer_id         String                @db.Char(20)
+  customerVehicle_id  String                @db.Char(20)
+  vehicle_customer_id String                @db.Char(20)
   // Informasi Service
   serviceDate         DateTime // Tanggal service
-  orderNumber         String                 @db.VarChar(30)
-  serviceSummary      String?                @db.Text // Ringkasan pekerjaan
-  partsReplaced       String?                @db.Text // Parts yang diganti
+  orderNumber         String                @db.VarChar(30)
+  serviceSummary      String?               @db.Text // Ringkasan pekerjaan
+  partsReplaced       String?               @db.Text // Parts yang diganti
   odometerReading     Int? // Odometer saat service
   // Biaya
-  totalServiceCost    Decimal?               @db.Decimal(21, 4)
-  totalPartsCost      Decimal?               @db.Decimal(21, 4)
-  totalAmount         Decimal?               @db.Decimal(21, 4)
+  totalServiceCost    Decimal?              @db.Decimal(21, 4)
+  totalPartsCost      Decimal?              @db.Decimal(21, 4)
+  totalAmount         Decimal?              @db.Decimal(21, 4)
   // Next Service Reminder
   nextServiceDate     DateTime? // Reminder service berikutnya
   nextServiceOdometer Int? // KM untuk service berikutnya
   // Mekanik & Quality
-  mechanicName        String?                @db.VarChar(100)
-  customerRating      Int?                   @db.SmallInt
-  customerFeedback    String?                @db.Text
+  mechanicName        String?               @db.VarChar(100)
+  customerRating      Int?                  @db.SmallInt
+  customerFeedback    String?               @db.Text
+  // Transaction Status
+  transactionStatus   TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted           Boolean               @default(false)
+  deletedAt           DateTime?
+  deletedBy           String?               @db.Char(10)
   // Metadata
-  iStatus             MasterRecordStatusEnum @default(Active)
-  remarks             String?                @db.VarChar(250)
-  createdBy           String?                @db.Char(10)
-  createdAt           DateTime               @default(now())
-  updatedBy           String?                @db.Char(10)
+  remarks             String?               @db.VarChar(250)
+  createdBy           String?               @db.Char(10)
+  createdAt           DateTime              @default(now())
+  updatedBy           String?               @db.Char(10)
   updatedAt           DateTime
-  company_id          String                 @db.Char(5)
-  branch_id           String                 @db.Char(10)
+  company_id          String                @db.Char(5)
+  branch_id           String                @db.Char(10)
   // Relations
-  serviceOrder        wks_ServiceOrder       @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
-  customer            cmf_Customer           @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
-  vehicle             cmf_CustomerVehicle    @relation(fields: [company_id, vehicle_customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
+  serviceOrder        wks_ServiceOrder      @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
+  customer            cmf_Customer          @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
+  vehicle             cmf_CustomerVehicle   @relation(fields: [company_id, vehicle_customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_wks_ServiceHistory")
   @@index([company_id, customer_id], map: "idx_service_history_customer")
   @@index([company_id, customerVehicle_id], map: "idx_service_history_vehicle")
   @@index([company_id, serviceDate], map: "idx_service_history_date")
+}
+
+/// ============================================================================
+/// REMINDER MANAGEMENT MODULE
+/// ============================================================================
+/// Module untuk manage reminder yang reusable untuk berbagai entity types
+/// Support: Service Orders, Bookings, Service History, dan entity lainnya
+/// Features: Multiple channels (WhatsApp, Email, SMS), Scheduling, History tracking
+
+// Reminder - Tabel terpusat untuk semua reminder
+model sys_Reminder {
+  id                String                 @db.Char(30) // Manual: REM/2025/10/00001
+  reminderNumber    String                 @db.VarChar(30)
+  // Polymorphic relation - bisa untuk berbagai entity types
+  entityType        ReminderEntityTypeEnum // SERVICE_ORDER, BOOKING, SERVICE_HISTORY, VEHICLE_MAINTENANCE, SUBSCRIPTION, etc.
+  entity_id         String                 @db.Char(30) // ID dari entity yang direminder
+  // Reminder Info
+  reminderType      ReminderTypeEnum       @default(SCHEDULED_SERVICE) // SCHEDULED_SERVICE, SERVICE_DUE, PAYMENT_DUE, APPOINTMENT, CUSTOM, etc.
+  title             String                 @db.VarChar(250) // Judul reminder
+  message           String?                @db.Text // Pesan reminder (template atau custom)
+  // Schedule
+  scheduledDate     DateTime? // Kapan reminder harus dikirim
+  scheduledTime     String?                @db.VarChar(10) // HH:mm format untuk waktu spesifik
+  // Reminder timing
+  sendBeforeDays    Int?                   @db.SmallInt // Kirim X hari sebelum scheduledDate (default: 1 hari)
+  sendBeforeHours   Int?                   @db.SmallInt // Kirim X jam sebelum scheduledTime (default: 24 jam)
+  // Recipient
+  customer_id       String?                @db.Char(20) // Customer yang akan menerima reminder
+  recipientPhone    String?                @db.VarChar(20) // Nomor WhatsApp/SMS
+  recipientEmail    String?                @db.VarChar(100) // Email recipient
+  // Channel - Array of channels (stored as JSON or comma-separated)
+  channels          String?                @db.VarChar(50) // Comma-separated: "WA,EM,SM" atau JSON array
+  // Status
+  status            ReminderStatusEnum     @default(PENDING) // PENDING, SCHEDULED, SENT, FAILED, CANCELLED
+  // Execution tracking
+  lastAttemptAt     DateTime? // Terakhir kali mencoba kirim
+  lastSentAt        DateTime? // Terakhir kali berhasil dikirim
+  sentCount         Int                    @default(0) @db.SmallInt // Berapa kali sudah dikirim
+  maxRetries        Int                    @default(3) @db.SmallInt // Max retry jika gagal
+  retryCount        Int                    @default(0) @db.SmallInt // Berapa kali sudah retry
+  failureReason     String?                @db.VarChar(250) // Alasan gagal kirim
+  // Response tracking
+  isRead            Boolean?               @default(false) // Apakah reminder sudah dibaca (jika support read receipt)
+  readAt            DateTime?
+  actionTaken       Boolean?               @default(false) // Apakah action sudah dilakukan (misal: customer sudah booking)
+  actionTakenAt     DateTime?
+  actionNotes       String?                @db.Text // Catatan action yang dilakukan
+  // Additional data
+  metadata          Json? // Flexible JSON untuk data tambahan (vehicle info, order details, dll)
+  // Automatic reminder (recurring)
+  isRecurring       Boolean?               @default(false)
+  recurringInterval Int?                   @db.SmallInt // Interval dalam hari
+  recurringEndDate  DateTime? // Kapan recurring berakhir
+  nextRecurringDate DateTime? // Tanggal recurring berikutnya
+  // Related reminders
+  parentReminder_id String?                @db.Char(30) // Jika ini adalah follow-up reminder
+  // Transaction Status
+  transactionStatus TransactionStatusEnum  @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean                @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?                @db.Char(10)
+  // Metadata
+  remarks           String?                @db.VarChar(250)
+  createdBy         String?                @db.Char(10)
+  createdAt         DateTime               @default(now())
+  updatedBy         String?                @db.Char(10)
+  updatedAt         DateTime
+  company_id        String                 @db.Char(5)
+  branch_id         String                 @db.Char(10)
+  // Relations
+  customer          cmf_Customer?          @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
+  parentReminder    sys_Reminder?          @relation("ReminderFollowUp", fields: [company_id, parentReminder_id], references: [company_id, id], onUpdate: NoAction)
+  childReminders    sys_Reminder[]         @relation("ReminderFollowUp")
+  reminderLogs      sys_ReminderLog[]
+
+  @@id([company_id, id], map: "pk_sys_Reminder")
+  @@unique([company_id, reminderNumber], map: "unique_reminder_number")
+  @@index([company_id, entityType, entity_id], map: "idx_reminder_entity")
+  @@index([company_id, customer_id], map: "idx_reminder_customer")
+  @@index([company_id, status], map: "idx_reminder_status")
+  @@index([company_id, scheduledDate], map: "idx_reminder_scheduled")
+  @@index([company_id, status, scheduledDate], map: "idx_reminder_pending")
+}
+
+// Reminder Log - History semua pengiriman reminder
+model sys_ReminderLog {
+  id                String                @db.Char(30) // Manual: RML/2025/10/00001
+  reminder_id       String                @db.Char(30)
+  // Log info
+  logType           ReminderLogTypeEnum   @default(SENT) // SENT, FAILED, CANCELLED, UPDATED
+  channel           ReminderChannelEnum // WHATSAPP, EMAIL, SMS (single channel per log)
+  // Execution details
+  sentAt            DateTime? // Kapan dikirim
+  message           String?               @db.Text // Pesan yang dikirim
+  recipient         String?               @db.VarChar(100) // Phone atau email yang dikirim
+  // Response
+  status            String?               @db.VarChar(50) // Success, Failed, Pending, dll
+  responseCode      String?               @db.VarChar(20) // HTTP status code atau provider response code
+  responseMessage   String?               @db.Text // Response dari provider (success/failure message)
+  errorMessage      String?               @db.Text // Error message jika gagal
+  // External reference
+  externalId        String?               @db.VarChar(100) // ID dari provider (WhatsApp API, Email service, dll)
+  // Transaction Status
+  transactionStatus TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean               @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?               @db.Char(10)
+  // Metadata
+  remarks           String?               @db.VarChar(250)
+  createdBy         String?               @db.Char(10)
+  createdAt         DateTime              @default(now())
+  company_id        String                @db.Char(5)
+  branch_id         String                @db.Char(10)
+  // Relations
+  reminder          sys_Reminder          @relation(fields: [company_id, reminder_id], references: [company_id, id], onUpdate: NoAction)
+
+  @@id([company_id, id], map: "pk_sys_ReminderLog")
+  @@index([company_id, reminder_id], map: "idx_reminder_log_reminder")
+  @@index([company_id, sentAt], map: "idx_reminder_log_date")
 }
 
 /// ============================================================================
@@ -1778,83 +1932,88 @@ model wks_ServiceHistory {
 
 // Customer Complaint - Keluhan customer terhadap service
 model wks_CustomerComplaint {
-  id                     String                 @db.Char(30) // Manual: CMP/2025/10/00001
-  complaintNumber        String                 @db.VarChar(30)
-  complaintDate          DateTime               @default(now())
-  serviceOrder_id        String?                @db.Char(20) // Service yang dikomplain
-  customer_id            String                 @db.Char(20)
-  customerVehicle_id     String?                @db.Char(20)
-  vehicle_customer_id    String?                @db.Char(20) // FK untuk composite key
+  id                     String                @db.Char(30) // Manual: CMP/2025/10/00001
+  complaintNumber        String                @db.VarChar(30)
+  complaintDate          DateTime              @default(now())
+  serviceOrder_id        String?               @db.Char(20) // Service yang dikomplain
+  customer_id            String                @db.Char(20)
+  customerVehicle_id     String?               @db.Char(20)
+  vehicle_customer_id    String?               @db.Char(20) // FK untuk composite key
   // Complaint Info
   complaintType          ComplaintTypeEnum? // SERVICE_QUALITY, PARTS_QUALITY, PRICING, DELAY, STAFF_BEHAVIOR, OTHER
-  complaintCategory      String?                @db.VarChar(50) // Mekanik tidak profesional, Hasil tidak memuaskan, dll
-  subject                String                 @db.VarChar(250) // Judul complaint
-  description            String                 @db.Text // Deskripsi detail complaint
-  severity               SeverityEnum?          @default(MEDIUM) // LOW, MEDIUM, HIGH, CRITICAL
+  complaintCategory      String?               @db.VarChar(50) // Mekanik tidak profesional, Hasil tidak memuaskan, dll
+  subject                String                @db.VarChar(250) // Judul complaint
+  description            String                @db.Text // Deskripsi detail complaint
+  severity               SeverityEnum?         @default(MEDIUM) // LOW, MEDIUM, HIGH, CRITICAL
   // Customer Contact
-  customerName           String?                @db.VarChar(100)
-  customerPhone          String?                @db.VarChar(20)
-  customerEmail          String?                @db.VarChar(100)
-  preferredContactMethod String?                @db.VarChar(20) // Phone, Email, WhatsApp
+  customerName           String?               @db.VarChar(100)
+  customerPhone          String?               @db.VarChar(20)
+  customerEmail          String?               @db.VarChar(100)
+  preferredContactMethod String?               @db.VarChar(20) // Phone, Email, WhatsApp
   // Complaint Details
   complaintSource        ComplaintSourceEnum? // PHONE, EMAIL, WHATSAPP, IN_PERSON, SOCIAL_MEDIA, WEBSITE
   occurredDate           DateTime? // Kapan kejadian yang dikomplain
-  reportedBy             String?                @db.VarChar(100) // Nama yang melaporkan (bisa beda dengan customer)
+  reportedBy             String?               @db.VarChar(100) // Nama yang melaporkan (bisa beda dengan customer)
   // Evidence
-  attachments            String?                @db.Text // JSON array URLs foto/dokumen bukti
-  witnessName            String?                @db.VarChar(100)
-  witnessContact         String?                @db.VarChar(50)
+  attachments            String?               @db.Text // JSON array URLs foto/dokumen bukti
+  witnessName            String?               @db.VarChar(100)
+  witnessContact         String?               @db.VarChar(50)
   // Assignment & Response
-  assignedTo             String?                @db.Char(10) // User yang handle complaint
+  assignedTo             String?               @db.Char(10) // User yang handle complaint
   assignedDate           DateTime?
-  department             String?                @db.VarChar(50) // Service, Parts, Management, dll
+  department             String?               @db.VarChar(50) // Service, Parts, Management, dll
   // Investigation
-  investigationNotes     String?                @db.Text
-  rootCause              String?                @db.Text // Akar masalah
+  investigationNotes     String?               @db.Text
+  rootCause              String?               @db.Text // Akar masalah
   // Resolution
-  resolutionDescription  String?                @db.Text // Penjelasan solusi
+  resolutionDescription  String?               @db.Text // Penjelasan solusi
   resolutionDate         DateTime?
-  resolvedBy             String?                @db.Char(10)
-  compensationType       String?                @db.VarChar(50) // Free Service, Discount, Refund, Replacement, dll
-  compensationAmount     Decimal?               @db.Decimal(21, 4)
-  compensationNotes      String?                @db.Text
+  resolvedBy             String?               @db.Char(10)
+  compensationType       String?               @db.VarChar(50) // Free Service, Discount, Refund, Replacement, dll
+  compensationAmount     Decimal?              @db.Decimal(21, 4)
+  compensationNotes      String?               @db.Text
   // Follow Up
-  followUpRequired       Boolean?               @default(false)
+  followUpRequired       Boolean?              @default(false)
   followUpDate           DateTime?
-  followUpBy             String?                @db.Char(10)
-  followUpNotes          String?                @db.Text
+  followUpBy             String?               @db.Char(10)
+  followUpNotes          String?               @db.Text
   // Customer Satisfaction
-  resolutionRating       Int?                   @db.SmallInt // Rating 1-5 setelah complaint resolved
-  customerFeedback       String?                @db.Text // Feedback customer setelah penanganan
+  resolutionRating       Int?                  @db.SmallInt // Rating 1-5 setelah complaint resolved
+  customerFeedback       String?               @db.Text // Feedback customer setelah penanganan
   isSatisfied            Boolean?
   // Status
-  complaintStatus        ComplaintStatusEnum    @default(OPEN)
-  priority               PriorityEnum?          @default(NORMAL)
+  complaintStatus        ComplaintStatusEnum   @default(OPEN)
+  priority               PriorityEnum?         @default(NORMAL)
   // SLA (Service Level Agreement)
   targetResolutionDate   DateTime? // Target tanggal selesai
-  isOverdue              Boolean?               @default(false)
+  isOverdue              Boolean?              @default(false)
   // Escalation
-  isEscalated            Boolean?               @default(false)
-  escalatedTo            String?                @db.Char(10) // User/Manager yang di-escalate
+  isEscalated            Boolean?              @default(false)
+  escalatedTo            String?               @db.Char(10) // User/Manager yang di-escalate
   escalatedDate          DateTime?
-  escalationReason       String?                @db.VarChar(250)
+  escalationReason       String?               @db.VarChar(250)
   // Preventive Action
-  preventiveAction       String?                @db.Text // Tindakan pencegahan kedepan
-  implementedBy          String?                @db.Char(10)
+  preventiveAction       String?               @db.Text // Tindakan pencegahan kedepan
+  implementedBy          String?               @db.Char(10)
   implementedDate        DateTime?
+  // Transaction Status
+  transactionStatus      TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted              Boolean               @default(false)
+  deletedAt              DateTime?
+  deletedBy              String?               @db.Char(10)
   // Metadata
-  iStatus                MasterRecordStatusEnum @default(Active)
-  remarks                String?                @db.VarChar(250)
-  createdBy              String?                @db.Char(10)
-  createdAt              DateTime               @default(now())
-  updatedBy              String?                @db.Char(10)
+  remarks                String?               @db.VarChar(250)
+  createdBy              String?               @db.Char(10)
+  createdAt              DateTime              @default(now())
+  updatedBy              String?               @db.Char(10)
   updatedAt              DateTime
-  company_id             String                 @db.Char(5)
-  branch_id              String                 @db.Char(10)
+  company_id             String                @db.Char(5)
+  branch_id              String                @db.Char(10)
   // Relations
-  serviceOrder           wks_ServiceOrder?      @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
-  customer               cmf_Customer           @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
-  vehicle                cmf_CustomerVehicle?   @relation(fields: [company_id, vehicle_customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
+  serviceOrder           wks_ServiceOrder?     @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
+  customer               cmf_Customer          @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
+  vehicle                cmf_CustomerVehicle?  @relation(fields: [company_id, vehicle_customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
   complaintLogs          wks_ComplaintLog[]
   serviceReworks         wks_ServiceRework[]
   creditNotes            arm_CreditNote[]
@@ -1869,25 +2028,30 @@ model wks_CustomerComplaint {
 
 // Complaint Activity Log - History semua aktivitas complaint
 model wks_ComplaintLog {
-  id           String                 @db.Char(30) // Manual: CML/2025/10/00001
-  complaint_id String                 @db.Char(30)
-  logDate      DateTime               @default(now())
-  logType      ComplaintLogTypeEnum // STATUS_CHANGE, ASSIGNMENT, RESPONSE, ESCALATION, RESOLUTION, FOLLOW_UP, NOTE
-  oldStatus    ComplaintStatusEnum?
-  newStatus    ComplaintStatusEnum?
-  action       String?                @db.VarChar(100) // Assigned to John, Status changed, Called customer, dll
-  description  String?                @db.Text
-  actionBy     String?                @db.Char(10) // User yang melakukan action
-  isInternal   Boolean?               @default(false) // Internal note atau visible ke customer
-  attachments  String?                @db.Text // JSON array URLs
+  id                String                @db.Char(30) // Manual: CML/2025/10/00001
+  complaint_id      String                @db.Char(30)
+  logDate           DateTime              @default(now())
+  logType           ComplaintLogTypeEnum // STATUS_CHANGE, ASSIGNMENT, RESPONSE, ESCALATION, RESOLUTION, FOLLOW_UP, NOTE
+  oldStatus         ComplaintStatusEnum?
+  newStatus         ComplaintStatusEnum?
+  action            String?               @db.VarChar(100) // Assigned to John, Status changed, Called customer, dll
+  description       String?               @db.Text
+  actionBy          String?               @db.Char(10) // User yang melakukan action
+  isInternal        Boolean?              @default(false) // Internal note atau visible ke customer
+  attachments       String?               @db.Text // JSON array URLs
+  // Transaction Status
+  transactionStatus TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean               @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?               @db.Char(10)
   // Metadata
-  iStatus      MasterRecordStatusEnum @default(Active)
-  createdBy    String?                @db.Char(10)
-  createdAt    DateTime               @default(now())
-  company_id   String                 @db.Char(5)
-  branch_id    String                 @db.Char(10)
+  createdBy         String?               @db.Char(10)
+  createdAt         DateTime              @default(now())
+  company_id        String                @db.Char(5)
+  branch_id         String                @db.Char(10)
   // Relations
-  complaint    wks_CustomerComplaint  @relation(fields: [company_id, complaint_id], references: [company_id, id], onUpdate: NoAction)
+  complaint         wks_CustomerComplaint @relation(fields: [company_id, complaint_id], references: [company_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_wks_ComplaintLog")
   @@index([company_id, complaint_id], map: "idx_complaint_log")
@@ -1945,8 +2109,13 @@ model wks_ServiceRework {
   // Notes
   notes                   String?                 @db.Text
   internalNotes           String?                 @db.Text
+  // Transaction Status
+  transactionStatus       TransactionStatusEnum   @default(ENTRY)
+  // Soft Delete
+  isDeleted               Boolean                 @default(false)
+  deletedAt               DateTime?
+  deletedBy               String?                 @db.Char(10)
   // Metadata
-  iStatus                 MasterRecordStatusEnum  @default(Active)
   remarks                 String?                 @db.VarChar(250)
   createdBy               String?                 @db.Char(10)
   createdAt               DateTime                @default(now())
@@ -1972,38 +2141,43 @@ model wks_ServiceRework {
 
 // Service Rework Items (Pekerjaan ulang & Parts)
 model wks_ServiceReworkItem {
-  id                 String                 @db.Char(30) // Manual: SRWI/2025/10/00001
-  serviceRework_id   String                 @db.Char(30)
-  lineNumber         Int                    @db.SmallInt
+  id                 String                @db.Char(30) // Manual: SRWI/2025/10/00001
+  serviceRework_id   String                @db.Char(30)
+  lineNumber         Int                   @db.SmallInt
   itemType           DetailTypeEnum // SERVICE atau PART
   // Original Item (yang bermasalah)
-  originalItem_id    String?                @db.Char(30) // Original ServiceOrderDetail ID
+  originalItem_id    String?               @db.Char(30) // Original ServiceOrderDetail ID
   // Service Info
-  serviceType_id     String?                @db.Char(10)
-  serviceName        String?                @db.VarChar(100)
-  serviceDescription String?                @db.Text
+  serviceType_id     String?               @db.Char(10)
+  serviceName        String?               @db.VarChar(100)
+  serviceDescription String?               @db.Text
   // Part Info
-  product_id         String?                @db.Char(20)
-  productVariant_id  String?                @db.Char(30)
-  partName           String?                @db.VarChar(250)
+  product_id         String?               @db.Char(20)
+  productVariant_id  String?               @db.Char(30)
+  partName           String?               @db.VarChar(250)
   // Action
   reworkAction       ReworkActionEnum? // REDO, REPLACE, ADJUST, REFUND
-  actionDescription  String?                @db.Text
+  actionDescription  String?               @db.Text
   // Quantity (untuk parts)
-  quantity           Decimal?               @default(0) @db.Decimal(12, 4)
+  quantity           Decimal?              @default(0) @db.Decimal(12, 4)
   // Cost
-  originalCost       Decimal?               @default(0) @db.Decimal(21, 4)
-  additionalCost     Decimal?               @default(0) @db.Decimal(21, 4)
+  originalCost       Decimal?              @default(0) @db.Decimal(21, 4)
+  additionalCost     Decimal?              @default(0) @db.Decimal(21, 4)
   // Status
-  itemStatus         DetailStatusEnum?      @default(PENDING)
-  iStatus            MasterRecordStatusEnum @default(Active)
-  remarks            String?                @db.VarChar(250)
-  createdBy          String?                @db.Char(10)
-  createdAt          DateTime               @default(now())
-  company_id         String                 @db.Char(5)
-  branch_id          String                 @db.Char(10)
+  itemStatus         DetailStatusEnum?     @default(PENDING)
+  transactionStatus  TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted          Boolean               @default(false)
+  deletedAt          DateTime?
+  deletedBy          String?               @db.Char(10)
+  // Metadata
+  remarks            String?               @db.VarChar(250)
+  createdBy          String?               @db.Char(10)
+  createdAt          DateTime              @default(now())
+  company_id         String                @db.Char(5)
+  branch_id          String                @db.Char(10)
   // Relations
-  serviceRework      wks_ServiceRework      @relation(fields: [company_id, serviceRework_id], references: [company_id, id], onUpdate: NoAction)
+  serviceRework      wks_ServiceRework     @relation(fields: [company_id, serviceRework_id], references: [company_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_wks_ServiceReworkItem")
   @@index([company_id, serviceRework_id], map: "idx_rework_item")
@@ -2054,8 +2228,13 @@ model arm_CreditNote {
   // Notes
   notes                 String?                @db.Text
   internalNotes         String?                @db.Text
+  // Transaction Status
+  transactionStatus     TransactionStatusEnum  @default(ENTRY)
+  // Soft Delete
+  isDeleted             Boolean                @default(false)
+  deletedAt             DateTime?
+  deletedBy             String?                @db.Char(10)
   // Metadata
-  iStatus               MasterRecordStatusEnum @default(Active)
   remarks               String?                @db.VarChar(250)
   createdBy             String?                @db.Char(10)
   createdAt             DateTime               @default(now())
@@ -2082,36 +2261,41 @@ model arm_CreditNote {
 
 // Credit Note Detail
 model arm_CreditNoteDetail {
-  id                String                 @db.Char(30) // Manual: CND/2025/10/00001
-  creditNote_id     String                 @db.Char(30)
-  lineNumber        Int                    @db.SmallInt
+  id                String                @db.Char(30) // Manual: CND/2025/10/00001
+  creditNote_id     String                @db.Char(30)
+  lineNumber        Int                   @db.SmallInt
   itemType          InvoiceItemTypeEnum // SERVICE, PART, OTHER
   // Item Info
-  item_id           String?                @db.Char(30)
-  itemCode          String?                @db.VarChar(50)
-  itemName          String                 @db.VarChar(250)
-  description       String?                @db.Text
+  item_id           String?               @db.Char(30)
+  itemCode          String?               @db.VarChar(50)
+  itemName          String                @db.VarChar(250)
+  description       String?               @db.Text
   // Original Amount
-  originalQuantity  Decimal?               @db.Decimal(12, 4)
-  originalUnitPrice Decimal?               @db.Decimal(21, 4)
-  originalAmount    Decimal?               @db.Decimal(21, 4)
+  originalQuantity  Decimal?              @db.Decimal(12, 4)
+  originalUnitPrice Decimal?              @db.Decimal(21, 4)
+  originalAmount    Decimal?              @db.Decimal(21, 4)
   // Credit Amount
-  creditQuantity    Decimal?               @db.Decimal(12, 4)
-  creditUnitPrice   Decimal?               @db.Decimal(21, 4)
-  creditAmount      Decimal                @db.Decimal(21, 4)
-  taxAmount         Decimal?               @default(0) @db.Decimal(21, 4)
-  totalCredit       Decimal                @db.Decimal(21, 4)
+  creditQuantity    Decimal?              @db.Decimal(12, 4)
+  creditUnitPrice   Decimal?              @db.Decimal(21, 4)
+  creditAmount      Decimal               @db.Decimal(21, 4)
+  taxAmount         Decimal?              @default(0) @db.Decimal(21, 4)
+  totalCredit       Decimal               @db.Decimal(21, 4)
   // Reason
-  creditReason      String?                @db.VarChar(250)
-  // Status
-  iStatus           MasterRecordStatusEnum @default(Active)
-  remarks           String?                @db.VarChar(250)
-  createdBy         String?                @db.Char(10)
-  createdAt         DateTime               @default(now())
-  company_id        String                 @db.Char(5)
-  branch_id         String                 @db.Char(10)
+  creditReason      String?               @db.VarChar(250)
+  // Transaction Status
+  transactionStatus TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean               @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?               @db.Char(10)
+  // Metadata
+  remarks           String?               @db.VarChar(250)
+  createdBy         String?               @db.Char(10)
+  createdAt         DateTime              @default(now())
+  company_id        String                @db.Char(5)
+  branch_id         String                @db.Char(10)
   // Relations
-  creditNote        arm_CreditNote         @relation(fields: [company_id, creditNote_id], references: [company_id, id], onUpdate: NoAction)
+  creditNote        arm_CreditNote        @relation(fields: [company_id, creditNote_id], references: [company_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_arm_CreditNoteDetail")
   @@index([company_id, creditNote_id], map: "idx_credit_note_detail")
@@ -2241,8 +2425,13 @@ model prc_PurchaseOrder {
   // Notes
   notes                 String?                   @db.Text
   internalNotes         String?                   @db.Text
+  // Transaction Status
+  transactionStatus     TransactionStatusEnum     @default(ENTRY)
+  // Soft Delete
+  isDeleted             Boolean                   @default(false)
+  deletedAt             DateTime?
+  deletedBy             String?                   @db.Char(10)
   // Metadata
-  iStatus               MasterRecordStatusEnum    @default(Active)
   remarks               String?                   @db.VarChar(250)
   createdBy             String?                   @db.Char(10)
   createdAt             DateTime                  @default(now())
@@ -2297,7 +2486,12 @@ model prc_PurchaseOrderDetail {
   expectedDate        DateTime?                   @db.Date
   // Status
   lineStatus          PODetailStatusEnum?         @default(OPEN) // OPEN, PARTIAL, FULLY_RECEIVED, CANCELLED
-  iStatus             MasterRecordStatusEnum      @default(Active)
+  transactionStatus   TransactionStatusEnum       @default(ENTRY)
+  // Soft Delete
+  isDeleted           Boolean                     @default(false)
+  deletedAt           DateTime?
+  deletedBy           String?                     @db.Char(10)
+  // Metadata
   remarks             String?                     @db.VarChar(250)
   createdBy           String?                     @db.Char(10)
   createdAt           DateTime                    @default(now())
@@ -2354,8 +2548,13 @@ model prc_PurchaseReceive {
   // Notes
   notes                 String?                     @db.Text
   internalNotes         String?                     @db.Text
+  // Transaction Status
+  transactionStatus     TransactionStatusEnum       @default(ENTRY)
+  // Soft Delete
+  isDeleted             Boolean                     @default(false)
+  deletedAt             DateTime?
+  deletedBy             String?                     @db.Char(10)
   // Metadata
-  iStatus               MasterRecordStatusEnum      @default(Active)
   remarks               String?                     @db.VarChar(250)
   createdBy             String?                     @db.Char(10)
   createdAt             DateTime                    @default(now())
@@ -2416,7 +2615,12 @@ model prc_PurchaseReceiveDetail {
   qualityNotes           String?                  @db.Text
   // Status
   lineStatus             ReceiveDetailStatusEnum? @default(RECEIVED)
-  iStatus                MasterRecordStatusEnum   @default(Active)
+  transactionStatus      TransactionStatusEnum    @default(ENTRY)
+  // Soft Delete
+  isDeleted              Boolean                  @default(false)
+  deletedAt              DateTime?
+  deletedBy              String?                  @db.Char(10)
+  // Metadata
   remarks                String?                  @db.VarChar(250)
   createdBy              String?                  @db.Char(10)
   createdAt              DateTime                 @default(now())
@@ -2810,8 +3014,13 @@ model arm_Invoice {
   // Notes
   notes                  String?                  @db.Text
   internalNotes          String?                  @db.Text
+  // Transaction Status
+  transactionStatus      TransactionStatusEnum    @default(ENTRY)
+  // Soft Delete
+  isDeleted              Boolean                  @default(false)
+  deletedAt              DateTime?
+  deletedBy              String?                  @db.Char(10)
   // Metadata
-  iStatus                MasterRecordStatusEnum   @default(Active)
   remarks                String?                  @db.VarChar(250)
   createdBy              String?                  @db.Char(10)
   createdAt              DateTime                 @default(now())
@@ -2838,37 +3047,42 @@ model arm_Invoice {
 
 // Invoice Detail
 model arm_InvoiceDetail {
-  id              String                 @db.Char(30) // Manual: IND/2025/10/00001
-  invoice_id      String                 @db.Char(30)
-  lineNumber      Int                    @db.SmallInt
-  itemType        InvoiceItemTypeEnum // SERVICE, PART, OTHER
+  id                String                @db.Char(30) // Manual: IND/2025/10/00001
+  invoice_id        String                @db.Char(30)
+  lineNumber        Int                   @db.SmallInt
+  itemType          InvoiceItemTypeEnum // SERVICE, PART, OTHER
   // Item Info
-  item_id         String?                @db.Char(30) // Service Type ID atau Product ID
-  itemCode        String?                @db.VarChar(50)
-  itemName        String                 @db.VarChar(250)
-  itemDescription String?                @db.Text
+  item_id           String?               @db.Char(30) // Service Type ID atau Product ID
+  itemCode          String?               @db.VarChar(50)
+  itemName          String                @db.VarChar(250)
+  itemDescription   String?               @db.Text
   // Quantity & Price
-  quantity        Decimal                @db.Decimal(12, 4)
-  uom             String?                @db.VarChar(10)
-  unitPrice       Decimal                @db.Decimal(21, 4)
-  discountPercent Decimal?               @default(0) @db.Decimal(5, 2)
-  discountAmount  Decimal?               @default(0) @db.Decimal(21, 4)
-  taxPercent      Decimal?               @default(0) @db.Decimal(5, 2)
-  taxAmount       Decimal?               @default(0) @db.Decimal(21, 4)
-  subtotal        Decimal                @db.Decimal(21, 4)
+  quantity          Decimal               @db.Decimal(12, 4)
+  uom               String?               @db.VarChar(10)
+  unitPrice         Decimal               @db.Decimal(21, 4)
+  discountPercent   Decimal?              @default(0) @db.Decimal(5, 2)
+  discountAmount    Decimal?              @default(0) @db.Decimal(21, 4)
+  taxPercent        Decimal?              @default(0) @db.Decimal(5, 2)
+  taxAmount         Decimal?              @default(0) @db.Decimal(21, 4)
+  subtotal          Decimal               @db.Decimal(21, 4)
   // COA Mapping
-  revenue_coa_id  String?                @db.Char(15) // Revenue account
-  // Status
-  iStatus         MasterRecordStatusEnum @default(Active)
-  remarks         String?                @db.VarChar(250)
-  createdBy       String?                @db.Char(10)
-  createdAt       DateTime               @default(now())
-  updatedBy       String?                @db.Char(10)
-  updatedAt       DateTime
-  company_id      String                 @db.Char(5)
-  branch_id       String                 @db.Char(10)
+  revenue_coa_id    String?               @db.Char(15) // Revenue account
+  // Transaction Status
+  transactionStatus TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean               @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?               @db.Char(10)
+  // Metadata
+  remarks           String?               @db.VarChar(250)
+  createdBy         String?               @db.Char(10)
+  createdAt         DateTime              @default(now())
+  updatedBy         String?               @db.Char(10)
+  updatedAt         DateTime
+  company_id        String                @db.Char(5)
+  branch_id         String                @db.Char(10)
   // Relations
-  invoice         arm_Invoice            @relation(fields: [company_id, invoice_id], references: [company_id, id], onUpdate: NoAction)
+  invoice           arm_Invoice           @relation(fields: [company_id, invoice_id], references: [company_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_arm_InvoiceDetail")
   @@index([company_id, invoice_id], map: "idx_invoice_detail")
@@ -2906,8 +3120,13 @@ model arm_Payment {
   internalNotes     String?                  @db.Text
   // Proof
   proofImageURL     String?                  @db.VarChar(250) // Bukti transfer
+  // Transaction Status
+  transactionStatus TransactionStatusEnum    @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean                  @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?                  @db.Char(10)
   // Metadata
-  iStatus           MasterRecordStatusEnum   @default(Active)
   remarks           String?                  @db.VarChar(250)
   createdBy         String?                  @db.Char(10)
   createdAt         DateTime                 @default(now())
@@ -2931,22 +3150,27 @@ model arm_Payment {
 
 // Payment Detail (jika 1 payment untuk multiple invoice atau alokasi)
 model arm_PaymentDetail {
-  id               String                 @db.Char(30) // Manual: PYD/2025/10/00001
-  payment_id       String                 @db.Char(30)
-  lineNumber       Int                    @db.SmallInt
-  description      String?                @db.VarChar(250)
-  paymentMethod_id String                 @db.Char(10)
-  amount           Decimal                @db.Decimal(21, 4)
-  referenceNumber  String?                @db.VarChar(50)
+  id                String                @db.Char(30) // Manual: PYD/2025/10/00001
+  payment_id        String                @db.Char(30)
+  lineNumber        Int                   @db.SmallInt
+  description       String?               @db.VarChar(250)
+  paymentMethod_id  String                @db.Char(10)
+  amount            Decimal               @db.Decimal(21, 4)
+  referenceNumber   String?               @db.VarChar(50)
+  // Transaction Status
+  transactionStatus TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean               @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?               @db.Char(10)
   // Metadata
-  iStatus          MasterRecordStatusEnum @default(Active)
-  createdBy        String?                @db.Char(10)
-  createdAt        DateTime               @default(now())
-  company_id       String                 @db.Char(5)
-  branch_id        String                 @db.Char(10)
+  createdBy         String?               @db.Char(10)
+  createdAt         DateTime              @default(now())
+  company_id        String                @db.Char(5)
+  branch_id         String                @db.Char(10)
   // Relations
-  payment          arm_Payment            @relation(fields: [company_id, payment_id], references: [company_id, id], onUpdate: NoAction)
-  paymentMethod    cmf_PaymentMethod      @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
+  payment           arm_Payment           @relation(fields: [company_id, payment_id], references: [company_id, id], onUpdate: NoAction)
+  paymentMethod     cmf_PaymentMethod     @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_arm_PaymentDetail")
   @@index([company_id, payment_id], map: "idx_payment_detail")
@@ -2972,8 +3196,13 @@ model arm_CashReceipt {
   // Notes
   description       String?                 @db.Text
   notes             String?                 @db.Text
+  // Transaction Status
+  transactionStatus TransactionStatusEnum   @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean                 @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?                 @db.Char(10)
   // Metadata
-  iStatus           MasterRecordStatusEnum  @default(Active)
   remarks           String?                 @db.VarChar(250)
   createdBy         String?                 @db.Char(10)
   createdAt         DateTime                @default(now())
@@ -2991,20 +3220,25 @@ model arm_CashReceipt {
 
 // Cash Receipt Detail
 model arm_CashReceiptDetail {
-  id             String                 @db.Char(30) // Manual: CRD/2025/10/00001
-  cashReceipt_id String                 @db.Char(30)
-  lineNumber     Int                    @db.SmallInt
-  coa_id         String                 @db.Char(15) // COA untuk debit
-  description    String?                @db.VarChar(250)
-  amount         Decimal                @db.Decimal(21, 4)
+  id                String                @db.Char(30) // Manual: CRD/2025/10/00001
+  cashReceipt_id    String                @db.Char(30)
+  lineNumber        Int                   @db.SmallInt
+  coa_id            String                @db.Char(15) // COA untuk debit
+  description       String?               @db.VarChar(250)
+  amount            Decimal               @db.Decimal(21, 4)
+  // Transaction Status
+  transactionStatus TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean               @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?               @db.Char(10)
   // Metadata
-  iStatus        MasterRecordStatusEnum @default(Active)
-  createdBy      String?                @db.Char(10)
-  createdAt      DateTime               @default(now())
-  company_id     String                 @db.Char(5)
-  branch_id      String                 @db.Char(10)
+  createdBy         String?               @db.Char(10)
+  createdAt         DateTime              @default(now())
+  company_id        String                @db.Char(5)
+  branch_id         String                @db.Char(10)
   // Relations
-  cashReceipt    arm_CashReceipt        @relation(fields: [company_id, cashReceipt_id], references: [company_id, id], onUpdate: NoAction)
+  cashReceipt       arm_CashReceipt       @relation(fields: [company_id, cashReceipt_id], references: [company_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_arm_CashReceiptDetail")
   @@index([company_id, cashReceipt_id], map: "idx_cash_receipt_detail")
@@ -3019,66 +3253,71 @@ model arm_CashReceiptDetail {
 
 // A/P Invoice (Invoice dari Supplier) - Hutang
 model apm_Invoice {
-  id                    String                 @db.Char(30) // Manual: APINV/2025/10/00001
-  invoiceNumber         String                 @db.VarChar(30)
-  invoiceDate           DateTime               @default(now())
-  dueDate               DateTime?              @db.Date
-  transaction_type      String                 @db.Char(5) // "APINV"
-  transaction_class     String                 @db.Char(10) // "PURCHASE"
+  id                    String                @db.Char(30) // Manual: APINV/2025/10/00001
+  invoiceNumber         String                @db.VarChar(30)
+  invoiceDate           DateTime              @default(now())
+  dueDate               DateTime?             @db.Date
+  transaction_type      String                @db.Char(5) // "APINV"
+  transaction_class     String                @db.Char(10) // "PURCHASE"
   // Tax Configuration
-  taxScheme_id          String?                @db.Char(5) // V1, V2, V3
+  taxScheme_id          String?               @db.Char(5) // V1, V2, V3
   // Source Document
-  source_module         String?                @db.VarChar(20) // "PROCUREMENT"
-  purchaseReceive_id    String?                @db.Char(20) // Link ke Purchase Receive
-  purchaseOrder_id      String?                @db.Char(20) // Link ke PO
-  receiveNumber         String?                @db.VarChar(30)
-  poNumber              String?                @db.VarChar(30)
+  source_module         String?               @db.VarChar(20) // "PROCUREMENT"
+  purchaseReceive_id    String?               @db.Char(20) // Link ke Purchase Receive
+  purchaseOrder_id      String?               @db.Char(20) // Link ke PO
+  receiveNumber         String?               @db.VarChar(30)
+  poNumber              String?               @db.VarChar(30)
   // Supplier Info
-  supplier_id           String                 @db.Char(20)
-  supplierName          String                 @db.VarChar(150)
-  supplierAddress       String?                @db.Text
-  supplierPhone         String?                @db.VarChar(20)
-  supplierEmail         String?                @db.VarChar(100)
+  supplier_id           String                @db.Char(20)
+  supplierName          String                @db.VarChar(150)
+  supplierAddress       String?               @db.Text
+  supplierPhone         String?               @db.VarChar(20)
+  supplierEmail         String?               @db.VarChar(100)
   // Supplier Invoice Info
-  supplierInvoiceNumber String?                @db.VarChar(30)
-  supplierInvoiceDate   DateTime?              @db.Date
-  taxInvoiceNumber      String?                @db.VarChar(30) // Faktur Pajak
+  supplierInvoiceNumber String?               @db.VarChar(30)
+  supplierInvoiceDate   DateTime?             @db.Date
+  taxInvoiceNumber      String?               @db.VarChar(30) // Faktur Pajak
   // Amount
-  subtotalAmount        Decimal                @default(0) @db.Decimal(21, 4)
-  discountPercent       Decimal?               @default(0) @db.Decimal(5, 2)
-  discountAmount        Decimal?               @default(0) @db.Decimal(21, 4)
-  taxPercent            Decimal?               @default(0) @db.Decimal(5, 2)
-  taxAmount             Decimal?               @default(0) @db.Decimal(21, 4)
-  shippingCost          Decimal?               @default(0) @db.Decimal(21, 4)
-  otherCharges          Decimal?               @default(0) @db.Decimal(21, 4)
-  totalAmount           Decimal                @db.Decimal(21, 4)
-  paidAmount            Decimal?               @default(0) @db.Decimal(21, 4)
-  outstandingAmount     Decimal?               @db.Decimal(21, 4)
+  subtotalAmount        Decimal               @default(0) @db.Decimal(21, 4)
+  discountPercent       Decimal?              @default(0) @db.Decimal(5, 2)
+  discountAmount        Decimal?              @default(0) @db.Decimal(21, 4)
+  taxPercent            Decimal?              @default(0) @db.Decimal(5, 2)
+  taxAmount             Decimal?              @default(0) @db.Decimal(21, 4)
+  shippingCost          Decimal?              @default(0) @db.Decimal(21, 4)
+  otherCharges          Decimal?              @default(0) @db.Decimal(21, 4)
+  totalAmount           Decimal               @db.Decimal(21, 4)
+  paidAmount            Decimal?              @default(0) @db.Decimal(21, 4)
+  outstandingAmount     Decimal?              @db.Decimal(21, 4)
   // Payment Terms
-  paymentTermDays       Int?                   @db.SmallInt
-  paymentDueDate        DateTime?              @db.Date
+  paymentTermDays       Int?                  @db.SmallInt
+  paymentDueDate        DateTime?             @db.Date
   // Status
-  invoiceStatus         APInvoiceStatusEnum    @default(DRAFT)
-  paymentStatus         APPaymentStatusEnum    @default(UNPAID)
-  isPosted              Boolean?               @default(false)
+  invoiceStatus         APInvoiceStatusEnum   @default(DRAFT)
+  paymentStatus         APPaymentStatusEnum   @default(UNPAID)
+  isPosted              Boolean?              @default(false)
   postedDate            DateTime?
   // Notes
-  notes                 String?                @db.Text
-  internalNotes         String?                @db.Text
+  notes                 String?               @db.Text
+  internalNotes         String?               @db.Text
+  // Transaction Status
+  transactionStatus     TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted             Boolean               @default(false)
+  deletedAt             DateTime?
+  deletedBy             String?               @db.Char(10)
   // Metadata
-  iStatus               MasterRecordStatusEnum @default(Active)
-  remarks               String?                @db.VarChar(250)
-  createdBy             String?                @db.Char(10)
-  createdAt             DateTime               @default(now())
-  updatedBy             String?                @db.Char(10)
+  remarks               String?               @db.VarChar(250)
+  createdBy             String?               @db.Char(10)
+  createdAt             DateTime              @default(now())
+  updatedBy             String?               @db.Char(10)
   updatedAt             DateTime
-  company_id            String                 @db.Char(5)
-  branch_id             String                 @db.Char(10)
+  company_id            String                @db.Char(5)
+  branch_id             String                @db.Char(10)
   // Relations
-  supplier              prc_Supplier           @relation(fields: [company_id, supplier_id], references: [company_id, id], onUpdate: NoAction)
-  purchaseReceive       prc_PurchaseReceive?   @relation(fields: [company_id, purchaseReceive_id], references: [company_id, id], onUpdate: NoAction)
-  purchaseOrder         prc_PurchaseOrder?     @relation(fields: [company_id, purchaseOrder_id], references: [company_id, id], onUpdate: NoAction)
-  taxScheme             cmf_TaxScheme?         @relation(fields: [company_id, taxScheme_id], references: [company_id, id], onUpdate: NoAction)
+  supplier              prc_Supplier          @relation(fields: [company_id, supplier_id], references: [company_id, id], onUpdate: NoAction)
+  purchaseReceive       prc_PurchaseReceive?  @relation(fields: [company_id, purchaseReceive_id], references: [company_id, id], onUpdate: NoAction)
+  purchaseOrder         prc_PurchaseOrder?    @relation(fields: [company_id, purchaseOrder_id], references: [company_id, id], onUpdate: NoAction)
+  taxScheme             cmf_TaxScheme?        @relation(fields: [company_id, taxScheme_id], references: [company_id, id], onUpdate: NoAction)
   invoiceDetails        apm_InvoiceDetail[]
   payments              apm_Payment[]
   glTrans               acc_GLTrans[]
@@ -3092,38 +3331,43 @@ model apm_Invoice {
 
 // A/P Invoice Detail
 model apm_InvoiceDetail {
-  id                String                 @db.Char(30) // Manual: APID/2025/10/00001
-  apInvoice_id      String                 @db.Char(30)
-  lineNumber        Int                    @db.SmallInt
+  id                String                @db.Char(30) // Manual: APID/2025/10/00001
+  apInvoice_id      String                @db.Char(30)
+  lineNumber        Int                   @db.SmallInt
   // Product Info
-  product_id        String?                @db.Char(20)
-  productVariant_id String?                @db.Char(30)
-  productName       String                 @db.VarChar(250)
-  productCode       String?                @db.VarChar(50)
-  description       String?                @db.Text
+  product_id        String?               @db.Char(20)
+  productVariant_id String?               @db.Char(30)
+  productName       String                @db.VarChar(250)
+  productCode       String?               @db.VarChar(50)
+  description       String?               @db.Text
   // Quantity & Price
-  quantity          Decimal                @db.Decimal(12, 4)
-  uom               String?                @db.VarChar(10)
-  unitPrice         Decimal                @db.Decimal(21, 4)
-  discountPercent   Decimal?               @default(0) @db.Decimal(5, 2)
-  discountAmount    Decimal?               @default(0) @db.Decimal(21, 4)
-  taxPercent        Decimal?               @default(0) @db.Decimal(5, 2)
-  taxAmount         Decimal?               @default(0) @db.Decimal(21, 4)
-  subtotal          Decimal                @db.Decimal(21, 4)
+  quantity          Decimal               @db.Decimal(12, 4)
+  uom               String?               @db.VarChar(10)
+  unitPrice         Decimal               @db.Decimal(21, 4)
+  discountPercent   Decimal?              @default(0) @db.Decimal(5, 2)
+  discountAmount    Decimal?              @default(0) @db.Decimal(21, 4)
+  taxPercent        Decimal?              @default(0) @db.Decimal(5, 2)
+  taxAmount         Decimal?              @default(0) @db.Decimal(21, 4)
+  subtotal          Decimal               @db.Decimal(21, 4)
   // COA Mapping
-  expense_coa_id    String?                @db.Char(15) // Expense/Inventory account
-  // Status
-  iStatus           MasterRecordStatusEnum @default(Active)
-  remarks           String?                @db.VarChar(250)
-  createdBy         String?                @db.Char(10)
-  createdAt         DateTime               @default(now())
-  updatedBy         String?                @db.Char(10)
+  expense_coa_id    String?               @db.Char(15) // Expense/Inventory account
+  // Transaction Status
+  transactionStatus TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean               @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?               @db.Char(10)
+  // Metadata
+  remarks           String?               @db.VarChar(250)
+  createdBy         String?               @db.Char(10)
+  createdAt         DateTime              @default(now())
+  updatedBy         String?               @db.Char(10)
   updatedAt         DateTime
-  company_id        String                 @db.Char(5)
-  branch_id         String                 @db.Char(10)
+  company_id        String                @db.Char(5)
+  branch_id         String                @db.Char(10)
   // Relations
-  apInvoice         apm_Invoice            @relation(fields: [company_id, apInvoice_id], references: [company_id, id], onUpdate: NoAction)
-  product           imc_Product?           @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
+  apInvoice         apm_Invoice           @relation(fields: [company_id, apInvoice_id], references: [company_id, id], onUpdate: NoAction)
+  product           imc_Product?          @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_apm_InvoiceDetail")
   @@index([company_id, apInvoice_id], map: "idx_ap_invoice_detail")
@@ -3161,8 +3405,13 @@ model apm_Payment {
   internalNotes     String?                    @db.Text
   // Proof
   proofImageURL     String?                    @db.VarChar(250) // Bukti transfer
+  // Transaction Status
+  transactionStatus TransactionStatusEnum      @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean                    @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?                    @db.Char(10)
   // Metadata
-  iStatus           MasterRecordStatusEnum     @default(Active)
   remarks           String?                    @db.VarChar(250)
   createdBy         String?                    @db.Char(10)
   createdAt         DateTime                   @default(now())
@@ -3186,22 +3435,27 @@ model apm_Payment {
 
 // A/P Payment Detail (jika 1 payment untuk multiple invoice)
 model apm_PaymentDetail {
-  id               String                 @db.Char(30) // Manual: APPD/2025/10/00001
-  apPayment_id     String                 @db.Char(30)
-  lineNumber       Int                    @db.SmallInt
-  description      String?                @db.VarChar(250)
-  paymentMethod_id String                 @db.Char(10)
-  amount           Decimal                @db.Decimal(21, 4)
-  referenceNumber  String?                @db.VarChar(50)
+  id                String                @db.Char(30) // Manual: APPD/2025/10/00001
+  apPayment_id      String                @db.Char(30)
+  lineNumber        Int                   @db.SmallInt
+  description       String?               @db.VarChar(250)
+  paymentMethod_id  String                @db.Char(10)
+  amount            Decimal               @db.Decimal(21, 4)
+  referenceNumber   String?               @db.VarChar(50)
+  // Transaction Status
+  transactionStatus TransactionStatusEnum @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean               @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?               @db.Char(10)
   // Metadata
-  iStatus          MasterRecordStatusEnum @default(Active)
-  createdBy        String?                @db.Char(10)
-  createdAt        DateTime               @default(now())
-  company_id       String                 @db.Char(5)
-  branch_id        String                 @db.Char(10)
+  createdBy         String?               @db.Char(10)
+  createdAt         DateTime              @default(now())
+  company_id        String                @db.Char(5)
+  branch_id         String                @db.Char(10)
   // Relations
-  apPayment        apm_Payment            @relation(fields: [company_id, apPayment_id], references: [company_id, id], onUpdate: NoAction)
-  paymentMethod    cmf_PaymentMethod      @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
+  apPayment         apm_Payment           @relation(fields: [company_id, apPayment_id], references: [company_id, id], onUpdate: NoAction)
+  paymentMethod     cmf_PaymentMethod     @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
 
   @@id([company_id, id], map: "pk_apm_PaymentDetail")
   @@index([company_id, apPayment_id], map: "idx_ap_payment_detail")
@@ -3240,8 +3494,13 @@ model prc_PurchaseReturn {
   // Notes
   notes                String?                    @db.Text
   internalNotes        String?                    @db.Text
+  // Transaction Status
+  transactionStatus    TransactionStatusEnum      @default(ENTRY)
+  // Soft Delete
+  isDeleted            Boolean                    @default(false)
+  deletedAt            DateTime?
+  deletedBy            String?                    @db.Char(10)
   // Metadata
-  iStatus              MasterRecordStatusEnum     @default(Active)
   remarks              String?                    @db.VarChar(250)
   createdBy            String?                    @db.Char(10)
   createdAt            DateTime                   @default(now())
@@ -3293,7 +3552,12 @@ model prc_PurchaseReturnDetail {
   batchNumber       String?                 @db.VarChar(30)
   // Status
   lineStatus        ReturnDetailStatusEnum? @default(PENDING)
-  iStatus           MasterRecordStatusEnum  @default(Active)
+  transactionStatus TransactionStatusEnum   @default(ENTRY)
+  // Soft Delete
+  isDeleted         Boolean                 @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?                 @db.Char(10)
+  // Metadata
   remarks           String?                 @db.VarChar(250)
   createdBy         String?                 @db.Char(10)
   createdAt         DateTime                @default(now())
@@ -3436,6 +3700,12 @@ enum ApprovalStatusEnum {
 enum PostingStatusEnum {
   NOT_POSTED @map("0")
   POSTED     @map("1")
+}
+
+enum TransactionStatusEnum {
+  ENTRY    @map("E") // Draft/Entry - Transaksi belum di-post
+  POSTED   @map("P") // Posted - Transaksi sudah di-post ke GL
+  UNPOSTED @map("U") // Unposted - Transaksi sudah di-unpost dari GL
 }
 
 enum PriorityEnum {
@@ -3892,4 +4162,49 @@ enum TaxTypeEnum {
   PURCHASE @map("P") // Tax untuk Purchase (Input Tax / PPN Masukan)
   WHT      @map("W") // Withholding Tax (PPh Potong)
   OTHER    @map("O") // Tax lainnya
+}
+
+// ============================================================================
+// REMINDER ENUMS
+// ============================================================================
+
+enum ReminderEntityTypeEnum {
+  SERVICE_ORDER       @map("SO") // Service Order reminder
+  BOOKING             @map("BK") // Booking reminder
+  SERVICE_HISTORY     @map("SH") // Service History / Next service reminder
+  VEHICLE_MAINTENANCE @map("VM") // Vehicle maintenance reminder
+  SUBSCRIPTION        @map("SUB") // Subscription expiry reminder
+  PAYMENT             @map("PAY") // Payment due reminder
+  CUSTOM              @map("CUS") // Custom reminder
+}
+
+enum ReminderTypeEnum {
+  SCHEDULED_SERVICE   @map("SCH") // Reminder untuk service yang dijadwalkan
+  SERVICE_DUE         @map("DUE") // Reminder service sudah due
+  APPOINTMENT         @map("APT") // Reminder appointment/booking
+  PAYMENT_DUE         @map("PAY") // Reminder payment due
+  SUBSCRIPTION_EXPIRY @map("EXP") // Reminder subscription akan expired
+  FOLLOW_UP           @map("FUP") // Follow-up reminder
+  CUSTOM              @map("CUS") // Custom reminder
+}
+
+enum ReminderChannelEnum {
+  WHATSAPP @map("WA") // WhatsApp
+  EMAIL    @map("EM") // Email
+  SMS      @map("SM") // SMS
+}
+
+enum ReminderStatusEnum {
+  PENDING   @map("P") // Pending - belum dikirim
+  SCHEDULED @map("S") // Scheduled - sudah dijadwalkan
+  SENT      @map("T") // Sent - sudah dikirim
+  FAILED    @map("F") // Failed - gagal dikirim
+  CANCELLED @map("C") // Cancelled - dibatalkan
+}
+
+enum ReminderLogTypeEnum {
+  SENT      @map("S") // Reminder berhasil dikirim
+  FAILED    @map("F") // Reminder gagal dikirim
+  CANCELLED @map("C") // Reminder dibatalkan
+  UPDATED   @map("U") // Reminder diupdate
 }

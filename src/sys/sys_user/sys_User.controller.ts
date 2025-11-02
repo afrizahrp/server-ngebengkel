@@ -2,7 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { sys_UserService } from './sys_User.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
 
-@Controller('user')
+@Controller(':user')
 export class sys_UserController {
   constructor(private readonly sys_userService: sys_UserService) {}
 

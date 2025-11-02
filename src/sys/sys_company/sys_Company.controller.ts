@@ -14,7 +14,7 @@ import { Sys_UpdateCompanyDto } from './dto/sys_UpdateCompany.dto';
 import { Sys_ResponseCompanyDto } from './dto/sys_ResponseCompany.dto';
 import { Sys_ResponseCompanyWithBranchesDto } from './dto/sys_ResponseCompanyWithBranches.dto';
 
-@Controller('sys_company')
+@Controller(':sys_company')
 export class sys_CompanyController {
   constructor(private readonly companyService: Sys_CompanyService) {}
 

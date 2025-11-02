@@ -22,24 +22,25 @@ async function main() {
   console.log(`✅ Found company: ${company.name}`);
 
   // Check if we need to create document numbering for Service Order
-  const docNumber = await prisma.sys_DocumentNumber.findUnique({
+  const docNumber = await prisma.sys_Numbering.findUnique({
     where: {
-      company_id_counterCode: {
+      company_id_branch_id_id: {
         company_id: company.id,
-        counterCode: 'SO',
+        branch_id: 'BR001',
+        id: 'SO',
       },
     },
   });
 
   if (!docNumber) {
-    await prisma.sys_DocumentNumber.create({
+    await prisma.sys_Numbering.create({
       data: {
         company_id: company.id,
         branch_id: 'BR001',
-        counterCode: 'SO',
-        description: 'Service Order',
-        module: 'SERVICE',
+        id: 'SO',
         prefix: 'SO',
+        description: 'Service Order',
+        module_id: 'WKS',
         delimiter: '/',
         includeYear: true,
         includeMonth: true,
@@ -207,7 +208,7 @@ async function main() {
       serviceCost: 350000,
       partsCost: 1065000,
       totalAmount: 1415000,
-      iStatus: MasterRecordStatusEnum.Active,
+      isDeleted: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },

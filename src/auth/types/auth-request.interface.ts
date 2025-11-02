@@ -10,4 +10,3 @@ export interface AuthRequest {
   refreshToken?: string;
   sessionId?: string;
 }
-

@@ -48,5 +48,3 @@ export class Sys_ResponseUserRoleDto {
     isDefault?: boolean;
   }>;
 }
-
-

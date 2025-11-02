@@ -12,7 +12,11 @@ export class Sys_BranchService {
     createBranchDto: Sys_CreateBranchDto,
   ): Promise<Sys_ResponseBranchDto> {
     const branch = await this.prisma.sys_Branch.create({
-      data: createBranchDto,
+      data: {
+        ...createBranchDto,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
       include: {
         company: {
           select: {
@@ -122,6 +126,7 @@ export class Sys_BranchService {
       iStatus: branch.iStatus,
       remarks: branch.remarks?.trim(),
       company_id: branch.company_id?.trim(),
+      isMain: branch.isMain ?? false,
       company: branch.company
         ? {
             id: branch.company.id?.trim(),

@@ -444,35 +444,35 @@ model sys_Migration_log {
 }
 
 // Document Numbering Configuration
-model sys_DocumentNumber {
-  counterCode    String                 @db.VarChar(10) // PCO, PCR, SO, INV, CR, CP, dll
-  description    String?                @db.VarChar(100) // Purchase Order, Service Order, dll
-  module         String?                @db.VarChar(20) // PROCUREMENT, SERVICE, ACCOUNTING, dll
-  prefix         String?                @db.VarChar(10) // Prefix tambahan (opsional)
-  delimiter      String                 @default("/") @db.VarChar(5) // Pemisah: / atau -
-  includeYear    Boolean                @default(true) // Include tahun di format
-  includeMonth   Boolean                @default(true) // Include bulan di format
-  startNumber    Int                    @default(1) // Nomor awal
-  currentNumber  Int                    @default(0) // Nomor terakhir yang digunakan
-  sequenceLength Int                    @default(5) // Panjang sequence (5 = 00001)
-  resetAt        DocumentResetEnum      @default(MONTH) // NEVER, YEAR, MONTH, DAY
-  format         String                 @db.VarChar(50) // Template format: {CODE}/{YYYY}/{MM}/{SEQ}
-  // Sample Output
-  sampleOutput   String?                @db.VarChar(50) // Contoh: PCO/2025/10/00001
-  // Status & Metadata
-  iStatus        MasterRecordStatusEnum @default(Active)
-  remarks        String?                @db.VarChar(250)
-  createdBy      String?                @db.Char(10)
-  createdAt      DateTime               @default(now())
-  updatedBy      String?                @db.Char(10)
-  updatedAt      DateTime
-  company_id     String                 @db.Char(5)
-  branch_id      String                 @db.Char(10)
+// model sys_DocumentNumber {
+//   counterCode    String                 @db.VarChar(10) // PCO, PCR, SO, INV, CR, CP, dll
+//   description    String?                @db.VarChar(100) // Purchase Order, Service Order, dll
+//   module         String?                @db.VarChar(20) // PROCUREMENT, SERVICE, ACCOUNTING, dll
+//   prefix         String?                @db.VarChar(10) // Prefix tambahan (opsional)
+//   delimiter      String                 @default("/") @db.VarChar(5) // Pemisah: / atau -
+//   includeYear    Boolean                @default(true) // Include tahun di format
+//   includeMonth   Boolean                @default(true) // Include bulan di format
+//   startNumber    Int                    @default(1) // Nomor awal
+//   currentNumber  Int                    @default(0) // Nomor terakhir yang digunakan
+//   sequenceLength Int                    @default(5) // Panjang sequence (5 = 00001)
+//   resetAt        DocumentResetEnum      @default(MONTH) // NEVER, YEAR, MONTH, DAY
+//   format         String                 @db.VarChar(50) // Template format: {CODE}/{YYYY}/{MM}/{SEQ}
+//   // Sample Output
+//   sampleOutput   String?                @db.VarChar(50) // Contoh: PCO/2025/10/00001
+//   // Status & Metadata
+//   iStatus        MasterRecordStatusEnum @default(Active)
+//   remarks        String?                @db.VarChar(250)
+//   createdBy      String?                @db.Char(10)
+//   createdAt      DateTime               @default(now())
+//   updatedBy      String?                @db.Char(10)
+//   updatedAt      DateTime
+//   company_id     String                 @db.Char(5)
+//   branch_id      String                 @db.Char(10)
 
-  @@id([company_id, counterCode], map: "pk_sys_DocumentNumber")
-  @@unique([company_id, counterCode], map: "unique_counter_code")
-  @@index([company_id, module], map: "idx_doc_number_module")
-}
+//   @@id([company_id, counterCode], map: "pk_sys_DocumentNumber")
+//   @@unique([company_id, counterCode], map: "unique_counter_code")
+//   @@index([company_id, module], map: "idx_doc_number_module")
+// }
 
 /// ============================================================================
 /// INVENTORY & WAREHOUSE MANAGEMENT MODULE

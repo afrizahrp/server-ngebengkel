@@ -58,6 +58,7 @@ export class Sys_CompanyService {
             id: true,
             name: true,
             iStatus: true,
+            isMain: true,
           },
           orderBy: {
             name: 'asc',
@@ -76,6 +77,7 @@ export class Sys_CompanyService {
         id: branch.id.trim(),
         name: branch.name.trim(),
         iStatus: branch.iStatus,
+        isMain: branch.isMain ?? false,
       })),
     } as Sys_ResponseCompanyWithBranchesDto;
   }

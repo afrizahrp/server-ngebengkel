@@ -18,6 +18,7 @@ import { EmailModule } from './email/email.module';
 import { CleanupModule } from './auth/cleanup/cleanup.module';
 import { BookingModule } from './wks/booking/booking.module';
 import { ServiceOrderModule } from './wks/service-order/service-order.module';
+import { ReminderModule } from './wks/reminder/reminder.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 @Module({
@@ -39,6 +40,7 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     sys_MenuPermissionModule,
     BookingModule,
     ServiceOrderModule,
+    ReminderModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

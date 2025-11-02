@@ -47,6 +47,9 @@ async function bootstrap() {
     }),
   );
 
+  // set all routes with /api prefix
+  app.setGlobalPrefix('api');
+
   // const port = process.env.PORT ?? 4000;
   await app.listen(process.env.PORT ?? 4000);
 }

@@ -68,17 +68,29 @@ export class UserCompanyService {
       throw new ConflictException('No active company found');
     }
 
-    // Get default role (USER)
+    // Cek jumlah user di database (tidak termasuk user yang baru dibuat)
+    // Jika tidak ada user lain, assign role ADMIN, else assign role USER
+    const userCount = await this.prisma.sys_User.count({
+      where: {
+        id: {
+          not: userId,
+        },
+      },
+    });
+
+    const roleId = userCount === 0 ? 'ADMIN' : 'USER';
+
+    // Get role berdasarkan kondisi
     const defaultRole = await this.prisma.sys_Role.findFirst({
       where: {
         iStatus: 'Active',
-        id: 'USER',
+        id: roleId,
       },
     });
 
     if (!defaultRole) {
       throw new ConflictException(
-        'USER role not found. Please create USER role first.',
+        `${roleId} role not found. Please create ${roleId} role first.`,
       );
     }
 
@@ -148,6 +160,3 @@ export class UserCompanyService {
     return userCompanies;
   }
 }
-
-
-
