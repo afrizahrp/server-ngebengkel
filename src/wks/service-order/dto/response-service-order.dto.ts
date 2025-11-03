@@ -100,3 +100,5 @@ export class ServiceOrderResponseDto {
   updatedAt: Date;
   orderDetails?: ServiceOrderDetailResponseDto[];
 }
+
+

@@ -9,3 +9,5 @@ import wablasConfig from './config/wablas.config';
   exports: [WablasService],
 })
 export class WhatsAppModule {}
+
+
