@@ -13,6 +13,12 @@ export class BookingSlotResponseDto {
   slotStatus: SlotStatusEnum;
   remarks: string | null;
   createdAt: Date;
+  createdBy: string | null;
+  updatedBy: string | null;
+  updatedAt: Date | null;
+  isDeleted: boolean;
+  deletedAt: Date | null;
+  deletedBy: string | null;
   bay?: {
     id: string;
     name: string;
