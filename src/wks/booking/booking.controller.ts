@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -34,7 +35,40 @@ export class BookingController {
   }
 
   @Get()
-  findAll(@Query() paginationDto: PaginationBookingDto) {
+  findAll(
+    @Query() paginationDto: PaginationBookingDto,
+    @CurrentUser() user: AuthJwtPayload,
+  ) {
+    // company_id dan branch_id adalah 1 paket mandatory yang harus ada
+    // Fallback: gunakan dari token jika tidak ada di query params
+    // Ini lebih aman karena berasal dari authenticated token, bukan dari client
+    // Query params masih bisa digunakan untuk override jika diperlukan
+
+    // Fallback company_id dari token
+    paginationDto.company_id = paginationDto.company_id || user.company_id;
+
+    // Fallback branch_id dari token (isMain branch)
+    // Jika branch_id tidak ada di query params, gunakan branch_id dari token
+    if (!paginationDto.branch_id || paginationDto.branch_id.length === 0) {
+      if (user.branch_id) {
+        paginationDto.branch_id = [user.branch_id];
+      }
+    }
+
+    // Validasi: pastikan company_id dan branch_id ada (mandatory)
+    // Seharusnya selalu ada karena guard sudah verify token
+    if (!paginationDto.company_id) {
+      throw new BadRequestException(
+        'company_id is required. Please ensure you are authenticated with a valid token.',
+      );
+    }
+
+    if (!paginationDto.branch_id || paginationDto.branch_id.length === 0) {
+      throw new BadRequestException(
+        'branch_id is required. Please ensure you are authenticated with a valid token or select a branch.',
+      );
+    }
+
     return this.bookingService.findAll(paginationDto);
   }
 

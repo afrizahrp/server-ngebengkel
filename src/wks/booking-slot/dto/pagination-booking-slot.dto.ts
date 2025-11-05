@@ -29,7 +29,8 @@ export class PaginationBookingSlotDto {
   searchTerm?: string;
 
   @IsString()
-  company_id: string;
+  @IsOptional()
+  company_id?: string;
 
   @IsArray()
   @IsString({ each: true })
