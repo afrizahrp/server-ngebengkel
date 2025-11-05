@@ -73,7 +73,7 @@ export class AuthTokenService {
   private async generateAccessToken(payload: UserPayload): Promise<string> {
     return this.jwtService.signAsync(payload, {
       secret: this.jwtConfiguration.secret,
-      expiresIn: this.jwtConfiguration.signOptions?.expiresIn || '1h',
+      expiresIn: this.jwtConfiguration.signOptions?.expiresIn || '1d',
     });
   }
 

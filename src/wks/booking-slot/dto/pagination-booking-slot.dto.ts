@@ -6,10 +6,10 @@ import {
   IsArray,
   IsDateString,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ServiceOrderStatusEnum } from '@prisma/client';
+import { Type, Transform } from 'class-transformer';
+import { SlotStatusEnum } from '@prisma/client';
 
-export class PaginationServiceOrderDto {
+export class PaginationBookingSlotDto {
   @IsInt()
   @Type(() => Number)
   @IsOptional()
@@ -34,24 +34,29 @@ export class PaginationServiceOrderDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    return Array.isArray(value) ? value : [value];
+  })
   branch_id?: string[];
 
   @IsArray()
-  @IsEnum(ServiceOrderStatusEnum, { each: true })
+  @IsString({ each: true })
   @IsOptional()
-  orderStatus?: ServiceOrderStatusEnum[];
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    return Array.isArray(value) ? value : [value];
+  })
+  bay_id?: string[];
 
-  @IsString()
+  @IsArray()
+  @IsEnum(SlotStatusEnum, { each: true })
   @IsOptional()
-  customer_id?: string;
-
-  @IsString()
-  @IsOptional()
-  mechanic_id?: string;
-
-  @IsString()
-  @IsOptional()
-  serviceBay_id?: string;
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    return Array.isArray(value) ? value : [value];
+  })
+  slotStatus?: SlotStatusEnum[];
 
   @IsDateString()
   @IsOptional()
@@ -69,7 +74,3 @@ export class PaginationServiceOrderDto {
   @IsOptional()
   orderDir?: 'asc' | 'desc' = 'desc';
 }
-
-
-
-

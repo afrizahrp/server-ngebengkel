@@ -17,6 +17,7 @@ import { sys_MenuPermissionModule } from './sys/sys_menu_permission/sys_Menu_Per
 import { EmailModule } from './email/email.module';
 import { CleanupModule } from './auth/cleanup/cleanup.module';
 import { BookingModule } from './wks/booking/booking.module';
+import { BookingSlotModule } from './wks/booking-slot/booking-slot.module';
 import { ServiceOrderModule } from './wks/service-order/service-order.module';
 import { ReminderModule } from './wks/reminder/reminder.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
@@ -31,6 +32,10 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     WhatsAppModule,
     BetterAuthModule,
     CleanupModule,
+    BookingModule,
+    BookingSlotModule,
+    ServiceOrderModule,
+    ReminderModule,
     sys_CompanyModule,
     sys_BranchModule,
     sys_UserModule,
@@ -38,9 +43,6 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     Sys_UserCompanyRoleModule,
     sys_MenuModule,
     sys_MenuPermissionModule,
-    BookingModule,
-    ServiceOrderModule,
-    ReminderModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

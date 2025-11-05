@@ -51,6 +51,7 @@ async function main() {
     '/dashboard',
     '/booking',
     '/booking/calendar',
+    '/booking/slot',
     '/service-order',
     '/service-order/history',
     '/reminder',
@@ -71,6 +72,9 @@ async function main() {
               'Dashboard',
               'Pemesanan',
               'Jadwal & Booking',
+              'Daftar Slot',
+              'Kelola Slot',
+              'Atur Slot',
               'Booking',
               'Perbaikan',
               'Service',
@@ -194,9 +198,21 @@ async function main() {
     true,
   );
 
-  // Menu 3: Daftar Pemesanan (Child dari Pemesanan)
-  const bookingListMenu = await createMenuWithId(
+  // Menu 3: Atur Slot (Child dari Pemesanan) - Setup/kelola slot waktu pemesanan
+  const bookingSlotMenu = await createMenuWithId(
     3,
+    'Atur Slot',
+    '/booking/slot',
+    'WKS',
+    'submenu',
+    2, // parent_id = Pemesanan
+    'Clock',
+    false,
+  );
+
+  // Menu 4: Daftar Pemesanan (Child dari Pemesanan) - Tampilan list/table
+  const bookingListMenu = await createMenuWithId(
+    4,
     'Daftar Pemesanan',
     '/booking',
     'WKS',
@@ -206,9 +222,9 @@ async function main() {
     false,
   );
 
-  // Menu 4: Kalender Pemesanan (Child dari Pemesanan)
+  // Menu 5: Kalender Pemesanan (Child dari Pemesanan) - Tampilan kalender visual
   const bookingCalendarMenu = await createMenuWithId(
-    4,
+    5,
     'Kalender Pemesanan',
     '/booking/calendar',
     'WKS',
@@ -218,9 +234,9 @@ async function main() {
     false,
   );
 
-  // Menu 5: Perbaikan (Service) - Parent dengan bahasa sehari-hari
+  // Menu 6: Perbaikan (Service) - Parent dengan bahasa sehari-hari
   const serviceParentMenu = await createMenuWithId(
-    5,
+    6,
     'Perbaikan',
     null,
     'WKS',
@@ -230,33 +246,33 @@ async function main() {
     true,
   );
 
-  // Menu 6: Daftar Perbaikan (Child dari Perbaikan)
+  // Menu 7: Daftar Perbaikan (Child dari Perbaikan)
   const serviceOrderMenu = await createMenuWithId(
-    6,
+    7,
     'Daftar Perbaikan',
     '/service-order',
     'WKS',
     'submenu',
-    5, // parent_id = Perbaikan
+    6, // parent_id = Perbaikan
     'FileText',
     false,
   );
 
-  // Menu 7: Riwayat Perbaikan (Child dari Perbaikan)
+  // Menu 8: Riwayat Perbaikan (Child dari Perbaikan)
   const serviceHistoryMenu = await createMenuWithId(
-    7,
+    8,
     'Riwayat Perbaikan',
     '/service-order/history',
     'WKS',
     'submenu',
-    5, // parent_id = Perbaikan
+    6, // parent_id = Perbaikan
     'History',
     false,
   );
 
-  // Menu 8: Pengingat (Reminder) - Parent dengan bahasa sehari-hari
+  // Menu 9: Pengingat (Reminder) - Parent dengan bahasa sehari-hari
   const reminderParentMenu = await createMenuWithId(
-    8,
+    9,
     'Pengingat',
     null,
     'SYS',
@@ -266,33 +282,33 @@ async function main() {
     true,
   );
 
-  // Menu 9: Daftar Pengingat (Child dari Pengingat)
+  // Menu 10: Daftar Pengingat (Child dari Pengingat)
   const reminderListMenu = await createMenuWithId(
-    9,
+    10,
     'Daftar Pengingat',
     '/reminder',
     'SYS',
     'submenu',
-    8, // parent_id = Pengingat
+    9, // parent_id = Pengingat
     'List',
     false,
   );
 
-  // Menu 10: Atur Pengingat (Child dari Pengingat)
+  // Menu 11: Atur Pengingat (Child dari Pengingat)
   const reminderSettingsMenu = await createMenuWithId(
-    10,
+    11,
     'Atur Pengingat',
     '/reminder/settings',
     'SYS',
     'submenu',
-    8, // parent_id = Pengingat
+    9, // parent_id = Pengingat
     'Settings',
     false,
   );
 
-  // Menu 11: Promosi - Parent dengan bahasa sehari-hari
+  // Menu 12: Promosi - Parent dengan bahasa sehari-hari
   const promotionParentMenu = await createMenuWithId(
-    11,
+    12,
     'Promosi',
     null,
     'SYS',
@@ -302,9 +318,9 @@ async function main() {
     false,
   );
 
-  // Menu 12: Pengaturan - Parent dengan bahasa sehari-hari
+  // Menu 13: Pengaturan - Parent dengan bahasa sehari-hari
   const settingsParentMenu = await createMenuWithId(
-    12,
+    13,
     'Pengaturan',
     null,
     'SYS',
@@ -314,26 +330,26 @@ async function main() {
     true,
   );
 
-  // Menu 13: Pengguna (Child dari Pengaturan)
+  // Menu 14: Pengguna (Child dari Pengaturan)
   const userSettingsMenu = await createMenuWithId(
-    13,
+    14,
     'Pengguna',
     '/settings/users',
     'SYS',
     'submenu',
-    12, // parent_id = Pengaturan
+    13, // parent_id = Pengaturan
     'Users',
     false,
   );
 
-  // Menu 14: Aplikasi (Child dari Pengaturan)
+  // Menu 15: Aplikasi (Child dari Pengaturan)
   const appSettingsMenu = await createMenuWithId(
-    14,
+    15,
     'Aplikasi',
     '/settings/app',
     'SYS',
     'submenu',
-    12, // parent_id = Pengaturan
+    13, // parent_id = Pengaturan
     'Sliders',
     false,
   );
@@ -341,6 +357,7 @@ async function main() {
   const allMenus = [
     dashboardMenu,
     bookingParentMenu,
+    bookingSlotMenu,
     bookingListMenu,
     bookingCalendarMenu,
     serviceParentMenu,
