@@ -16,7 +16,12 @@ export class BetterRefreshGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    // Ambil refresh token dari cookie (httpOnly) atau header
+    // Priority: cookie > header (untuk security)
+    const token =
+      request.cookies?.refreshToken ||
+      request.headers['x-refresh-token'] ||
+      this.extractTokenFromHeader(request);
 
     if (!token) {
       throw new UnauthorizedException('No refresh token provided');

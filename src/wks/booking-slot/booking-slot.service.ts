@@ -4,6 +4,7 @@ import { CreateBookingSlotDto } from './dto/create-booking-slot.dto';
 import { UpdateBookingSlotDto } from './dto/update-booking-slot.dto';
 import { BookingSlotResponseDto } from './dto/response-booking-slot.dto';
 import { PaginationBookingSlotDto } from './dto/pagination-booking-slot.dto';
+import { BookingSlotStatsQueryDto, BookingSlotStatsResponseDto } from './dto/stats-booking-slot.dto';
 import {
   buildSearchCondition,
   sortFieldBy,
@@ -190,6 +191,52 @@ export class BookingSlotService {
     }
 
     return this.mapToResponse(bookingSlot);
+  }
+
+  async getStats(query: BookingSlotStatsQueryDto): Promise<BookingSlotStatsResponseDto> {
+    const { company_id, branch_id, bay_id, slotStatus, start_date, end_date } = query;
+
+    const where: any = { company_id };
+    if (branch_id && branch_id.length > 0) where.branch_id = { in: branch_id };
+    if (bay_id && bay_id.length > 0) where.bay_id = { in: bay_id };
+    if (slotStatus && slotStatus.length > 0) where.slotStatus = { in: slotStatus as any };
+    if (start_date || end_date) {
+      where.date = {};
+      if (start_date) where.date.gte = new Date(start_date);
+      if (end_date) where.date.lte = new Date(end_date);
+    }
+
+    // Group by status for counts, and aggregate sums for capacity/bookedCount
+    const [grouped, sums, total] = await Promise.all([
+      this.prisma.wks_BookingSlot.groupBy({
+        by: ['slotStatus'],
+        where,
+        _count: { _all: true },
+      }),
+      this.prisma.wks_BookingSlot.aggregate({
+        where,
+        _sum: { capacity: true, bookedCount: true },
+      }),
+      this.prisma.wks_BookingSlot.count({ where }),
+    ]);
+
+    const getCount = (status: string) =>
+      grouped.find((g) => g.slotStatus === status)?._count?._all || 0;
+
+    const totalCapacity = sums._sum.capacity || 0;
+    const totalBooked = sums._sum.bookedCount || 0;
+    const averageUtilization = totalCapacity > 0 ? Math.round((totalBooked / totalCapacity) * 100) : 0;
+
+    return {
+      total,
+      open: getCount('OPEN'),
+      booked: getCount('BOOKED'),
+      cancelled: getCount('CANCELLED'),
+      closed: getCount('CLOSED'),
+      totalCapacity,
+      totalBooked,
+      averageUtilization,
+    };
   }
 
   async update(

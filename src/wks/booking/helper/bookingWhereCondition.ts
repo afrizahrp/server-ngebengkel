@@ -1,7 +1,7 @@
 import { buildFilterWhereCondition } from '../../../utils/query-operator';
 
 export interface BookingFilter {
-  company_id: string;
+  company_id?: string;
   branch_id?: string[];
   status?: string[];
   customer_id?: string;

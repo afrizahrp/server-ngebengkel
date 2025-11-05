@@ -69,14 +69,15 @@ export class BetterJwtAuthGuard implements CanActivate {
         throw new UnauthorizedException('Invalid token');
       }
 
-      // Ambil refresh token dari header Authorization: Bearer <refresh>
-      // atau header khusus 'x-refresh-token'
+      // Ambil refresh token dari cookie (httpOnly) atau header
+      // Priority: cookie > header (untuk security)
       const refreshToken =
-        this.extractTokenFromHeader(request) ||
-        request.headers['x-refresh-token'];
+        request.cookies?.refreshToken ||
+        request.headers['x-refresh-token'] ||
+        this.extractTokenFromHeader(request);
 
       if (!refreshToken || typeof refreshToken !== 'string') {
-        throw new UnauthorizedException('Access token expired');
+        throw new UnauthorizedException('Access token expired and no refresh token available');
       }
 
       // Verify refresh token dan rotasi token

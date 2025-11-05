@@ -14,6 +14,7 @@ import { BookingSlotService } from './booking-slot.service';
 import { CreateBookingSlotDto } from './dto/create-booking-slot.dto';
 import { UpdateBookingSlotDto } from './dto/update-booking-slot.dto';
 import { PaginationBookingSlotDto } from './dto/pagination-booking-slot.dto';
+import { BookingSlotStatsQueryDto, BookingSlotStatsResponseDto } from './dto/stats-booking-slot.dto';
 import { BetterJwtAuthGuard } from '../../auth/better-auth/guards/better-jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthJwtPayload } from '../../auth/types/auth-jwtPayload';
@@ -64,6 +65,28 @@ export class BookingSlotController {
     }
 
     return this.bookingSlotService.findAll(paginationDto);
+  }
+
+  @Get('stats')
+  getStats(
+    @Query() statsQuery: BookingSlotStatsQueryDto,
+    @CurrentUser() user: AuthJwtPayload,
+  ): Promise<BookingSlotStatsResponseDto> {
+    // Fallback: ambil company_id dan branch_id default dari token
+    statsQuery.company_id = statsQuery.company_id || user.company_id;
+    if (!statsQuery.branch_id || statsQuery.branch_id.length === 0) {
+      if (user.branch_id) statsQuery.branch_id = [user.branch_id];
+    }
+
+    if (!statsQuery.company_id) {
+      throw new BadRequestException('company_id is required');
+    }
+
+    if (!statsQuery.branch_id || statsQuery.branch_id.length === 0) {
+      throw new BadRequestException('branch_id is required');
+    }
+
+    return this.bookingSlotService.getStats(statsQuery);
   }
 
   @Get(':id')
