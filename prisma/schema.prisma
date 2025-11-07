@@ -4208,3 +4208,111 @@ enum ReminderLogTypeEnum {
   CANCELLED @map("C") // Reminder dibatalkan
   UPDATED   @map("U") // Reminder diupdate
 }
+
+model tmp_sys_Company {
+  seq_no          Int              @db.SmallInt
+  id              String           @id @db.Char(5)
+  name            String?          @db.VarChar(50)
+  isMain          Boolean?         @default(false)
+  email1          String?          @db.VarChar(100)
+  email2          String?          @db.VarChar(100)
+  email3          String?          @db.VarChar(100)
+  officialWebsite String?          @db.VarChar(100)
+  companyLogo     String?          @db.VarChar(255)
+  createdBy       String?          @db.Char(10)
+  createdAt       DateTime
+  updatedBy       String?          @db.Char(10)
+  updatedAt       DateTime
+  branches        tmp_sys_Branch[]
+
+  @@index([seq_no], map: "idx_tmp_sys_Company_seq_no")
+}
+
+model tmp_sys_Branch {
+  company_id String          @db.Char(5)
+  id         String          @id @db.Char(10)
+  name       String          @db.VarChar(50)
+  isMain     Boolean?        @default(false)
+  remarks    String?         @db.VarChar(255)
+  company    tmp_sys_Company @relation(fields: [company_id], references: [id])
+  province   String?         @db.VarChar(50)
+  district   String?         @db.VarChar(50)
+  city       String?         @db.VarChar(50)
+  address1   String?         @db.VarChar(250)
+  address2   String?         @db.VarChar(250)
+  address3   String?         @db.VarChar(250)
+  postalCode String?         @db.Char(6)
+  phone1     String?         @db.VarChar(20)
+  phone2     String?         @db.VarChar(20)
+  phone3     String?         @db.VarChar(20)
+  mobile1    String?         @db.VarChar(20)
+  mobile2    String?         @db.VarChar(20)
+  mobile3    String?         @db.VarChar(20)
+  createdBy  String?         @db.Char(10)
+  createdAt  DateTime
+  updatedBy  String?         @db.Char(10)
+  updatedAt  DateTime
+
+  @@index([company_id], map: "idx_tmp_sys_Branch_company_id")
+}
+
+model tmp_customer {
+  id                  String  @id @db.Char(10)
+  name                String  @db.VarChar(50)
+  email               String? @db.VarChar(100)
+  phone               String? @db.VarChar(20)
+  vehicle             String? @db.VarChar(50)
+  plateNumber         String? @db.VarChar(20)
+  vehicleType         String? @db.VarChar(50)
+  vehicleYear         String? @db.VarChar(4)
+  vehicleColor        String? @db.VarChar(50)
+  vehicleEngine       String? @db.VarChar(50)
+  vehicleTransmission String? @db.VarChar(50)
+  vehicleFuel         String? @db.VarChar(50)
+  mobile              String? @db.VarChar(20)
+}
+
+model sys_Province {
+  id         String   @id @db.Char(5)
+  name       String   @db.VarChar(50)
+  company_id String   @db.Char(5)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String?  @db.Char(10)
+  updatedBy  String?  @db.Char(10)
+}
+
+model sys_District {
+  id         String   @id @db.Char(5)
+  name       String   @db.VarChar(50)
+  company_id String   @db.Char(5)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String?  @db.Char(10)
+  updatedBy  String?  @db.Char(10)
+}
+
+model sys_City {
+  id         String   @id @db.Char(5)
+  name       String   @db.VarChar(50)
+  company_id String   @db.Char(5)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String?  @db.Char(10)
+  updatedBy  String?  @db.Char(10)
+}
+
+model sys_SubDistrict {
+  id          String   @id @db.Char(8)
+  name        String   @db.VarChar(100)
+  district_id String?  @db.Char(5)
+  city_id     String?  @db.Char(5)
+  company_id  String   @db.Char(5)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?  @db.Char(10)
+  updatedBy   String?  @db.Char(10)
+
+  @@index([district_id])
+  @@index([city_id])
+}
