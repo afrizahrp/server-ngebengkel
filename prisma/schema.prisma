@@ -4263,6 +4263,16 @@ model tmp_sys_Branch {
   @@index([company_id], map: "idx_tmp_sys_Branch_company_id")
 }
 
+model wks_waitingList {
+  id       String @id @db.Char(10)
+  name     String @db.VarChar(50)
+  address  String @db.VarChar(250)
+  city     String @db.Char(5)
+  district String @db.Char(5)
+  province String @db.Char(5)
+  email    String @db.VarChar(100)
+}
+
 model tmp_customer {
   id                  String  @id @db.Char(10)
   name                String  @db.VarChar(50)
