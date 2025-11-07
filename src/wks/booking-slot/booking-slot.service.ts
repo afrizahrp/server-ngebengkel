@@ -17,6 +17,7 @@ export class BookingSlotService {
 
   async create(
     createBookingSlotDto: CreateBookingSlotDto,
+    createdBy: string,
   ): Promise<BookingSlotResponseDto> {
     const {
       company_id,
@@ -40,6 +41,7 @@ export class BookingSlotService {
     const dateObj = new Date(date);
     const startTimeObj = new Date(startTime);
     const endTimeObj = new Date(endTime);
+    const now = new Date();
 
     const bookingSlot = await this.prisma.wks_BookingSlot.create({
       data: {
@@ -54,7 +56,9 @@ export class BookingSlotService {
         bookedCount,
         slotStatus: slotStatus || 'OPEN',
         remarks: remarks || null,
-        createdAt: new Date(),
+        createdAt: now,
+        createdBy: createdBy || null,
+        isDeleted: false,
       },
       include: {
         bay: {
@@ -102,6 +106,7 @@ export class BookingSlotService {
     // Build where condition
     const whereCondition: any = {
       company_id,
+      isDeleted: false, // Hanya ambil yang tidak dihapus (soft delete)
     };
 
     if (branch_id && branch_id.length > 0) {
@@ -168,12 +173,11 @@ export class BookingSlotService {
     companyId: string,
     id: string,
   ): Promise<BookingSlotResponseDto> {
-    const bookingSlot = await this.prisma.wks_BookingSlot.findUnique({
+    const bookingSlot = await this.prisma.wks_BookingSlot.findFirst({
       where: {
-        company_id_id: {
-          company_id: companyId,
-          id,
-        },
+        company_id: companyId,
+        id,
+        isDeleted: false, // Hanya ambil yang tidak dihapus (soft delete)
       },
       include: {
         bay: {
@@ -196,7 +200,10 @@ export class BookingSlotService {
   async getStats(query: BookingSlotStatsQueryDto): Promise<BookingSlotStatsResponseDto> {
     const { company_id, branch_id, bay_id, slotStatus, start_date, end_date } = query;
 
-    const where: any = { company_id };
+    const where: any = { 
+      company_id,
+      isDeleted: false, // Hanya ambil yang tidak dihapus (soft delete)
+    };
     if (branch_id && branch_id.length > 0) where.branch_id = { in: branch_id };
     if (bay_id && bay_id.length > 0) where.bay_id = { in: bay_id };
     if (slotStatus && slotStatus.length > 0) where.slotStatus = { in: slotStatus as any };
@@ -243,10 +250,14 @@ export class BookingSlotService {
     companyId: string,
     id: string,
     updateBookingSlotDto: UpdateBookingSlotDto,
+    updatedBy: string,
   ): Promise<BookingSlotResponseDto> {
     await this.findOne(companyId, id);
 
-    const updateData: any = {};
+    const updateData: any = {
+      updatedBy: updatedBy || null,
+      updatedAt: new Date(),
+    };
 
     if (updateBookingSlotDto.bay_id !== undefined) {
       updateData.bay_id = updateBookingSlotDto.bay_id || null;
@@ -293,15 +304,21 @@ export class BookingSlotService {
     return this.findOne(companyId, id);
   }
 
-  async remove(companyId: string, id: string): Promise<{ message: string }> {
+  async remove(companyId: string, id: string, deletedBy: string): Promise<{ message: string }> {
     await this.findOne(companyId, id);
 
-    await this.prisma.wks_BookingSlot.delete({
+    // Soft delete: update isDeleted, deletedAt, deletedBy
+    await this.prisma.wks_BookingSlot.update({
       where: {
         company_id_id: {
           company_id: companyId,
           id,
         },
+      },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        deletedBy: deletedBy || null,
       },
     });
 
@@ -322,6 +339,12 @@ export class BookingSlotService {
       slotStatus: slot.slotStatus,
       remarks: slot.remarks,
       createdAt: slot.createdAt,
+      createdBy: slot.createdBy || null,
+      updatedBy: slot.updatedBy || null,
+      updatedAt: slot.updatedAt || null,
+      isDeleted: slot.isDeleted || false,
+      deletedAt: slot.deletedAt || null,
+      deletedBy: slot.deletedBy || null,
       bay: slot.bay || null,
     };
   }

@@ -1552,6 +1552,13 @@ model wks_BookingSlot {
   slotStatus  SlotStatusEnum @default(OPEN)
   remarks     String?        @db.VarChar(250)
   createdAt   DateTime       @default(now())
+  createdBy   String?        @db.Char(10)
+  updatedBy   String?        @db.Char(10)
+  updatedAt   DateTime?
+  // Soft Delete
+  isDeleted   Boolean?       @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?        @db.Char(10)
 
   bay wks_ServiceBay? @relation(fields: [company_id, bay_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -1604,7 +1611,7 @@ model wks_ServiceBooking {
   createdBy           String?               @db.Char(10)
   createdAt           DateTime              @default(now())
   updatedBy           String?               @db.Char(10)
-  updatedAt           DateTime
+  updatedAt           DateTime?
   // Relations
   customer            cmf_Customer          @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
   customerVehicle     cmf_CustomerVehicle   @relation(fields: [company_id, customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)

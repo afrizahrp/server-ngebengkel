@@ -25,8 +25,11 @@ export class BookingSlotController {
   constructor(private readonly bookingSlotService: BookingSlotService) {}
 
   @Post()
-  create(@Body() createBookingSlotDto: CreateBookingSlotDto) {
-    return this.bookingSlotService.create(createBookingSlotDto);
+  create(
+    @Body() createBookingSlotDto: CreateBookingSlotDto,
+    @CurrentUser() user: AuthJwtPayload,
+  ) {
+    return this.bookingSlotService.create(createBookingSlotDto, user.sub.toString());
   }
 
   @Get()
@@ -99,12 +102,17 @@ export class BookingSlotController {
     @Param('id') id: string,
     @Query('company_id') companyId: string,
     @Body() updateBookingSlotDto: UpdateBookingSlotDto,
+    @CurrentUser() user: AuthJwtPayload,
   ) {
-    return this.bookingSlotService.update(companyId, id, updateBookingSlotDto);
+    return this.bookingSlotService.update(companyId, id, updateBookingSlotDto, user.sub.toString());
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Query('company_id') companyId: string) {
-    return this.bookingSlotService.remove(companyId, id);
+  remove(
+    @Param('id') id: string,
+    @Query('company_id') companyId: string,
+    @CurrentUser() user: AuthJwtPayload,
+  ) {
+    return this.bookingSlotService.remove(companyId, id, user.sub.toString());
   }
 }
