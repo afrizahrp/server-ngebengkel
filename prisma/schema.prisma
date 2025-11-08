@@ -64,10 +64,10 @@ model saas_SubscriptionPlan {
 
 // Company Subscription (Langganan Company)
 model saas_CompanySubscription {
-  id                   String                     @db.Char(30) // Manual: SUB/2025/10/00001
-  subscriptionNumber   String                     @db.VarChar(30)
   company_id           String                     @db.Char(10)
   branch_id            String                     @db.Char(10)
+  id                   String                     @db.Char(30) // Manual: SUB/2025/10/00001
+  subscriptionNumber   String                     @db.VarChar(30)
   plan_id              String                     @db.Char(10)
   // Subscription Period
   startDate            DateTime                   @db.Date
@@ -137,13 +137,13 @@ model saas_PlanFeature {
 
 // Subscription Billing (Tagihan Langganan)
 model saas_SubscriptionBilling {
+  company_id        String                   @db.Char(10)
+  branch_id         String                   @db.Char(10)
   id                String                   @db.Char(30) // Manual: SBIL/2025/10/00001
   billingNumber     String                   @db.VarChar(30)
   billingDate       DateTime                 @default(now())
   dueDate           DateTime                 @db.Date
   subscription_id   String                   @db.Char(30)
-  company_id        String                   @db.Char(10)
-  branch_id         String                   @db.Char(10)
   // Billing Period
   periodStart       DateTime                 @db.Date
   periodEnd         DateTime                 @db.Date
@@ -185,10 +185,10 @@ model saas_SubscriptionBilling {
 
 // Usage Tracking (Monitoring Usage per Company)
 model saas_UsageTracking {
-  id                    String                   @db.Char(30)
-  subscription_id       String                   @db.Char(30)
   company_id            String                   @db.Char(10)
   branch_id             String                   @db.Char(10)
+  id                    String                   @db.Char(30)
+  subscription_id       String                   @db.Char(30)
   trackingDate          DateTime                 @default(now()) @db.Date
   // Usage Metrics
   totalUsers            Int?                     @default(0)
@@ -257,10 +257,10 @@ model saas_AddonFeature {
 
 // Company Addons (Add-on yang diaktifkan per company)
 model saas_CompanyAddon {
-  id              String                   @db.Char(30)
-  subscription_id String                   @db.Char(30)
   company_id      String                   @db.Char(10)
   branch_id       String                   @db.Char(10)
+  id              String                   @db.Char(30)
+  subscription_id String                   @db.Char(30)
   addon_id        String                   @db.Char(10)
   // Activation
   activatedDate   DateTime                 @default(now())
@@ -374,12 +374,12 @@ model sys_Branch {
 }
 
 model sys_Role {
+  company_id String?                @db.Char(10)
+  branch_id  String?                @db.Char(10)
   id         String                 @id @db.Char(20)
   name       String                 @db.VarChar(50)
   iStatus    MasterRecordStatusEnum @default(Active)
   remarks    String?                @db.VarChar(255)
-  company_id String?                @db.Char(10)
-  branch_id  String?                @db.Char(10)
   userRoles  sys_UserRole[]
 }
 
@@ -391,6 +391,8 @@ model sys_WhiteListEmail {
 }
 
 model sys_User {
+  company_id         String?                 @db.Char(10)
+  branch_id          String?                 @db.Char(10)
   id                 Int                     @id @db.SmallInt
   name               String                  @db.VarChar(50)
   email              String                  @unique @db.VarChar(100)
@@ -405,8 +407,6 @@ model sys_User {
   twoFactorEnabled   Boolean                 @default(false)
   // Employee Reference (setiap user harus terdaftar sebagai employee)
   employee_id        String?                 @db.Char(20)
-  company_id         String?                 @db.Char(10)
-  branch_id          String?                 @db.Char(10)
   // Relations
   employee           cmf_Employee?           @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
   userRoles          sys_UserRole[]
@@ -419,13 +419,13 @@ model sys_User {
 }
 
 model sys_EmailVerification {
+  company_id String?  @db.Char(10)
+  branch_id  String?  @db.Char(10)
   id         String   @id @default(cuid()) @db.VarChar(50)
   user_id    Int      @db.SmallInt
   token      String   @unique @db.VarChar(255)
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  company_id String?  @db.Char(10)
-  branch_id  String?  @db.Char(10)
   // Relations
   user       sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -433,14 +433,14 @@ model sys_EmailVerification {
 }
 
 model sys_TwoFactorToken {
+  company_id String?  @db.Char(10)
+  branch_id  String?  @db.Char(10)
   id         String   @id @default(cuid()) @db.VarChar(50)
   user_id    Int      @db.SmallInt
   code       String   @db.VarChar(6) // 6-digit OTP
   expiresAt  DateTime
   used       Boolean  @default(false)
   createdAt  DateTime @default(now())
-  company_id String?  @db.Char(10)
-  branch_id  String?  @db.Char(10)
   // Relations
   user       sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -449,14 +449,14 @@ model sys_TwoFactorToken {
 }
 
 model sys_PasswordReset {
+  company_id String?  @db.Char(10)
+  branch_id  String?  @db.Char(10)
   id         Int      @id @default(autoincrement())
   user_id    Int      @db.SmallInt
   token      String   @unique @db.VarChar(255)
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   used       Boolean  @default(false)
-  company_id String?  @db.Char(10)
-  branch_id  String?  @db.Char(10)
   // Relations
   user       sys_User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -465,6 +465,8 @@ model sys_PasswordReset {
 }
 
 model sys_Session {
+  company_id        String?                @db.Char(10)
+  branch_id         String?                @db.Char(10)
   id                String                 @id @default(cuid()) @db.VarChar(50)
   user_id           Int                    @db.Integer
   refreshToken      String                 @unique @db.VarChar(500)
@@ -482,8 +484,6 @@ model sys_Session {
   revokedReason     String?                @db.VarChar(255)
   hasRefreshedToken Boolean                @default(false)
   iStatus           MasterRecordStatusEnum @default(Active)
-  company_id        String?                @db.Char(10)
-  branch_id         String?                @db.Char(10)
   // Relations
   user              sys_User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -493,13 +493,13 @@ model sys_Session {
 }
 
 model sys_UserRole {
+  company_id    String?                @db.Char(10)
+  branch_id     String?                @db.Char(10)
   id            Int                    @id @db.SmallInt
   user_id       Int                    @db.SmallInt
   role_id       String                 @db.Char(20)
   iStatus       MasterRecordStatusEnum @default(Active)
   isDefault     Boolean?               @default(false)
-  company_id    String?                @db.Char(10)
-  branch_id     String?                @db.Char(10)
   role          sys_Role               @relation(fields: [role_id], references: [id])
   user          sys_User               @relation(fields: [user_id], references: [id])
   userCompanies sys_UserCompanyRole[]
@@ -508,10 +508,10 @@ model sys_UserRole {
 }
 
 model sys_UserCompanyRole {
-  id          Int                    @id @db.SmallInt
-  userRole_id Int                    @db.SmallInt
   company_id  String                 @db.Char(10)
   branch_id   String                 @db.Char(10)
+  id          Int                    @id @db.SmallInt
+  userRole_id Int                    @db.SmallInt
   iStatus     MasterRecordStatusEnum @default(Active)
   isDefault   Boolean?               @default(false)
 
@@ -579,6 +579,8 @@ model sys_Module {
 //  Numbering Configuration
 
 model sys_Numbering {
+  company_id     String                 @db.Char(10)
+  branch_id      String                 @db.Char(10)
   module_id      String                 @db.VarChar(3) // PRC,WKS,SLS,IMC,ACC
   id             String                 @db.VarChar(10) // PCO, PCR, SO, INV, CR, CP, dll
   description    String?                @db.VarChar(100) // Purchase Order, Service Order, dll
@@ -600,8 +602,6 @@ model sys_Numbering {
   createdAt      DateTime               @default(now())
   updatedBy      String?                @db.Char(10)
   updatedAt      DateTime
-  company_id     String                 @db.Char(10)
-  branch_id      String                 @db.Char(10)
   module         sys_Module             @relation(fields: [module_id], references: [id], onDelete: NoAction)
 
   @@id([company_id, branch_id, id], map: "pk_sys_Numbering")
@@ -616,6 +616,8 @@ model sys_Numbering {
 /// Struktur: Warehouse → Floor → Shelf → Row
 
 model imc_Warehouse {
+  company_id       String                 @db.Char(10)
+  branch_id        String                 @db.Char(10)
   id               String                 @id @db.Char(4)
   name             String?                @db.Char(60)
   iMain            Int?
@@ -627,8 +629,6 @@ model imc_Warehouse {
   createdAt        DateTime
   updatedBy        String?                @db.Char(10)
   updatedAt        DateTime
-  company_id       String                 @db.Char(10)
-  branch_id        String                 @db.Char(10)
   floor            imc_Floor[]
   purchaseOrders   prc_PurchaseOrder[]
   purchaseReceives prc_PurchaseReceive[]
@@ -638,6 +638,8 @@ model imc_Warehouse {
 }
 
 model imc_Floor {
+  company_id   String                 @db.Char(10)
+  branch_id    String                 @db.Char(10)
   warehouse_id String                 @db.Char(4)
   id           String                 @id(map: "pk_ic_floor") @db.Char(5)
   name         String?                @db.Char(35)
@@ -646,14 +648,14 @@ model imc_Floor {
   createdAt    DateTime
   updatedBy    String?                @db.Char(10)
   updatedAt    DateTime
-  company_id   String                 @db.Char(10)
-  branch_id    String                 @db.Char(10)
   warehouse    imc_Warehouse          @relation(fields: [warehouse_id], references: [id], onDelete: NoAction)
   row          imc_Row[]
   shelf        imc_Shelf[]
 }
 
 model imc_Shelf {
+  company_id String                 @db.Char(10)
+  branch_id  String                 @db.Char(10)
   floor_id   String                 @db.Char(5)
   id         String                 @db.Char(15)
   name       String?                @db.Char(35)
@@ -662,8 +664,6 @@ model imc_Shelf {
   createdAt  DateTime
   updatedBy  String?                @db.Char(10)
   updatedAt  DateTime
-  company_id String                 @db.Char(10)
-  branch_id  String                 @db.Char(10)
   imc_row    imc_Row[]
   imc_floor  imc_Floor              @relation(fields: [floor_id], references: [id], onDelete: NoAction)
 
@@ -672,6 +672,8 @@ model imc_Shelf {
 }
 
 model imc_Row {
+  company_id String                 @db.Char(10)
+  branch_id  String                 @db.Char(10)
   floor_id   String                 @db.Char(5)
   shelf_id   String                 @db.Char(15)
   id         String                 @db.Char(15)
@@ -681,8 +683,6 @@ model imc_Row {
   createdAt  DateTime
   updatedBy  String?                @db.Char(10)
   updatedAt  DateTime
-  company_id String                 @db.Char(10)
-  branch_id  String                 @db.Char(10)
   storages   String?                @db.Char(15)
   floor      imc_Floor              @relation(fields: [floor_id], references: [id], onDelete: NoAction)
   shelf      imc_Shelf              @relation(fields: [floor_id, shelf_id], references: [floor_id, id], onDelete: NoAction)
@@ -697,6 +697,8 @@ model imc_Row {
 /// Module untuk manage kategori produk, sub-kategori, brand, dan UOM
 
 model imc_Uom {
+  company_id String                 @db.Char(10)
+  branch_id  String                 @db.Char(10)
   id         String                 @db.Char(10)
   name       String?                @db.VarChar(50)
   iStatus    MasterRecordStatusEnum @default(Active)
@@ -705,14 +707,14 @@ model imc_Uom {
   createdAt  DateTime               @default(now())
   updatedBy  String?                @db.Char(10)
   updatedAt  DateTime
-  company_id String                 @db.Char(10)
-  branch_id  String                 @db.Char(10)
   products   imc_Product[]
 
   @@id([company_id, id], map: "pk_imc_Uoms")
 }
 
 model imc_CategoryType {
+  company_id   String                 @db.Char(10)
+  branch_id    String?                @db.Char(10)
   id           Int                    @id @default(autoincrement()) @db.SmallInt
   name         String?                @db.VarChar(20)
   iStatus      MasterRecordStatusEnum @default(Active)
@@ -722,16 +724,16 @@ model imc_CategoryType {
   cogs_acct    String?                @db.Char(10)
   expense_acct String?                @db.Char(10)
   asset_acct   String?                @db.Char(10)
-  company_id   String                 @db.Char(10)
   createdBy    String?                @db.Char(10)
   createdAt    DateTime?              @default(now())
   updatedBy    String?                @db.Char(10)
   updatedAt    DateTime?
-  branch_id    String?                @db.Char(10)
   categories   imc_Category[]
 }
 
 model imc_Category {
+  company_id    String                 @db.Char(10)
+  branch_id     String                 @db.Char(10)
   type          Int                    @db.SmallInt
   id            String                 @db.Char(10)
   name          String?                @db.VarChar(80)
@@ -743,8 +745,6 @@ model imc_Category {
   createdAt     DateTime               @default(now())
   updatedBy     String?                @db.Char(10)
   updatedAt     DateTime
-  company_id    String                 @db.Char(10)
-  branch_id     String                 @db.Char(10)
   href          String?                @db.VarChar(150)
   icon          String?                @db.VarChar(50)
   categoryType  imc_CategoryType       @relation(fields: [type], references: [id], onUpdate: NoAction)
@@ -757,6 +757,8 @@ model imc_Category {
 }
 
 model imc_SubCategory {
+  company_id   String                 @db.Char(10)
+  branch_id    String                 @db.Char(10)
   id           String                 @db.Char(10)
   seq          Int?                   @default(0)
   imageURL     String?                @db.VarChar(250)
@@ -769,8 +771,6 @@ model imc_SubCategory {
   createdAt    DateTime               @default(now())
   updatedBy    String?                @db.Char(10)
   updatedAt    DateTime
-  company_id   String                 @db.Char(10)
-  branch_id    String                 @db.Char(10)
   category     imc_Category           @relation(fields: [company_id, category_id], references: [company_id, id])
   products     imc_Product[]
 
@@ -778,6 +778,8 @@ model imc_SubCategory {
 }
 
 model imc_Brand {
+  company_id   String                 @db.Char(10)
+  branch_id    String                 @db.Char(10)
   id           String                 @db.Char(10)
   name         String                 @db.VarChar(50)
   slug         String?                @db.VarChar(50)
@@ -787,14 +789,14 @@ model imc_Brand {
   createdAt    DateTime               @default(now())
   updatedBy    String?                @db.Char(10)
   updatedAt    DateTime
-  company_id   String                 @db.Char(10)
-  branch_id    String                 @db.Char(10)
   imc_Products imc_Product[]
 
   @@id([company_id, id], map: "pk_imc_Brands")
 }
 
 model imc_Product {
+  company_id              String                       @db.Char(10)
+  branch_id               String                       @db.Char(10)
   id                      String                       @db.Char(20)
   register_id             String?                      @db.Char(20)
   catalog_id              String?                      @db.Char(20)
@@ -815,8 +817,6 @@ model imc_Product {
   createdAt               DateTime                     @default(now())
   updatedBy               String?                      @db.Char(50)
   updatedAt               DateTime
-  company_id              String                       @db.Char(10)
-  branch_id               String                       @db.Char(10)
   category                imc_Category                 @relation(fields: [company_id, category_id], references: [company_id, id], onUpdate: NoAction)
   subCategory             imc_SubCategory              @relation(fields: [company_id, category_id, subCategory_id], references: [company_id, category_id, id], onUpdate: NoAction)
   uom                     imc_Uom                      @relation(fields: [company_id, uom_id], references: [company_id, id], onUpdate: NoAction)
@@ -837,6 +837,8 @@ model imc_Product {
 }
 
 model imc_ProductStock {
+  company_id         String                 @db.Char(10)
+  branch_id          String                 @db.Char(10)
   id                 String                 @db.Char(20)
   iStatus            MasterRecordStatusEnum @default(Active)
   warehouse_id       String                 @db.Char(4)
@@ -868,14 +870,14 @@ model imc_ProductStock {
   createdAt          DateTime               @default(now())
   updatedBy          String?                @db.Char(50)
   updatedAt          DateTime
-  company_id         String                 @db.Char(10)
-  branch_id          String                 @db.Char(10)
   products           imc_Product            @relation(fields: [id, company_id], references: [id, company_id], onUpdate: NoAction)
 
   @@id([id, floor_id, shelf_id, row_id, mExpired_dt, yExpired_dt, warehouse_id, company_id])
 }
 
 model imc_ProductStockCard {
+  company_id              String                 @db.Char(10)
+  branch_id               String                 @db.Char(10)
   customer_or_supplier_id String                 @db.Char(20)
   trx_id                  String                 @db.Char(2)
   trx_class               String                 @db.Char(2)
@@ -913,13 +915,13 @@ model imc_ProductStockCard {
   createdAt               DateTime               @default(now())
   updatedBy               String?                @db.Char(50)
   updatedAt               DateTime
-  company_id              String                 @db.Char(10)
-  branch_id               String                 @db.Char(10)
 
   @@id([product_id, floor_id, shelf_id, row_id, mExpired_dt, yExpired_dt, doc_id, mutation_id, srn_seq, batch_no_item, warehouse_id, company_id])
 }
 
 model imc_ProductImage {
+  company_id String      @db.Char(10)
+  branch_id  String      @db.Char(10)
   id         String      @db.Char(150)
   product_id String      @db.Char(20)
   imageURL   String      @db.VarChar(250)
@@ -932,8 +934,6 @@ model imc_ProductImage {
   createdAt  DateTime    @default(now())
   updatedBy  String      @db.Char(10)
   updatedAt  DateTime
-  company_id String      @db.Char(10)
-  branch_id  String      @db.Char(10)
   products   imc_Product @relation(fields: [product_id, company_id], references: [id, company_id], onUpdate: NoAction)
   // cms_Product cms_Product[]
 
@@ -949,6 +949,8 @@ model imc_ProductImage {
 
 // Master Tipe Variant (Warna, Ukuran, Model, dll)
 model imc_VariantType {
+  company_id          String                   @db.Char(10)
+  branch_id           String                   @db.Char(10)
   id                  String                   @db.Char(10)
   name                String                   @db.VarChar(50) // Warna, Ukuran, Model, Tahun, Spesifikasi
   iStatus             MasterRecordStatusEnum   @default(Active)
@@ -958,8 +960,6 @@ model imc_VariantType {
   createdAt           DateTime                 @default(now())
   updatedBy           String?                  @db.Char(10)
   updatedAt           DateTime
-  company_id          String                   @db.Char(10)
-  branch_id           String                   @db.Char(10)
   variantOptions      imc_VariantOption[]
   productVariantTypes imc_ProductVariantType[]
 
@@ -968,6 +968,8 @@ model imc_VariantType {
 
 // Master Opsi Variant (Merah, Biru, S, M, L, dll)
 model imc_VariantOption {
+  company_id            String                     @db.Char(10)
+  branch_id             String                     @db.Char(10)
   id                    String                     @db.Char(15)
   variantType_id        String                     @db.Char(10)
   name                  String                     @db.VarChar(100) // Merah, Biru, 15 inch, Model X, 2024, dll
@@ -981,8 +983,6 @@ model imc_VariantOption {
   createdAt             DateTime                   @default(now())
   updatedBy             String?                    @db.Char(10)
   updatedAt             DateTime
-  company_id            String                     @db.Char(10)
-  branch_id             String                     @db.Char(10)
   variantType           imc_VariantType            @relation(fields: [company_id, variantType_id], references: [company_id, id], onUpdate: NoAction)
   productVariantOptions imc_ProductVariantOption[]
 
@@ -991,6 +991,8 @@ model imc_VariantOption {
 
 // Definisi tipe variant apa saja yang dimiliki suatu produk
 model imc_ProductVariantType {
+  company_id     String                 @db.Char(10)
+  branch_id      String                 @db.Char(10)
   product_id     String                 @db.Char(20)
   variantType_id String                 @db.Char(10)
   isRequired     Boolean                @default(true) // apakah variant ini wajib dipilih
@@ -1000,8 +1002,6 @@ model imc_ProductVariantType {
   createdAt      DateTime               @default(now())
   updatedBy      String?                @db.Char(10)
   updatedAt      DateTime
-  company_id     String                 @db.Char(10)
-  branch_id      String                 @db.Char(10)
   product        imc_Product            @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
   variantType    imc_VariantType        @relation(fields: [company_id, variantType_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -1010,6 +1010,8 @@ model imc_ProductVariantType {
 
 // SKU Variant Produk (kombinasi produk dengan variant options)
 model imc_ProductVariant {
+  company_id      String                     @db.Char(10)
+  branch_id       String                     @db.Char(10)
   id              String                     @db.Char(30) // SKU unique identifier
   product_id      String                     @db.Char(20)
   sku             String                     @db.VarChar(50) // SKU code, misal: PROD-001-RED-M
@@ -1029,8 +1031,6 @@ model imc_ProductVariant {
   createdAt       DateTime                   @default(now())
   updatedBy       String?                    @db.Char(10)
   updatedAt       DateTime
-  company_id      String                     @db.Char(10)
-  branch_id       String                     @db.Char(10)
   product         imc_Product                @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
   variantOptions  imc_ProductVariantOption[]
   variantImages   imc_ProductVariantImage[]
@@ -1041,12 +1041,12 @@ model imc_ProductVariant {
 
 // Relasi antara Product Variant dengan Variant Options yang dipilih
 model imc_ProductVariantOption {
+  company_id        String             @db.Char(10)
+  branch_id         String             @db.Char(10)
   productVariant_id String             @db.Char(30)
   product_id        String             @db.Char(20)
   variantType_id    String             @db.Char(10)
   variantOption_id  String             @db.Char(15)
-  company_id        String             @db.Char(10)
-  branch_id         String             @db.Char(10)
   productVariant    imc_ProductVariant @relation(fields: [company_id, product_id, productVariant_id], references: [company_id, product_id, id], onUpdate: NoAction)
   variantOption     imc_VariantOption  @relation(fields: [company_id, variantType_id, variantOption_id], references: [company_id, variantType_id, id], onUpdate: NoAction)
 
@@ -1055,6 +1055,8 @@ model imc_ProductVariantOption {
 
 // Gambar-gambar untuk Product Variant
 model imc_ProductVariantImage {
+  company_id        String                 @db.Char(10)
+  branch_id         String                 @db.Char(10)
   id                String                 @db.Char(150)
   productVariant_id String                 @db.Char(30)
   product_id        String                 @db.Char(20)
@@ -1067,8 +1069,6 @@ model imc_ProductVariantImage {
   createdAt         DateTime               @default(now())
   updatedBy         String?                @db.Char(10)
   updatedAt         DateTime
-  company_id        String                 @db.Char(10)
-  branch_id         String                 @db.Char(10)
   productVariant    imc_ProductVariant     @relation(fields: [company_id, product_id, productVariant_id], references: [company_id, product_id, id], onUpdate: NoAction)
 
   @@id([company_id, product_id, productVariant_id, id], map: "pk_imc_ProductVariantImage")
@@ -1084,6 +1084,8 @@ model imc_ProductVariantImage {
 // Master Employee - Semua person di bengkel
 // Digunakan untuk: User Login, Mechanic, Payroll, Attendance
 model cmf_Employee {
+  company_id       String                 @db.Char(10)
+  branch_id        String                 @db.Char(10)
   id               String                 @db.Char(20) // Manual: EMP-001, EMP-002, dst
   employeeCode     String                 @db.VarChar(20) // Kode pegawai internal
   name             String                 @db.VarChar(100)
@@ -1120,8 +1122,6 @@ model cmf_Employee {
   createdAt        DateTime               @default(now())
   updatedBy        String?                @db.Char(10)
   updatedAt        DateTime
-  company_id       String                 @db.Char(10)
-  branch_id        String                 @db.Char(10)
   // Relations
   user             sys_User?
   mechanic         cmf_Mechanic?
@@ -1197,6 +1197,8 @@ model wks_VehicleModel {
 
 // Master Customer
 model cmf_Customer {
+  company_id                String                      @db.Char(10)
+  branch_id                 String                      @db.Char(10)
   id                        String                      @db.Char(20)
   customerType              CustomerTypeEnum            @default(INDIVIDUAL) // Individual atau Corporate
   // Data Personal/Corporate
@@ -1263,8 +1265,6 @@ model cmf_Customer {
   createdAt                 DateTime                    @default(now())
   updatedBy                 String?                     @db.Char(10)
   updatedAt                 DateTime
-  company_id                String                      @db.Char(10)
-  branch_id                 String                      @db.Char(10)
   // Relations
   vehicles                  cmf_CustomerVehicle[]
   serviceOrders             wks_ServiceOrder[]
@@ -1286,6 +1286,8 @@ model cmf_Customer {
 
 // Contact Person untuk Corporate Customer
 model cmf_CustomerContactPerson {
+  company_id    String                 @db.Char(10)
+  branch_id     String                 @db.Char(10)
   id            String                 @db.Char(20)
   customer_id   String                 @db.Char(20)
   // Personal Info
@@ -1309,8 +1311,6 @@ model cmf_CustomerContactPerson {
   createdAt     DateTime               @default(now())
   updatedBy     String?                @db.Char(10)
   updatedAt     DateTime
-  company_id    String                 @db.Char(10)
-  branch_id     String                 @db.Char(10)
   // Relations
   customer      cmf_Customer           @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -1320,6 +1320,8 @@ model cmf_CustomerContactPerson {
 
 // Kendaraan yang dimiliki Customer
 model cmf_CustomerVehicle {
+  company_id          String                  @db.Char(10)
+  branch_id           String                  @db.Char(10)
   id                  String                  @db.Char(20)
   customer_id         String                  @db.Char(20)
   vehicleType_id      String                  @db.Char(5)
@@ -1359,8 +1361,6 @@ model cmf_CustomerVehicle {
   createdAt           DateTime                @default(now())
   updatedBy           String?                 @db.Char(10)
   updatedAt           DateTime
-  company_id          String                  @db.Char(10)
-  branch_id           String                  @db.Char(10)
   // Relations
   customer            cmf_Customer            @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
   brand               wks_VehicleBrand        @relation(fields: [vehicleType_id, brand_id], references: [vehicleType_id, id], onUpdate: NoAction)
@@ -1388,6 +1388,8 @@ model cmf_CustomerVehicle {
 
 // Master Tipe Service (Service Rutin, Ganti Oli, Tune Up, dll)
 model wks_ServiceType {
+  company_id          String                   @db.Char(10)
+  branch_id           String                   @db.Char(10)
   id                  String                   @db.Char(10)
   name                String                   @db.VarChar(100) // Service Rutin, Ganti Oli, Tune Up, Body Repair, dll
   category            ServiceCategoryEnum? // MAINTENANCE, REPAIR, BODYWORK, WASH, INSPECTION
@@ -1401,8 +1403,6 @@ model wks_ServiceType {
   createdAt           DateTime                 @default(now())
   updatedBy           String?                  @db.Char(10)
   updatedAt           DateTime
-  company_id          String                   @db.Char(10)
-  branch_id           String                   @db.Char(10)
   serviceOrderDetails wks_ServiceOrderDetail[]
   wks_ServiceBooking  wks_ServiceBooking[]
 
@@ -1412,6 +1412,8 @@ model wks_ServiceType {
 // Master Mekanik/Teknisi
 // Mechanic Profile - Extended dari cmf_Employee
 model cmf_Mechanic {
+  company_id               String                     @db.Char(10)
+  branch_id                String                     @db.Char(10)
   id                       String                     @db.Char(10)
   employee_id              String                     @db.Char(20) // Reference ke cmf_Employee
   specialization           String?                    @db.VarChar(100) // Mesin, Body, Elektrik, AC, dll
@@ -1427,8 +1429,6 @@ model cmf_Mechanic {
   createdAt                DateTime                   @default(now())
   updatedBy                String?                    @db.Char(10)
   updatedAt                DateTime
-  company_id               String                     @db.Char(10)
-  branch_id                String                     @db.Char(10)
   // Relations
   employee                 cmf_Employee               @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
   serviceOrders            wks_ServiceOrder[]
@@ -1444,6 +1444,8 @@ model cmf_Mechanic {
 
 // Master Service Bay/Stall (Tempat Service)
 model wks_ServiceBay {
+  company_id         String                 @db.Char(10)
+  branch_id          String                 @db.Char(10)
   id                 String                 @db.Char(10)
   name               String                 @db.VarChar(50) // Bay 1, Bay 2, Stall A, dll
   bayType            ServiceBayTypeEnum? // GENERAL, HEAVY_DUTY, QUICK_SERVICE, BODYWORK, WASH
@@ -1455,8 +1457,6 @@ model wks_ServiceBay {
   createdAt          DateTime               @default(now())
   updatedBy          String?                @db.Char(10)
   updatedAt          DateTime
-  company_id         String                 @db.Char(10)
-  branch_id          String                 @db.Char(10)
   serviceOrders      wks_ServiceOrder[]
   serviceReworks     wks_ServiceRework[]
   wks_BayBlock       wks_BayBlock[]
@@ -1485,10 +1485,10 @@ model wks_WorkshopCategory {
 }
 
 model wks_WorkshopType {
-  id             String                 @id @db.Char(10)
-  category_id    String                 @db.Char(5)
   company_id     String?                @db.Char(10)
   branch_id      String?                @db.Char(10)
+  id             String                 @id @db.Char(10)
+  category_id    String                 @db.Char(5)
   name           String                 @db.VarChar(150)
   description    String?                @db.Text
   iconName       String?                @db.VarChar(100)
@@ -1565,9 +1565,9 @@ model wks_BranchWorkingHour {
 
 // Hari libur/pengecualian jadwal (per branch)
 model wks_BranchHoliday {
-  id         String   @db.Char(20)
   company_id String   @db.Char(10)
   branch_id  String?  @db.Char(10)
+  id         String   @db.Char(20)
   date       DateTime @db.Date
   name       String?  @db.VarChar(100)
   isClosed   Boolean  @default(true)
@@ -1580,8 +1580,8 @@ model wks_BranchHoliday {
 
 // Ketersediaan mekanik per tanggal (override jam kerja umum)
 model wks_MechanicAvailability {
-  id             String   @db.Char(20)
   company_id     String   @db.Char(10)
+  id             String   @db.Char(20)
   mechanic_id    String   @db.Char(10)
   date           DateTime @db.Date
   availableStart String?  @db.Char(5) // "09:00"
@@ -1599,9 +1599,9 @@ model wks_MechanicAvailability {
 
 // Blokir bay (maintenance, cleaning, dipakai internal, dll)
 model wks_BayBlock {
-  id         String   @db.Char(20)
   company_id String   @db.Char(10)
   branch_id  String   @db.Char(10)
+  id         String   @db.Char(20)
   bay_id     String   @db.Char(10)
   startTime  DateTime
   endTime    DateTime
@@ -1617,9 +1617,9 @@ model wks_BayBlock {
 
 // Slot jadwal opsional (untuk pre-generate time slots per cabang/bay)
 model wks_BookingSlot {
-  id          String         @db.Char(20)
   company_id  String         @db.Char(10)
   branch_id   String         @db.Char(10)
+  id          String         @db.Char(20)
   bay_id      String?        @db.Char(10)
   date        DateTime       @db.Date
   startTime   DateTime
@@ -1646,11 +1646,11 @@ model wks_BookingSlot {
 
 // Inti booking service oleh customer
 model wks_ServiceBooking {
+  company_id          String                @db.Char(10)
+  branch_id           String                @db.Char(10)
   id                  String                @db.Char(30)
   bookingNumber       String                @db.VarChar(30) // BKG-2025-00001
   bookingDate         DateTime              @default(now())
-  company_id          String                @db.Char(10)
-  branch_id           String                @db.Char(10)
   // Customer & Vehicle
   customer_id         String                @db.Char(20)
   customerVehicle_id  String                @db.Char(20)
@@ -1705,6 +1705,8 @@ model wks_ServiceBooking {
 
 // Service Order / Work Order
 model wks_ServiceOrder {
+  company_id             String                   @db.Char(10)
+  branch_id              String                   @db.Char(10)
   id                     String                   @db.Char(30)
   orderNumber            String                   @db.VarChar(30) // SO-2024-0001
   orderDate              DateTime                 @default(now())
@@ -1762,8 +1764,6 @@ model wks_ServiceOrder {
   createdAt              DateTime                 @default(now())
   updatedBy              String?                  @db.Char(10)
   updatedAt              DateTime
-  company_id             String                   @db.Char(10)
-  branch_id              String                   @db.Char(10)
   // Relations
   customer               cmf_Customer             @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
   vehicle                cmf_CustomerVehicle      @relation(fields: [company_id, vehicle_customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
@@ -1785,6 +1785,8 @@ model wks_ServiceOrder {
 
 // Detail Service Order (Pekerjaan & Parts yang digunakan)
 model wks_ServiceOrderDetail {
+  company_id         String                @db.Char(10)
+  branch_id          String                @db.Char(10)
   id                 String                @db.Char(30) // Manual: SOD/2025/10/00001
   serviceOrder_id    String                @db.Char(20)
   lineNumber         Int                   @db.SmallInt // Nomor urut item
@@ -1825,8 +1827,6 @@ model wks_ServiceOrderDetail {
   createdAt          DateTime              @default(now())
   updatedBy          String?               @db.Char(10)
   updatedAt          DateTime
-  company_id         String                @db.Char(10)
-  branch_id          String                @db.Char(10)
   // Relations
   serviceOrder       wks_ServiceOrder      @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
   serviceType        wks_ServiceType?      @relation(fields: [company_id, serviceType_id], references: [company_id, id], onUpdate: NoAction)
@@ -1839,6 +1839,8 @@ model wks_ServiceOrderDetail {
 
 // Service History - History lengkap semua service kendaraan
 model wks_ServiceHistory {
+  company_id          String                @db.Char(10)
+  branch_id           String                @db.Char(10)
   id                  String                @db.Char(30)
   serviceOrder_id     String                @db.Char(20)
   customer_id         String                @db.Char(20)
@@ -1873,8 +1875,6 @@ model wks_ServiceHistory {
   createdAt           DateTime              @default(now())
   updatedBy           String?               @db.Char(10)
   updatedAt           DateTime
-  company_id          String                @db.Char(10)
-  branch_id           String                @db.Char(10)
   // Relations
   serviceOrder        wks_ServiceOrder      @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
   customer            cmf_Customer          @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
@@ -1895,6 +1895,8 @@ model wks_ServiceHistory {
 
 // Reminder - Tabel terpusat untuk semua reminder
 model sys_Reminder {
+  company_id        String                 @db.Char(10)
+  branch_id         String                 @db.Char(10)
   id                String                 @db.Char(30) // Manual: REM/2025/10/00001
   reminderNumber    String                 @db.VarChar(30)
   // Polymorphic relation - bisa untuk berbagai entity types
@@ -1952,8 +1954,6 @@ model sys_Reminder {
   createdAt         DateTime               @default(now())
   updatedBy         String?                @db.Char(10)
   updatedAt         DateTime
-  company_id        String                 @db.Char(10)
-  branch_id         String                 @db.Char(10)
   // Relations
   customer          cmf_Customer?          @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
   parentReminder    sys_Reminder?          @relation("ReminderFollowUp", fields: [company_id, parentReminder_id], references: [company_id, id], onUpdate: NoAction)
@@ -1971,6 +1971,8 @@ model sys_Reminder {
 
 // Reminder Log - History semua pengiriman reminder
 model sys_ReminderLog {
+  company_id        String                @db.Char(10)
+  branch_id         String                @db.Char(10)
   id                String                @db.Char(30) // Manual: RML/2025/10/00001
   reminder_id       String                @db.Char(30)
   // Log info
@@ -1997,8 +1999,6 @@ model sys_ReminderLog {
   remarks           String?               @db.VarChar(250)
   createdBy         String?               @db.Char(10)
   createdAt         DateTime              @default(now())
-  company_id        String                @db.Char(10)
-  branch_id         String                @db.Char(10)
   // Relations
   reminder          sys_Reminder          @relation(fields: [company_id, reminder_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -2016,6 +2016,8 @@ model sys_ReminderLog {
 
 // Customer Complaint - Keluhan customer terhadap service
 model wks_CustomerComplaint {
+  company_id             String                @db.Char(10)
+  branch_id              String                @db.Char(10)
   id                     String                @db.Char(30) // Manual: CMP/2025/10/00001
   complaintNumber        String                @db.VarChar(30)
   complaintDate          DateTime              @default(now())
@@ -2092,8 +2094,6 @@ model wks_CustomerComplaint {
   createdAt              DateTime              @default(now())
   updatedBy              String?               @db.Char(10)
   updatedAt              DateTime
-  company_id             String                @db.Char(10)
-  branch_id              String                @db.Char(10)
   // Relations
   serviceOrder           wks_ServiceOrder?     @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
   customer               cmf_Customer          @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
@@ -2112,6 +2112,8 @@ model wks_CustomerComplaint {
 
 // Complaint Activity Log - History semua aktivitas complaint
 model wks_ComplaintLog {
+  company_id        String                @db.Char(10)
+  branch_id         String                @db.Char(10)
   id                String                @db.Char(30) // Manual: CML/2025/10/00001
   complaint_id      String                @db.Char(30)
   logDate           DateTime              @default(now())
@@ -2132,8 +2134,6 @@ model wks_ComplaintLog {
   // Metadata
   createdBy         String?               @db.Char(10)
   createdAt         DateTime              @default(now())
-  company_id        String                @db.Char(10)
-  branch_id         String                @db.Char(10)
   // Relations
   complaint         wks_CustomerComplaint @relation(fields: [company_id, complaint_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -2150,6 +2150,8 @@ model wks_ComplaintLog {
 
 // Service Rework (Service Ulang/Redo)
 model wks_ServiceRework {
+  company_id              String                  @db.Char(10)
+  branch_id               String                  @db.Char(10)
   id                      String                  @db.Char(30) // Manual: SRW/2025/10/00001
   reworkNumber            String                  @db.VarChar(30)
   reworkDate              DateTime                @default(now())
@@ -2205,8 +2207,6 @@ model wks_ServiceRework {
   createdAt               DateTime                @default(now())
   updatedBy               String?                 @db.Char(10)
   updatedAt               DateTime
-  company_id              String                  @db.Char(10)
-  branch_id               String                  @db.Char(10)
   // Relations
   originalServiceOrder    wks_ServiceOrder        @relation(fields: [company_id, originalServiceOrder_id], references: [company_id, id], onUpdate: NoAction)
   complaint               wks_CustomerComplaint?  @relation(fields: [company_id, complaint_id], references: [company_id, id], onUpdate: NoAction)
@@ -2225,6 +2225,8 @@ model wks_ServiceRework {
 
 // Service Rework Items (Pekerjaan ulang & Parts)
 model wks_ServiceReworkItem {
+  company_id         String                @db.Char(10)
+  branch_id          String                @db.Char(10)
   id                 String                @db.Char(30) // Manual: SRWI/2025/10/00001
   serviceRework_id   String                @db.Char(30)
   lineNumber         Int                   @db.SmallInt
@@ -2258,8 +2260,6 @@ model wks_ServiceReworkItem {
   remarks            String?               @db.VarChar(250)
   createdBy          String?               @db.Char(10)
   createdAt          DateTime              @default(now())
-  company_id         String                @db.Char(10)
-  branch_id          String                @db.Char(10)
   // Relations
   serviceRework      wks_ServiceRework     @relation(fields: [company_id, serviceRework_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -2269,6 +2269,8 @@ model wks_ServiceReworkItem {
 
 // Credit Note (Nota Kredit - Refund/Discount untuk Customer)
 model arm_CreditNote {
+  company_id            String                 @db.Char(10)
+  branch_id             String                 @db.Char(10)
   id                    String                 @db.Char(30) // Manual: CN/2025/10/00001
   creditNoteNumber      String                 @db.VarChar(30)
   creditNoteDate        DateTime               @default(now())
@@ -2324,8 +2326,6 @@ model arm_CreditNote {
   createdAt             DateTime               @default(now())
   updatedBy             String?                @db.Char(10)
   updatedAt             DateTime
-  company_id            String                 @db.Char(10)
-  branch_id             String                 @db.Char(10)
   // Relations
   invoice               arm_Invoice?           @relation(fields: [company_id, invoice_id], references: [company_id, id], onUpdate: NoAction)
   serviceOrder          wks_ServiceOrder?      @relation(fields: [company_id, serviceOrder_id], references: [company_id, id], onUpdate: NoAction)
@@ -2345,6 +2345,8 @@ model arm_CreditNote {
 
 // Credit Note Detail
 model arm_CreditNoteDetail {
+  company_id        String                @db.Char(10)
+  branch_id         String                @db.Char(10)
   id                String                @db.Char(30) // Manual: CND/2025/10/00001
   creditNote_id     String                @db.Char(30)
   lineNumber        Int                   @db.SmallInt
@@ -2376,8 +2378,6 @@ model arm_CreditNoteDetail {
   remarks           String?               @db.VarChar(250)
   createdBy         String?               @db.Char(10)
   createdAt         DateTime              @default(now())
-  company_id        String                @db.Char(10)
-  branch_id         String                @db.Char(10)
   // Relations
   creditNote        arm_CreditNote        @relation(fields: [company_id, creditNote_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -2394,6 +2394,8 @@ model arm_CreditNoteDetail {
 
 // Master Supplier
 model prc_Supplier {
+  company_id       String                 @db.Char(10)
+  branch_id        String                 @db.Char(10)
   id               String                 @db.Char(20)
   supplierCode     String?                @db.Char(20)
   supplierType     SupplierTypeEnum       @default(VENDOR) // VENDOR, DISTRIBUTOR, MANUFACTURER
@@ -2446,8 +2448,6 @@ model prc_Supplier {
   createdAt        DateTime               @default(now())
   updatedBy        String?                @db.Char(10)
   updatedAt        DateTime
-  company_id       String                 @db.Char(10)
-  branch_id        String                 @db.Char(10)
   // Relations
   purchaseOrders   prc_PurchaseOrder[]
   purchaseReceives prc_PurchaseReceive[]
@@ -2463,6 +2463,8 @@ model prc_Supplier {
 
 // Purchase Order Header
 model prc_PurchaseOrder {
+  company_id            String                    @db.Char(10)
+  branch_id             String                    @db.Char(10)
   id                    String                    @db.Char(20)
   poNumber              String                    @db.VarChar(30) // PO-2024-12-0001
   poDate                DateTime                  @default(now())
@@ -2521,8 +2523,6 @@ model prc_PurchaseOrder {
   createdAt             DateTime                  @default(now())
   updatedBy             String?                   @db.Char(10)
   updatedAt             DateTime
-  company_id            String                    @db.Char(10)
-  branch_id             String                    @db.Char(10)
   // Relations
   supplier              prc_Supplier              @relation(fields: [company_id, supplier_id], references: [company_id, id], onUpdate: NoAction)
   warehouse             imc_Warehouse?            @relation(fields: [warehouse_id], references: [id], onUpdate: NoAction)
@@ -2541,6 +2541,8 @@ model prc_PurchaseOrder {
 
 // Purchase Order Detail
 model prc_PurchaseOrderDetail {
+  company_id          String                      @db.Char(10)
+  branch_id           String                      @db.Char(10)
   id                  String                      @db.Char(30) // Manual: POD/2025/10/00001
   purchaseOrder_id    String                      @db.Char(20)
   lineNumber          Int                         @db.SmallInt // Nomor urut baris
@@ -2581,8 +2583,6 @@ model prc_PurchaseOrderDetail {
   createdAt           DateTime                    @default(now())
   updatedBy           String?                     @db.Char(10)
   updatedAt           DateTime
-  company_id          String                      @db.Char(10)
-  branch_id           String                      @db.Char(10)
   // Relations
   purchaseOrder       prc_PurchaseOrder           @relation(fields: [company_id, purchaseOrder_id], references: [company_id, id], onUpdate: NoAction)
   product             imc_Product                 @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
@@ -2594,6 +2594,8 @@ model prc_PurchaseOrderDetail {
 
 // Purchase Receive Header (GRN - Goods Receipt Note)
 model prc_PurchaseReceive {
+  company_id            String                      @db.Char(10)
+  branch_id             String                      @db.Char(10)
   id                    String                      @db.Char(20)
   receiveNumber         String                      @db.VarChar(30) // GRN-2024-12-0001
   receiveDate           DateTime                    @default(now())
@@ -2644,8 +2646,6 @@ model prc_PurchaseReceive {
   createdAt             DateTime                    @default(now())
   updatedBy             String?                     @db.Char(10)
   updatedAt             DateTime
-  company_id            String                      @db.Char(10)
-  branch_id             String                      @db.Char(10)
   // Relations
   purchaseOrder         prc_PurchaseOrder           @relation(fields: [company_id, purchaseOrder_id], references: [company_id, id], onUpdate: NoAction)
   supplier              prc_Supplier                @relation(fields: [company_id, supplier_id], references: [company_id, id], onUpdate: NoAction)
@@ -2663,6 +2663,8 @@ model prc_PurchaseReceive {
 
 // Purchase Receive Detail
 model prc_PurchaseReceiveDetail {
+  company_id             String                   @db.Char(10)
+  branch_id              String                   @db.Char(10)
   id                     String                   @db.Char(30) // Manual: RCD/2025/10/00001
   purchaseReceive_id     String                   @db.Char(20)
   purchaseOrderDetail_id String                   @db.Char(30)
@@ -2710,8 +2712,6 @@ model prc_PurchaseReceiveDetail {
   createdAt              DateTime                 @default(now())
   updatedBy              String?                  @db.Char(10)
   updatedAt              DateTime
-  company_id             String                   @db.Char(10)
-  branch_id              String                   @db.Char(10)
   // Relations
   purchaseReceive        prc_PurchaseReceive      @relation(fields: [company_id, purchaseReceive_id], references: [company_id, id], onUpdate: NoAction)
   purchaseOrderDetail    prc_PurchaseOrderDetail  @relation(fields: [company_id, purchaseOrderDetail_id], references: [company_id, id], onUpdate: NoAction)
@@ -2730,6 +2730,8 @@ model prc_PurchaseReceiveDetail {
 
 // Inventory Internal Movement Header
 model inv_InternalMovement {
+  company_id         String                       @db.Char(10)
+  branch_id          String                       @db.Char(10)
   id                 String                       @db.Char(30) // Manual: INV-IN/2025/10/00001 atau INV-OUT/2025/10/00001
   movementNumber     String                       @db.VarChar(30)
   movementDate       DateTime                     @default(now())
@@ -2769,8 +2771,6 @@ model inv_InternalMovement {
   createdAt          DateTime                     @default(now())
   updatedBy          String?                      @db.Char(10)
   updatedAt          DateTime
-  company_id         String                       @db.Char(10)
-  branch_id          String                       @db.Char(10)
   // Relations
   sourceWarehouse    imc_Warehouse?               @relation("SourceWarehouse", fields: [sourceWarehouse_id], references: [id], onUpdate: NoAction)
   destWarehouse      imc_Warehouse?               @relation("DestWarehouse", fields: [destWarehouse_id], references: [id], onUpdate: NoAction)
@@ -2785,6 +2785,8 @@ model inv_InternalMovement {
 
 // Inventory Internal Movement Detail
 model inv_InternalMovementDetail {
+  company_id          String                    @db.Char(10)
+  branch_id           String                    @db.Char(10)
   id                  String                    @db.Char(30) // Manual: IMD/2025/10/00001
   internalMovement_id String                    @db.Char(30)
   lineNumber          Int                       @db.SmallInt
@@ -2824,8 +2826,6 @@ model inv_InternalMovementDetail {
   createdAt           DateTime                  @default(now())
   updatedBy           String?                   @db.Char(10)
   updatedAt           DateTime
-  company_id          String                    @db.Char(10)
-  branch_id           String                    @db.Char(10)
   // Relations
   internalMovement    inv_InternalMovement      @relation(fields: [company_id, internalMovement_id], references: [company_id, id], onUpdate: NoAction)
   product             imc_Product               @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
@@ -2900,6 +2900,8 @@ model cmf_PaymentMethod {
 
 // Chart of Account (COA)
 model acc_COA {
+  company_id         String                 @db.Char(10)
+  branch_id          String                 @db.Char(10)
   id                 String                 @db.Char(15) // 1-1000, 2-1000, dll (flexible)
   accountCode        String                 @db.VarChar(20) // Kode akun alternatif
   accountName        String                 @db.VarChar(150)
@@ -2930,8 +2932,6 @@ model acc_COA {
   createdAt          DateTime               @default(now())
   updatedBy          String?                @db.Char(10)
   updatedAt          DateTime
-  company_id         String                 @db.Char(10)
-  branch_id          String                 @db.Char(10)
   // Relations
   parent             acc_COA?               @relation("COAHierarchy", fields: [company_id, parent_id], references: [company_id, id], onUpdate: NoAction)
   children           acc_COA[]              @relation("COAHierarchy")
@@ -2948,6 +2948,8 @@ model acc_COA {
 
 // Bank Account (Rekening Bank)
 model acc_BankAccount {
+  company_id     String                 @db.Char(10)
+  branch_id      String                 @db.Char(10)
   id             String                 @db.Char(10)
   coa_id         String                 @db.Char(15) // Link ke COA
   bankName       String                 @db.VarChar(100) // BCA, Mandiri, BNI, dll
@@ -2967,8 +2969,6 @@ model acc_BankAccount {
   createdAt      DateTime               @default(now())
   updatedBy      String?                @db.Char(10)
   updatedAt      DateTime
-  company_id     String                 @db.Char(10)
-  branch_id      String                 @db.Char(10)
   // Relations
   coa            acc_COA                @relation(fields: [company_id, coa_id], references: [company_id, id], onUpdate: NoAction)
   payments       arm_Payment[]
@@ -2981,6 +2981,8 @@ model acc_BankAccount {
 
 // Tax Scheme Configuration (Konfigurasi Pajak)
 model cmf_TaxScheme {
+  company_id    String                 @db.Char(10)
+  branch_id     String                 @db.Char(10)
   id            String                 @db.Char(5) // T1, T2, T3, V1, V2, V3
   schemeCode    String                 @db.VarChar(10) // T1, V1, dll
   name          String                 @db.VarChar(100) // PPN 11%, PPN 12%, PPh 23, dll
@@ -3004,8 +3006,6 @@ model cmf_TaxScheme {
   createdAt     DateTime               @default(now())
   updatedBy     String?                @db.Char(10)
   updatedAt     DateTime
-  company_id    String                 @db.Char(10)
-  branch_id     String                 @db.Char(10)
   // Relations
   taxAccount    acc_COA?               @relation(fields: [company_id, taxAccount_id], references: [company_id, id], onUpdate: NoAction)
   taxDetails    cmf_TaxSchemeDetail[]
@@ -3019,6 +3019,8 @@ model cmf_TaxScheme {
 
 // Tax Scheme Detail (Detail komponenRpajak - untuk pajak bertingkat atau multi-component)
 model cmf_TaxSchemeDetail {
+  company_id       String                 @db.Char(10)
+  branch_id        String                 @db.Char(10)
   id               String                 @db.Char(10)
   taxScheme_id     String                 @db.Char(5)
   lineNumber       Int                    @db.SmallInt
@@ -3037,8 +3039,6 @@ model cmf_TaxSchemeDetail {
   createdAt        DateTime               @default(now())
   updatedBy        String?                @db.Char(10)
   updatedAt        DateTime
-  company_id       String                 @db.Char(10)
-  branch_id        String                 @db.Char(10)
   // Relations
   taxScheme        cmf_TaxScheme          @relation(fields: [company_id, taxScheme_id], references: [company_id, id], onUpdate: NoAction)
   taxAccount       acc_COA                @relation(fields: [company_id, taxAccount_id], references: [company_id, id], onUpdate: NoAction)
@@ -3056,6 +3056,8 @@ model cmf_TaxSchemeDetail {
 
 // A/R Invoice (dari Service Order atau Sales) - Account Receivable Management
 model arm_Invoice {
+  company_id             String                   @db.Char(10)
+  branch_id              String                   @db.Char(10)
   id                     String                   @db.Char(30) // Manual: INV/2025/10/00001
   invoiceNumber          String                   @db.VarChar(30)
   invoiceDate            DateTime                 @default(now())
@@ -3110,8 +3112,6 @@ model arm_Invoice {
   createdAt              DateTime                 @default(now())
   updatedBy              String?                  @db.Char(10)
   updatedAt              DateTime
-  company_id             String                   @db.Char(10)
-  branch_id              String                   @db.Char(10)
   // Relations
   customer               cmf_Customer             @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
   vehicle                cmf_CustomerVehicle?     @relation(fields: [company_id, vehicle_customer_id, customerVehicle_id], references: [company_id, customer_id, id], onUpdate: NoAction)
@@ -3131,6 +3131,8 @@ model arm_Invoice {
 
 // Invoice Detail
 model arm_InvoiceDetail {
+  company_id        String                @db.Char(10)
+  branch_id         String                @db.Char(10)
   id                String                @db.Char(30) // Manual: IND/2025/10/00001
   invoice_id        String                @db.Char(30)
   lineNumber        Int                   @db.SmallInt
@@ -3163,8 +3165,6 @@ model arm_InvoiceDetail {
   createdAt         DateTime              @default(now())
   updatedBy         String?               @db.Char(10)
   updatedAt         DateTime
-  company_id        String                @db.Char(10)
-  branch_id         String                @db.Char(10)
   // Relations
   invoice           arm_Invoice           @relation(fields: [company_id, invoice_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -3174,6 +3174,8 @@ model arm_InvoiceDetail {
 
 // Payment (Pembayaran Invoice)
 model arm_Payment {
+  company_id        String                   @db.Char(10)
+  branch_id         String                   @db.Char(10)
   id                String                   @db.Char(30) // Manual: PAY/2025/10/00001
   paymentNumber     String                   @db.VarChar(30)
   paymentDate       DateTime                 @default(now())
@@ -3216,8 +3218,6 @@ model arm_Payment {
   createdAt         DateTime                 @default(now())
   updatedBy         String?                  @db.Char(10)
   updatedAt         DateTime
-  company_id        String                   @db.Char(10)
-  branch_id         String                   @db.Char(10)
   // Relations
   invoice           arm_Invoice              @relation(fields: [company_id, invoice_id], references: [company_id, id], onUpdate: NoAction)
   customer          cmf_Customer             @relation(fields: [company_id, customer_id], references: [company_id, id], onUpdate: NoAction)
@@ -3234,6 +3234,8 @@ model arm_Payment {
 
 // Payment Detail (jika 1 payment untuk multiple invoice atau alokasi)
 model arm_PaymentDetail {
+  company_id        String                @db.Char(10)
+  branch_id         String                @db.Char(10)
   id                String                @db.Char(30) // Manual: PYD/2025/10/00001
   payment_id        String                @db.Char(30)
   lineNumber        Int                   @db.SmallInt
@@ -3250,8 +3252,6 @@ model arm_PaymentDetail {
   // Metadata
   createdBy         String?               @db.Char(10)
   createdAt         DateTime              @default(now())
-  company_id        String                @db.Char(10)
-  branch_id         String                @db.Char(10)
   // Relations
   payment           arm_Payment           @relation(fields: [company_id, payment_id], references: [company_id, id], onUpdate: NoAction)
   paymentMethod     cmf_PaymentMethod     @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
@@ -3262,6 +3262,8 @@ model arm_PaymentDetail {
 
 // Cash Receipt (Penerimaan Kas)
 model arm_CashReceipt {
+  company_id        String                  @db.Char(10)
+  branch_id         String                  @db.Char(10)
   id                String                  @db.Char(30) // Manual: CR/2025/10/00001
   receiptNumber     String                  @db.VarChar(30)
   receiptDate       DateTime                @default(now())
@@ -3292,8 +3294,6 @@ model arm_CashReceipt {
   createdAt         DateTime                @default(now())
   updatedBy         String?                 @db.Char(10)
   updatedAt         DateTime
-  company_id        String                  @db.Char(10)
-  branch_id         String                  @db.Char(10)
   // Relations
   receiptDetails    arm_CashReceiptDetail[]
   glTrans           acc_GLTrans[]
@@ -3304,6 +3304,8 @@ model arm_CashReceipt {
 
 // Cash Receipt Detail
 model arm_CashReceiptDetail {
+  company_id        String                @db.Char(10)
+  branch_id         String                @db.Char(10)
   id                String                @db.Char(30) // Manual: CRD/2025/10/00001
   cashReceipt_id    String                @db.Char(30)
   lineNumber        Int                   @db.SmallInt
@@ -3319,8 +3321,6 @@ model arm_CashReceiptDetail {
   // Metadata
   createdBy         String?               @db.Char(10)
   createdAt         DateTime              @default(now())
-  company_id        String                @db.Char(10)
-  branch_id         String                @db.Char(10)
   // Relations
   cashReceipt       arm_CashReceipt       @relation(fields: [company_id, cashReceipt_id], references: [company_id, id], onUpdate: NoAction)
 
@@ -3337,6 +3337,8 @@ model arm_CashReceiptDetail {
 
 // A/P Invoice (Invoice dari Supplier) - Hutang
 model apm_Invoice {
+  company_id            String                @db.Char(10)
+  branch_id             String                @db.Char(10)
   id                    String                @db.Char(30) // Manual: APINV/2025/10/00001
   invoiceNumber         String                @db.VarChar(30)
   invoiceDate           DateTime              @default(now())
@@ -3395,8 +3397,6 @@ model apm_Invoice {
   createdAt             DateTime              @default(now())
   updatedBy             String?               @db.Char(10)
   updatedAt             DateTime
-  company_id            String                @db.Char(10)
-  branch_id             String                @db.Char(10)
   // Relations
   supplier              prc_Supplier          @relation(fields: [company_id, supplier_id], references: [company_id, id], onUpdate: NoAction)
   purchaseReceive       prc_PurchaseReceive?  @relation(fields: [company_id, purchaseReceive_id], references: [company_id, id], onUpdate: NoAction)
@@ -3415,6 +3415,8 @@ model apm_Invoice {
 
 // A/P Invoice Detail
 model apm_InvoiceDetail {
+  company_id        String                @db.Char(10)
+  branch_id         String                @db.Char(10)
   id                String                @db.Char(30) // Manual: APID/2025/10/00001
   apInvoice_id      String                @db.Char(30)
   lineNumber        Int                   @db.SmallInt
@@ -3447,8 +3449,6 @@ model apm_InvoiceDetail {
   createdAt         DateTime              @default(now())
   updatedBy         String?               @db.Char(10)
   updatedAt         DateTime
-  company_id        String                @db.Char(10)
-  branch_id         String                @db.Char(10)
   // Relations
   apInvoice         apm_Invoice           @relation(fields: [company_id, apInvoice_id], references: [company_id, id], onUpdate: NoAction)
   product           imc_Product?          @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
@@ -3459,6 +3459,8 @@ model apm_InvoiceDetail {
 
 // A/P Payment (Pembayaran ke Supplier)
 model apm_Payment {
+  company_id        String                     @db.Char(10)
+  branch_id         String                     @db.Char(10)
   id                String                     @db.Char(30) // Manual: APPAY/2025/10/00001
   paymentNumber     String                     @db.VarChar(30)
   paymentDate       DateTime                   @default(now())
@@ -3501,8 +3503,6 @@ model apm_Payment {
   createdAt         DateTime                   @default(now())
   updatedBy         String?                    @db.Char(10)
   updatedAt         DateTime
-  company_id        String                     @db.Char(10)
-  branch_id         String                     @db.Char(10)
   // Relations
   apInvoice         apm_Invoice                @relation(fields: [company_id, apInvoice_id], references: [company_id, id], onUpdate: NoAction)
   supplier          prc_Supplier               @relation(fields: [company_id, supplier_id], references: [company_id, id], onUpdate: NoAction)
@@ -3519,6 +3519,8 @@ model apm_Payment {
 
 // A/P Payment Detail (jika 1 payment untuk multiple invoice)
 model apm_PaymentDetail {
+  company_id        String                @db.Char(10)
+  branch_id         String                @db.Char(10)
   id                String                @db.Char(30) // Manual: APPD/2025/10/00001
   apPayment_id      String                @db.Char(30)
   lineNumber        Int                   @db.SmallInt
@@ -3535,8 +3537,6 @@ model apm_PaymentDetail {
   // Metadata
   createdBy         String?               @db.Char(10)
   createdAt         DateTime              @default(now())
-  company_id        String                @db.Char(10)
-  branch_id         String                @db.Char(10)
   // Relations
   apPayment         apm_Payment           @relation(fields: [company_id, apPayment_id], references: [company_id, id], onUpdate: NoAction)
   paymentMethod     cmf_PaymentMethod     @relation(fields: [paymentMethod_id], references: [id], onUpdate: NoAction)
@@ -3547,6 +3547,8 @@ model apm_PaymentDetail {
 
 // Purchase Return (Return barang ke Supplier)
 model prc_PurchaseReturn {
+  company_id           String                     @db.Char(10)
+  branch_id            String                     @db.Char(10)
   id                   String                     @db.Char(30) // Manual: PRET/2025/10/00001
   returnNumber         String                     @db.VarChar(30)
   returnDate           DateTime                   @default(now())
@@ -3590,8 +3592,6 @@ model prc_PurchaseReturn {
   createdAt            DateTime                   @default(now())
   updatedBy            String?                    @db.Char(10)
   updatedAt            DateTime
-  company_id           String                     @db.Char(10)
-  branch_id            String                     @db.Char(10)
   // Relations
   purchaseReceive      prc_PurchaseReceive        @relation(fields: [company_id, purchaseReceive_id], references: [company_id, id], onUpdate: NoAction)
   purchaseOrder        prc_PurchaseOrder?         @relation(fields: [company_id, purchaseOrder_id], references: [company_id, id], onUpdate: NoAction)
@@ -3608,6 +3608,8 @@ model prc_PurchaseReturn {
 
 // Purchase Return Detail
 model prc_PurchaseReturnDetail {
+  company_id        String                  @db.Char(10)
+  branch_id         String                  @db.Char(10)
   id                String                  @db.Char(30) // Manual: PRTD/2025/10/00001
   purchaseReturn_id String                  @db.Char(30)
   lineNumber        Int                     @db.SmallInt
@@ -3647,8 +3649,6 @@ model prc_PurchaseReturnDetail {
   createdAt         DateTime                @default(now())
   updatedBy         String?                 @db.Char(10)
   updatedAt         DateTime
-  company_id        String                  @db.Char(10)
-  branch_id         String                  @db.Char(10)
   // Relations
   purchaseReturn    prc_PurchaseReturn      @relation(fields: [company_id, purchaseReturn_id], references: [company_id, id], onUpdate: NoAction)
   product           imc_Product             @relation(fields: [company_id, product_id], references: [company_id, id], onUpdate: NoAction)
@@ -3666,6 +3666,8 @@ model prc_PurchaseReturnDetail {
 
 // GL Transaction (Journal Entry Header) - Semua transaksi uang bermuara ke sini
 model acc_GLTrans {
+  company_id             String                 @db.Char(10)
+  branch_id              String                 @db.Char(10)
   id                     String                 @db.Char(30) // Manual: JV/2025/10/00001
   journalNumber          String                 @db.VarChar(30)
   journalDate            DateTime               @default(now())
@@ -3706,8 +3708,6 @@ model acc_GLTrans {
   createdAt              DateTime               @default(now())
   updatedBy              String?                @db.Char(10)
   updatedAt              DateTime
-  company_id             String                 @db.Char(10)
-  branch_id              String                 @db.Char(10)
   // Relations
   invoice                arm_Invoice?           @relation(fields: [company_id, invoice_id], references: [company_id, id], onUpdate: NoAction)
   payment                arm_Payment?           @relation(fields: [company_id, payment_id], references: [company_id, id], onUpdate: NoAction)
@@ -3727,6 +3727,8 @@ model acc_GLTrans {
 
 // GL Transaction Detail (Journal Entry Detail) - Detail transaksi GL
 model acc_GLTransDetail {
+  company_id   String                 @db.Char(10)
+  branch_id    String                 @db.Char(10)
   id           String                 @db.Char(30) // Manual: GLD/2025/10/00001
   glTrans_id   String                 @db.Char(30)
   lineNumber   Int                    @db.SmallInt
@@ -3742,8 +3744,6 @@ model acc_GLTransDetail {
   iStatus      MasterRecordStatusEnum @default(Active)
   createdBy    String?                @db.Char(10)
   createdAt    DateTime               @default(now())
-  company_id   String                 @db.Char(10)
-  branch_id    String                 @db.Char(10)
   // Relations
   glTrans      acc_GLTrans            @relation(fields: [company_id, glTrans_id], references: [company_id, id], onUpdate: NoAction)
   coa          acc_COA                @relation(fields: [company_id, coa_id], references: [company_id, id], onUpdate: NoAction)
@@ -4379,9 +4379,9 @@ model tmp_customer {
 }
 
 model sys_Province {
+  company_id String     @db.Char(10)
   id         String     @id @db.Char(5)
   name       String     @db.VarChar(100)
-  company_id String     @db.Char(10)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   createdBy  String?    @db.Char(10)
@@ -4392,9 +4392,9 @@ model sys_Province {
 }
 
 model sys_City {
+  company_id  String         @db.Char(10)
   id          String         @id @db.Char(15)
   name        String         @db.VarChar(100)
-  company_id  String         @db.Char(10)
   province_id String        @db.Char(5)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -4410,9 +4410,9 @@ model sys_City {
 }
 
 model sys_District {
+  company_id   String            @db.Char(10)
   id           String            @id @db.Char(15)
   name         String            @db.VarChar(100)
-  company_id   String            @db.Char(10)
   city_id      String           @db.Char(15)
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
@@ -4427,11 +4427,11 @@ model sys_District {
 }
 
 model sys_SubDistrict {
+  company_id  String       @db.Char(10)
   id          String       @id @db.Char(20)
   name        String       @db.VarChar(100)
   district_id String       @db.Char(15)
   city_id     String       @db.Char(15)
-  company_id  String       @db.Char(10)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   createdBy   String?      @db.Char(10)
