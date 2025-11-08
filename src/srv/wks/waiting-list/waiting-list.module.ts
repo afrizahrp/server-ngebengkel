@@ -9,4 +9,3 @@ import { WaitingListService } from './waiting-list.service';
   providers: [WaitingListService],
 })
 export class WaitingListModule {}
-

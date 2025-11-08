@@ -1,0 +1,171 @@
+{
+  "province": {
+    "id": "31000",
+    "name": "Daerah Khusus Ibukota Jakarta",
+    "company_id": "NGB",
+    "cities": [
+      {
+        "id": "31730",
+        "name": "Kota Administrasi Jakarta Barat",
+        "company_id": "NGB",
+        "districts": [
+          {
+            "id": "317301",
+            "name": "Cengkareng",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31730101",
+                "name": "Cengkareng Barat",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31730102",
+                "name": "Cengkareng Timur",
+                "company_id": "NGB"
+              },
+              { "id": "31730103", "name": "Rawa Buaya", "company_id": "NGB" },
+              { "id": "31730104", "name": "Duri Kosambi", "company_id": "NGB" },
+              { "id": "31730105", "name": "Kapuk", "company_id": "NGB" },
+              {
+                "id": "31730106",
+                "name": "Kedaung Kali Angke",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317302",
+            "name": "Grogol Petamburan",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31730201", "name": "Grogol", "company_id": "NGB" },
+              {
+                "id": "31730202",
+                "name": "Tanjung Duren Utara",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31730203",
+                "name": "Tanjung Duren Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31730204", "name": "Tomang", "company_id": "NGB" },
+              { "id": "31730205", "name": "Jelambar", "company_id": "NGB" },
+              { "id": "31730206", "name": "Jelambar Baru", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317303",
+            "name": "Taman Sari",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31730301", "name": "Pinangsia", "company_id": "NGB" },
+              { "id": "31730302", "name": "Glodok", "company_id": "NGB" },
+              { "id": "31730303", "name": "Keagungan", "company_id": "NGB" },
+              { "id": "31730304", "name": "Krukut", "company_id": "NGB" },
+              { "id": "31730305", "name": "Mangga Besar", "company_id": "NGB" },
+              { "id": "31730306", "name": "Maphar", "company_id": "NGB" },
+              { "id": "31730307", "name": "Tangki", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317304",
+            "name": "Tambora",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31730401", "name": "Tambora", "company_id": "NGB" },
+              { "id": "31730402", "name": "Pekojan", "company_id": "NGB" },
+              {
+                "id": "31730403",
+                "name": "Jembatan Lima",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31730404",
+                "name": "Jembatan Besi",
+                "company_id": "NGB"
+              },
+              { "id": "31730405", "name": "Angke", "company_id": "NGB" },
+              { "id": "31730406", "name": "Duri Selatan", "company_id": "NGB" },
+              { "id": "31730407", "name": "Duri Utara", "company_id": "NGB" },
+              { "id": "31730408", "name": "Kalianyar", "company_id": "NGB" },
+              { "id": "31730409", "name": "Roa Malaka", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317305",
+            "name": "Kebon Jeruk",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31730501", "name": "Kebon Jeruk", "company_id": "NGB" },
+              {
+                "id": "31730502",
+                "name": "Sukabumi Utara",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31730503",
+                "name": "Sukabumi Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31730504", "name": "Duri Kepa", "company_id": "NGB" },
+              { "id": "31730505", "name": "Kelapa Dua", "company_id": "NGB" },
+              { "id": "31730506", "name": "Kedoya Utara", "company_id": "NGB" },
+              {
+                "id": "31730507",
+                "name": "Kedoya Selatan",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317306",
+            "name": "Palmerah",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31730601", "name": "Palmerah", "company_id": "NGB" },
+              { "id": "31730602", "name": "Slipi", "company_id": "NGB" },
+              {
+                "id": "31730603",
+                "name": "Kota Bambu Utara",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31730604",
+                "name": "Kota Bambu Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31730605", "name": "Kemanggisan", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317307",
+            "name": "Kembangan",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31730701",
+                "name": "Kembangan Utara",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31730702",
+                "name": "Kembangan Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31730703", "name": "Meruya Utara", "company_id": "NGB" },
+              {
+                "id": "31730704",
+                "name": "Meruya Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31730705", "name": "Srengseng", "company_id": "NGB" },
+              { "id": "31730706", "name": "Joglo", "company_id": "NGB" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

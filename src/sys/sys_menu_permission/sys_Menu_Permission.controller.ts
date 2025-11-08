@@ -13,7 +13,7 @@ import { Sys_UpdateMenuPermissionDto } from './dto/sys_UpdateMenuPermission.dto'
 import { Sys_ResponseMenuPermissionDto } from './dto/sys_ResponseMenuPermission.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 
-@Controller(':sys_menu_permission')
+@Controller('sys_menu_permission')
 export class sys_MenuPermissionController {
   constructor(
     private readonly menuPermissionService: sys_MenuPermissionService,

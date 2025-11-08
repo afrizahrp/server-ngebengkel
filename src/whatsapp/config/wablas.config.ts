@@ -6,5 +6,3 @@ export default registerAs('wablas', () => ({
   senderName: process.env.WABLAS_SENDER_NAME || 'Ngebengkel',
   enabled: process.env.WABLAS_ENABLED === 'true',
 }));
-
-

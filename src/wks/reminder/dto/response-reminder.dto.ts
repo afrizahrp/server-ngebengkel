@@ -85,4 +85,3 @@ export class ReminderResponseDto {
   company_id: string;
   branch_id: string;
 }
-

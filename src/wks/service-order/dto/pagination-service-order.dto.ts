@@ -69,7 +69,3 @@ export class PaginationServiceOrderDto {
   @IsOptional()
   orderDir?: 'asc' | 'desc' = 'desc';
 }
-
-
-
-

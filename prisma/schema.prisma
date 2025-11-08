@@ -353,7 +353,7 @@ model sys_Branch {
 
 model sys_Role {
   id         String                 @id @db.Char(20)
-  name       String                 @db.VarChar(20)
+  name       String                 @db.VarChar(50)
   iStatus    MasterRecordStatusEnum @default(Active)
   remarks    String?                @db.VarChar(255)
   company_id String?                @db.Char(5)
@@ -4290,45 +4290,59 @@ model tmp_customer {
 }
 
 model sys_Province {
-  id         String   @id @db.Char(5)
-  name       String   @db.VarChar(50)
-  company_id String   @db.Char(5)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  createdBy  String?  @db.Char(10)
-  updatedBy  String?  @db.Char(10)
-}
-
-model sys_District {
-  id         String   @id @db.Char(5)
-  name       String   @db.VarChar(50)
-  company_id String   @db.Char(5)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  createdBy  String?  @db.Char(10)
-  updatedBy  String?  @db.Char(10)
+  id         String     @id @db.Char(5)
+  name       String     @db.VarChar(100)
+  company_id String     @db.Char(5)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  createdBy  String?    @db.Char(10)
+  updatedBy  String?    @db.Char(10)
+  cities     sys_City[]
 }
 
 model sys_City {
-  id         String   @id @db.Char(5)
-  name       String   @db.VarChar(50)
-  company_id String   @db.Char(5)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  createdBy  String?  @db.Char(10)
-  updatedBy  String?  @db.Char(10)
+  id          String         @id @db.Char(15)
+  name        String         @db.VarChar(100)
+  company_id  String         @db.Char(5)
+  province_id String        @db.Char(5)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  createdBy   String?        @db.Char(10)
+  updatedBy   String?        @db.Char(10)
+  province    sys_Province?  @relation(fields: [province_id], references: [id])
+  districts   sys_District[]
+  // subdistricts sys_SubDistrict[] @relation("CitySubdistricts")
+
+  @@index([province_id])
+}
+
+model sys_District {
+  id           String            @id @db.Char(15)
+  name         String            @db.VarChar(100)
+  company_id   String            @db.Char(5)
+  city_id      String           @db.Char(15)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  createdBy    String?           @db.Char(10)
+  updatedBy    String?           @db.Char(10)
+  city         sys_City?         @relation(fields: [city_id], references: [id])
+  subdistricts sys_SubDistrict[]
+
+  @@index([city_id])
 }
 
 model sys_SubDistrict {
-  id          String   @id @db.Char(8)
-  name        String   @db.VarChar(100)
-  district_id String?  @db.Char(5)
-  city_id     String?  @db.Char(5)
-  company_id  String   @db.Char(5)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   String?  @db.Char(10)
-  updatedBy   String?  @db.Char(10)
+  id          String       @id @db.Char(20)
+  name        String       @db.VarChar(100)
+  district_id String       @db.Char(15)
+  city_id     String       @db.Char(15)
+  company_id  String       @db.Char(5)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   String?      @db.Char(10)
+  updatedBy   String?      @db.Char(10)
+  district    sys_District @relation(fields: [district_id], references: [id])
+  // city        sys_City     @relation("CitySubdistricts", fields: [city_id], references: [id])
 
   @@index([district_id])
   @@index([city_id])

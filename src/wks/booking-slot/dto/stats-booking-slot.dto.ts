@@ -36,5 +36,3 @@ export class BookingSlotStatsQueryDto {
   @IsOptional()
   end_date?: string;
 }
-
-

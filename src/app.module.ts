@@ -14,6 +14,10 @@ import { sys_CompanyModule } from './sys/sys_company/sys_Company.module';
 import { sys_BranchModule } from './sys/sys_branch/sys_Branch.module';
 import { sys_MenuModule } from './sys/sys_menu/sys_Menu.module';
 import { sys_MenuPermissionModule } from './sys/sys_menu_permission/sys_Menu_Permission.module';
+import { sys_ProvinceModule } from './sys/sys_province/sys_Province.module';
+import { sys_CityModule } from './sys/sys_city/sys_City.module';
+import { sys_DistrictModule } from './sys/sys_district/sys_District.module';
+import { sys_SubDistrictModule } from './sys/sys_subdistrict/sys_SubDistrict.module';
 import { EmailModule } from './email/email.module';
 import { CleanupModule } from './auth/cleanup/cleanup.module';
 import { BookingModule } from './wks/booking/booking.module';
@@ -45,6 +49,10 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     Sys_UserCompanyRoleModule,
     sys_MenuModule,
     sys_MenuPermissionModule,
+    sys_ProvinceModule,
+    sys_CityModule,
+    sys_DistrictModule,
+    sys_SubDistrictModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

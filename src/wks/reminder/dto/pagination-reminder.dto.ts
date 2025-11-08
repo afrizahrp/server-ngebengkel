@@ -104,4 +104,3 @@ export class PaginationReminderDto {
   @IsOptional()
   orderDir?: 'asc' | 'desc' = 'desc';
 }
-

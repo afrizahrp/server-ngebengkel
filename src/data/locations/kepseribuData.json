@@ -1,0 +1,56 @@
+{
+  "province": {
+    "id": "31000",
+    "name": "Daerah Khusus Ibukota Jakarta",
+    "company_id": "NGB",
+    "cities": [
+      {
+        "id": "31700",
+        "name": "Kabupaten Administrasi Kepulauan Seribu",
+        "company_id": "NGB",
+        "districts": [
+          {
+            "id": "317001",
+            "name": "Kepulauan Seribu Utara",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31700101",
+                "name": "Pulau Panggang",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31700102",
+                "name": "Pulau Kelapa",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31700103",
+                "name": "Pulau Harapan",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317002",
+            "name": "Kepulauan Seribu Selatan",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31700201",
+                "name": "Pulau Tidung",
+                "company_id": "NGB"
+              },
+              { "id": "31700202", "name": "Pulau Pari", "company_id": "NGB" },
+              {
+                "id": "31700203",
+                "name": "Pulau Untung Jawa",
+                "company_id": "NGB"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

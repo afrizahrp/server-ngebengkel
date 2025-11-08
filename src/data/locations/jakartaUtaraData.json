@@ -1,0 +1,117 @@
+{
+  "province": {
+    "id": "31000",
+    "name": "Daerah Khusus Ibukota Jakarta",
+    "company_id": "NGB",
+    "cities": [
+      {
+        "id": "31720",
+        "name": "Kota Administrasi Jakarta Utara",
+        "company_id": "NGB",
+        "districts": [
+          {
+            "id": "317201",
+            "name": "Penjaringan",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31720101", "name": "Penjaringan", "company_id": "NGB" },
+              { "id": "31720102", "name": "Pejagalan", "company_id": "NGB" },
+              { "id": "31720103", "name": "Pluit", "company_id": "NGB" },
+              { "id": "31720104", "name": "Kapuk Muara", "company_id": "NGB" },
+              { "id": "31720105", "name": "Kamal Muara", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317202",
+            "name": "Tanjung Priok",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31720201", "name": "Sunter Agung", "company_id": "NGB" },
+              { "id": "31720202", "name": "Sunter Jaya", "company_id": "NGB" },
+              { "id": "31720203", "name": "Papanggo", "company_id": "NGB" },
+              { "id": "31720204", "name": "Warakas", "company_id": "NGB" },
+              { "id": "31720205", "name": "Sungai Bambu", "company_id": "NGB" },
+              { "id": "31720206", "name": "Kebon Bawang", "company_id": "NGB" },
+              { "id": "31720207", "name": "Tanjung Priok", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317203",
+            "name": "Koja",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31720301", "name": "Koja", "company_id": "NGB" },
+              { "id": "31720302", "name": "Tugu Utara", "company_id": "NGB" },
+              { "id": "31720303", "name": "Tugu Selatan", "company_id": "NGB" },
+              { "id": "31720304", "name": "Lagoa", "company_id": "NGB" },
+              {
+                "id": "31720305",
+                "name": "Rawa Badak Utara",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31720306",
+                "name": "Rawa Badak Selatan",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317204",
+            "name": "Cilincing",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31720401", "name": "Cilincing", "company_id": "NGB" },
+              { "id": "31720402", "name": "Sukapura", "company_id": "NGB" },
+              { "id": "31720403", "name": "Semper Timur", "company_id": "NGB" },
+              { "id": "31720404", "name": "Semper Barat", "company_id": "NGB" },
+              { "id": "31720405", "name": "Rorotan", "company_id": "NGB" },
+              { "id": "31720406", "name": "Marunda", "company_id": "NGB" },
+              { "id": "31720407", "name": "Kali Baru", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317205",
+            "name": "Pademangan",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31720501", "name": "Ancol", "company_id": "NGB" },
+              {
+                "id": "31720502",
+                "name": "Pademangan Barat",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31720503",
+                "name": "Pademangan Timur",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317206",
+            "name": "Kelapa Gading",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31720601",
+                "name": "Pegangsaan Dua",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31720602",
+                "name": "Kelapa Gading Barat",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31720603",
+                "name": "Kelapa Gading Timur",
+                "company_id": "NGB"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "province": {
+    "id": "31000",
+    "name": "Daerah Khusus Ibukota Jakarta",
+    "company_id": "NGB",
+    "cities": [
+      {
+        "id": "31710",
+        "name": "Kota Administrasi Jakarta Pusat",
+        "company_id": "NGB",
+        "districts": [
+          {
+            "id": "317101",
+            "name": "Gambir",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31710101", "name": "Petojo Utara", "company_id": "NGB" },
+              { "id": "31710102", "name": "Gambir", "company_id": "NGB" },
+              { "id": "31710103", "name": "Kebon Kelapa", "company_id": "NGB" },
+              {
+                "id": "31710104",
+                "name": "Petojo Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31710105", "name": "Duri Pulo", "company_id": "NGB" },
+              { "id": "31710106", "name": "Cideng", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317102",
+            "name": "Sawah Besar",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31710201",
+                "name": "Mangga Dua Selatan",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31710202",
+                "name": "Gunung Sahari Utara",
+                "company_id": "NGB"
+              },
+              { "id": "31710203", "name": "Karang Anyar", "company_id": "NGB" },
+              { "id": "31710204", "name": "Pasar Baru", "company_id": "NGB" },
+              { "id": "31710205", "name": "Kartini", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317103",
+            "name": "Kemayoran",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31710301", "name": "Utan Panjang", "company_id": "NGB" },
+              {
+                "id": "31710302",
+                "name": "Gunung Sahari Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31710303", "name": "Kemayoran", "company_id": "NGB" },
+              { "id": "31710304", "name": "Serdang", "company_id": "NGB" },
+              { "id": "31710305", "name": "Cempaka Baru", "company_id": "NGB" },
+              { "id": "31710306", "name": "Kebon Kosong", "company_id": "NGB" },
+              { "id": "31710307", "name": "Sumur Batu", "company_id": "NGB" },
+              { "id": "31710308", "name": "Harapan Mulya", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317104",
+            "name": "Senen",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31710401", "name": "Senen", "company_id": "NGB" },
+              { "id": "31710402", "name": "Kwitang", "company_id": "NGB" },
+              { "id": "31710403", "name": "Kenari", "company_id": "NGB" },
+              { "id": "31710404", "name": "Kramat", "company_id": "NGB" },
+              { "id": "31710405", "name": "Paseban", "company_id": "NGB" },
+              { "id": "31710406", "name": "Bungur", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317105",
+            "name": "Cempaka Putih",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31710501",
+                "name": "Cempaka Putih Barat",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31710502",
+                "name": "Cempaka Putih Timur",
+                "company_id": "NGB"
+              },
+              { "id": "31710503", "name": "Rawasari", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317106",
+            "name": "Menteng",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31710601", "name": "Kebon Sirih", "company_id": "NGB" },
+              { "id": "31710602", "name": "Gondangdia", "company_id": "NGB" },
+              { "id": "31710603", "name": "Cikini", "company_id": "NGB" },
+              { "id": "31710604", "name": "Menteng", "company_id": "NGB" },
+              { "id": "31710605", "name": "Pegangsaan", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317107",
+            "name": "Tanah Abang",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31710701",
+                "name": "Bendungan Hilir",
+                "company_id": "NGB"
+              },
+              { "id": "31710702", "name": "Gelora", "company_id": "NGB" },
+              { "id": "31710703", "name": "Kampung Bali", "company_id": "NGB" },
+              {
+                "id": "31710704",
+                "name": "Karet Tengsin",
+                "company_id": "NGB"
+              },
+              { "id": "31710705", "name": "Kebon Melati", "company_id": "NGB" },
+              { "id": "31710706", "name": "Kebon Kacang", "company_id": "NGB" },
+              { "id": "31710707", "name": "Petamburan", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317108",
+            "name": "Johar Baru",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31710801", "name": "Kampung Rawa", "company_id": "NGB" },
+              { "id": "31710802", "name": "Tanah Tinggi", "company_id": "NGB" },
+              { "id": "31710803", "name": "Galur", "company_id": "NGB" },
+              { "id": "31710804", "name": "Johar Baru", "company_id": "NGB" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -97,7 +97,8 @@ export class ReminderService {
         reminderNumber,
         entityType: reminderData.entityType,
         entity_id: reminderData.entity_id,
-        reminderType: reminderData.reminderType || ReminderTypeEnum.SCHEDULED_SERVICE,
+        reminderType:
+          reminderData.reminderType || ReminderTypeEnum.SCHEDULED_SERVICE,
         title: reminderData.title,
         message: reminderData.message,
         channels: channelsStr,
@@ -460,7 +461,11 @@ export class ReminderService {
       ? reminder.channels.split(',')
       : ['WHATSAPP']; // Default to WhatsApp
 
-    const results: Array<{ channel: string; success: boolean; error?: string }> = [];
+    const results: Array<{
+      channel: string;
+      success: boolean;
+      error?: string;
+    }> = [];
 
     for (const channel of channels) {
       try {
@@ -518,7 +523,9 @@ export class ReminderService {
             branch_id: reminder.branch_id,
             id: logId,
             reminder_id: reminderId,
-            logType: success ? ReminderLogTypeEnum.SENT : ReminderLogTypeEnum.FAILED,
+            logType: success
+              ? ReminderLogTypeEnum.SENT
+              : ReminderLogTypeEnum.FAILED,
             channel: channelEnum,
             sentAt: success ? new Date() : undefined,
             message: reminder.message || reminder.title,

@@ -55,5 +55,5 @@ export class BookingResponseDto {
   transactionStatus: string;
   remarks?: string;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt: Date | null;
 }

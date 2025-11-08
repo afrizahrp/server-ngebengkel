@@ -15,7 +15,7 @@ import { Sys_UpdateMenuDto } from './dto/sys_UpdateMenu.dto';
 import { Sys_ResponseMenuDto } from './dto/sys_ResponseMenu.dto';
 import { MenuItemDto } from './dto/sys_MenuItem.dto';
 
-@Controller(':sys_menu')
+@Controller('sys_menu')
 export class sys_MenuController {
   constructor(private readonly menuService: sys_MenuService) {}
 

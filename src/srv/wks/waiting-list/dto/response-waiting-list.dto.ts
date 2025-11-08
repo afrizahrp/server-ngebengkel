@@ -7,4 +7,3 @@ export class WaitingListResponseDto {
   province!: string;
   email!: string;
 }
-

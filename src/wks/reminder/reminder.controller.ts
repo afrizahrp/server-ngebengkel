@@ -71,4 +71,3 @@ export class ReminderController {
     return this.reminderService.cancel(companyId, id);
   }
 }
-

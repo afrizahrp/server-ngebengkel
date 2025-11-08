@@ -1,0 +1,216 @@
+{
+  "province": {
+    "id": "31000",
+    "name": "Daerah Khusus Ibukota Jakarta",
+    "company_id": "NGB",
+    "cities": [
+      {
+        "id": "31750",
+        "name": "Kota Administrasi Jakarta Timur",
+        "company_id": "NGB",
+        "districts": [
+          {
+            "id": "317501",
+            "name": "Matraman",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31750101", "name": "Palmeriam", "company_id": "NGB" },
+              {
+                "id": "31750102",
+                "name": "Pisangan Baru",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31750103",
+                "name": "Kebon Manggis",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31750104",
+                "name": "Utan Kayu Utara",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31750105",
+                "name": "Utan Kayu Selatan",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317502",
+            "name": "Pulo Gadung",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31750201",
+                "name": "Pisangan Timur",
+                "company_id": "NGB"
+              },
+              { "id": "31750202", "name": "Jati", "company_id": "NGB" },
+              { "id": "31750203", "name": "Rawamangun", "company_id": "NGB" },
+              { "id": "31750204", "name": "Kayu Putih", "company_id": "NGB" },
+              { "id": "31750205", "name": "Cipinang", "company_id": "NGB" },
+              {
+                "id": "31750206",
+                "name": "Jatinegara Kaum",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317503",
+            "name": "Jatinegara",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31750301", "name": "Bali Mester", "company_id": "NGB" },
+              { "id": "31750302", "name": "Bidara Cina", "company_id": "NGB" },
+              {
+                "id": "31750303",
+                "name": "Cipinang Besar Selatan",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31750304",
+                "name": "Cipinang Besar Utara",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31750305",
+                "name": "Cipinang Cempedak",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31750306",
+                "name": "Cipinang Muara",
+                "company_id": "NGB"
+              },
+              { "id": "31750307", "name": "Rawa Bunga", "company_id": "NGB" },
+              { "id": "31750308", "name": "Batu Ampar", "company_id": "NGB" },
+              {
+                "id": "31750309",
+                "name": "Kampung Melayu",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317504",
+            "name": "Duren Sawit",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31750401", "name": "Duren Sawit", "company_id": "NGB" },
+              { "id": "31750402", "name": "Klender", "company_id": "NGB" },
+              { "id": "31750403", "name": "Pondok Bambu", "company_id": "NGB" },
+              {
+                "id": "31750404",
+                "name": "Pondok Kelapa",
+                "company_id": "NGB"
+              },
+              { "id": "31750405", "name": "Pondok Kopi", "company_id": "NGB" },
+              { "id": "31750406", "name": "Malaka Sari", "company_id": "NGB" },
+              { "id": "31750407", "name": "Malaka Jaya", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317505",
+            "name": "Kramat Jati",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31750501", "name": "Kramat Jati", "company_id": "NGB" },
+              { "id": "31750502", "name": "Dukuh", "company_id": "NGB" },
+              { "id": "31750503", "name": "Cililitan", "company_id": "NGB" },
+              { "id": "31750504", "name": "Batu Ampar", "company_id": "NGB" },
+              { "id": "31750505", "name": "Balekambang", "company_id": "NGB" },
+              { "id": "31750506", "name": "Cawang", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317506",
+            "name": "Pasar Rebo",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31750601", "name": "Kalisari", "company_id": "NGB" },
+              { "id": "31750602", "name": "Pekayon", "company_id": "NGB" },
+              { "id": "31750603", "name": "Baru", "company_id": "NGB" },
+              { "id": "31750604", "name": "Cijantung", "company_id": "NGB" },
+              { "id": "31750605", "name": "Gedong", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317507",
+            "name": "Ciracas",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31750701", "name": "Ciracas", "company_id": "NGB" },
+              {
+                "id": "31750702",
+                "name": "Kelapa Dua Wetan",
+                "company_id": "NGB"
+              },
+              { "id": "31750703", "name": "Susukan", "company_id": "NGB" },
+              { "id": "31750704", "name": "Cibubur", "company_id": "NGB" },
+              { "id": "31750705", "name": "Rambutan", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317508",
+            "name": "Cipayung",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31750801", "name": "Cipayung", "company_id": "NGB" },
+              { "id": "31750802", "name": "Setu", "company_id": "NGB" },
+              { "id": "31750803", "name": "Bambu Apus", "company_id": "NGB" },
+              { "id": "31750804", "name": "Munjul", "company_id": "NGB" },
+              { "id": "31750805", "name": "Lubang Buaya", "company_id": "NGB" },
+              { "id": "31750806", "name": "Cilangkap", "company_id": "NGB" },
+              {
+                "id": "31750807",
+                "name": "Pondok Ranggon",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317509",
+            "name": "Makasar",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31750901", "name": "Makasar", "company_id": "NGB" },
+              { "id": "31750902", "name": "Kebon Pala", "company_id": "NGB" },
+              {
+                "id": "31750903",
+                "name": "Cipinang Melayu",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31750904",
+                "name": "Halim Perdana Kusuma",
+                "company_id": "NGB"
+              },
+              { "id": "31750905", "name": "Pinang Ranti", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317510",
+            "name": "Cakung",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31751001", "name": "Cakung Timur", "company_id": "NGB" },
+              { "id": "31751002", "name": "Cakung Barat", "company_id": "NGB" },
+              { "id": "31751003", "name": "Jatinegara", "company_id": "NGB" },
+              { "id": "31751004", "name": "Penggilingan", "company_id": "NGB" },
+              { "id": "31751005", "name": "Pulo Gebang", "company_id": "NGB" },
+              {
+                "id": "31751006",
+                "name": "Ujung Menteng",
+                "company_id": "NGB"
+              },
+              { "id": "31751007", "name": "Rawa Terate", "company_id": "NGB" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

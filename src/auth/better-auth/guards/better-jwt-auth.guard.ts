@@ -77,7 +77,9 @@ export class BetterJwtAuthGuard implements CanActivate {
         this.extractTokenFromHeader(request);
 
       if (!refreshToken || typeof refreshToken !== 'string') {
-        throw new UnauthorizedException('Access token expired and no refresh token available');
+        throw new UnauthorizedException(
+          'Access token expired and no refresh token available',
+        );
       }
 
       // Verify refresh token dan rotasi token

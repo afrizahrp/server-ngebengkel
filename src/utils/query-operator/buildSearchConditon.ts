@@ -35,7 +35,12 @@ export function buildSearchCondition(
   }
 
   // New format: { fields, searchTerm }
-  if (!config || !('fields' in config) || !config.fields || !config.searchTerm?.trim()) {
+  if (
+    !config ||
+    !('fields' in config) ||
+    !config.fields ||
+    !config.searchTerm?.trim()
+  ) {
     return undefined;
   }
 

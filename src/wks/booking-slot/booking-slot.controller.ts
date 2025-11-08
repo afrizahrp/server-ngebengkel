@@ -14,7 +14,10 @@ import { BookingSlotService } from './booking-slot.service';
 import { CreateBookingSlotDto } from './dto/create-booking-slot.dto';
 import { UpdateBookingSlotDto } from './dto/update-booking-slot.dto';
 import { PaginationBookingSlotDto } from './dto/pagination-booking-slot.dto';
-import { BookingSlotStatsQueryDto, BookingSlotStatsResponseDto } from './dto/stats-booking-slot.dto';
+import {
+  BookingSlotStatsQueryDto,
+  BookingSlotStatsResponseDto,
+} from './dto/stats-booking-slot.dto';
 import { BetterJwtAuthGuard } from '../../auth/better-auth/guards/better-jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthJwtPayload } from '../../auth/types/auth-jwtPayload';
@@ -29,7 +32,10 @@ export class BookingSlotController {
     @Body() createBookingSlotDto: CreateBookingSlotDto,
     @CurrentUser() user: AuthJwtPayload,
   ) {
-    return this.bookingSlotService.create(createBookingSlotDto, user.sub.toString());
+    return this.bookingSlotService.create(
+      createBookingSlotDto,
+      user.sub.toString(),
+    );
   }
 
   @Get()
@@ -104,7 +110,12 @@ export class BookingSlotController {
     @Body() updateBookingSlotDto: UpdateBookingSlotDto,
     @CurrentUser() user: AuthJwtPayload,
   ) {
-    return this.bookingSlotService.update(companyId, id, updateBookingSlotDto, user.sub.toString());
+    return this.bookingSlotService.update(
+      companyId,
+      id,
+      updateBookingSlotDto,
+      user.sub.toString(),
+    );
   }
 
   @Delete(':id')

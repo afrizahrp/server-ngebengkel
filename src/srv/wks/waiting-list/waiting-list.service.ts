@@ -79,4 +79,3 @@ export class WaitingListService {
     return nextNumber.toString().padStart(10, '0');
   }
 }
-

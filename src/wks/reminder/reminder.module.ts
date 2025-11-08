@@ -12,4 +12,3 @@ import { BetterAuthModule } from '../../auth/better-auth/better-auth.module';
   exports: [ReminderService],
 })
 export class ReminderModule {}
-

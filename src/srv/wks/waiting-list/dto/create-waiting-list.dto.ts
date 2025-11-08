@@ -44,4 +44,3 @@ export class CreateWaitingListDto {
   @Transform(({ value }) => value?.trim().toLowerCase())
   email!: string;
 }
-

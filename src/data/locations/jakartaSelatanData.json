@@ -1,0 +1,235 @@
+{
+  "province": {
+    "id": "31000",
+    "name": "Daerah Khusus Ibukota Jakarta",
+    "company_id": "NGB",
+    "cities": [
+      {
+        "id": "31740",
+        "name": "Kota Administrasi Jakarta Selatan",
+        "company_id": "NGB",
+        "districts": [
+          {
+            "id": "317401",
+            "name": "Kebayoran Baru",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31740101", "name": "Selong", "company_id": "NGB" },
+              { "id": "31740102", "name": "Gunung", "company_id": "NGB" },
+              { "id": "31740103", "name": "Kramat Pela", "company_id": "NGB" },
+              {
+                "id": "31740104",
+                "name": "Gandaria Utara",
+                "company_id": "NGB"
+              },
+              { "id": "31740105", "name": "Cipete Utara", "company_id": "NGB" },
+              { "id": "31740106", "name": "Melawai", "company_id": "NGB" },
+              { "id": "31740107", "name": "Pulo", "company_id": "NGB" },
+              { "id": "31740108", "name": "Petogogan", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317402",
+            "name": "Kebayoran Lama",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31740201",
+                "name": "Grogol Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31740202", "name": "Grogol Utara", "company_id": "NGB" },
+              {
+                "id": "31740203",
+                "name": "Kebayoran Lama Selatan",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31740204",
+                "name": "Kebayoran Lama Utara",
+                "company_id": "NGB"
+              },
+              { "id": "31740205", "name": "Pondok Pinang", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317403",
+            "name": "Pesanggrahan",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31740301", "name": "Ulujami", "company_id": "NGB" },
+              {
+                "id": "31740302",
+                "name": "Petukangan Utara",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31740303",
+                "name": "Petukangan Selatan",
+                "company_id": "NGB"
+              },
+              { "id": "31740304", "name": "Pesanggrahan", "company_id": "NGB" },
+              { "id": "31740305", "name": "Bintaro", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317404",
+            "name": "Cilandak",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31740401",
+                "name": "Cilandak Barat",
+                "company_id": "NGB"
+              },
+              { "id": "31740402", "name": "Lebak Bulus", "company_id": "NGB" },
+              { "id": "31740403", "name": "Pondok Labu", "company_id": "NGB" },
+              {
+                "id": "31740404",
+                "name": "Gandaria Selatan",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31740405",
+                "name": "Cipete Selatan",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317405",
+            "name": "Pasar Minggu",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31740501",
+                "name": "Pejaten Barat",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31740502",
+                "name": "Pejaten Timur",
+                "company_id": "NGB"
+              },
+              { "id": "31740503", "name": "Pasar Minggu", "company_id": "NGB" },
+              { "id": "31740504", "name": "Jati Padang", "company_id": "NGB" },
+              { "id": "31740505", "name": "Kebagusan", "company_id": "NGB" },
+              { "id": "31740506", "name": "Ragunan", "company_id": "NGB" },
+              {
+                "id": "31740507",
+                "name": "Cilandak Timur",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317406",
+            "name": "Jagakarsa",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31740601", "name": "Jagakarsa", "company_id": "NGB" },
+              { "id": "31740602", "name": "Cipedak", "company_id": "NGB" },
+              {
+                "id": "31740603",
+                "name": "Srengseng Sawah",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31740604",
+                "name": "Tanjung Barat",
+                "company_id": "NGB"
+              },
+              { "id": "31740605", "name": "Lenteng Agung", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317407",
+            "name": "Mampang Prapatan",
+            "company_id": "NGB",
+            "subdistricts": [
+              {
+                "id": "31740701",
+                "name": "Mampang Prapatan",
+                "company_id": "NGB"
+              },
+              { "id": "31740702", "name": "Bangka", "company_id": "NGB" },
+              { "id": "31740703", "name": "Pela Mampang", "company_id": "NGB" },
+              { "id": "31740704", "name": "Tegal Parang", "company_id": "NGB" },
+              {
+                "id": "31740705",
+                "name": "Kuningan Barat",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317408",
+            "name": "Pancoran",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31740801", "name": "Pancoran", "company_id": "NGB" },
+              { "id": "31740802", "name": "Duren Tiga", "company_id": "NGB" },
+              { "id": "31740803", "name": "Cikoko", "company_id": "NGB" },
+              { "id": "31740804", "name": "Kalibata", "company_id": "NGB" },
+              { "id": "31740805", "name": "Pengadegan", "company_id": "NGB" },
+              { "id": "31740806", "name": "Rawajati", "company_id": "NGB" }
+            ]
+          },
+          {
+            "id": "317409",
+            "name": "Tebet",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31740901", "name": "Tebet Barat", "company_id": "NGB" },
+              { "id": "31740902", "name": "Tebet Timur", "company_id": "NGB" },
+              { "id": "31740903", "name": "Kebon Baru", "company_id": "NGB" },
+              {
+                "id": "31740904",
+                "name": "Menteng Dalam",
+                "company_id": "NGB"
+              },
+              { "id": "31740905", "name": "Bukit Duri", "company_id": "NGB" },
+              { "id": "31740906", "name": "Manggarai", "company_id": "NGB" },
+              {
+                "id": "31740907",
+                "name": "Manggarai Selatan",
+                "company_id": "NGB"
+              }
+            ]
+          },
+          {
+            "id": "317410",
+            "name": "Setiabudi",
+            "company_id": "NGB",
+            "subdistricts": [
+              { "id": "31741001", "name": "Setiabudi", "company_id": "NGB" },
+              { "id": "31741002", "name": "Karet", "company_id": "NGB" },
+              {
+                "id": "31741003",
+                "name": "Karet Kuningan",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31741004",
+                "name": "Karet Semanggi",
+                "company_id": "NGB"
+              },
+              {
+                "id": "31741005",
+                "name": "Kuningan Timur",
+                "company_id": "NGB"
+              },
+              { "id": "31741006", "name": "Menteng Atas", "company_id": "NGB" },
+              {
+                "id": "31741007",
+                "name": "Pasar Manggis",
+                "company_id": "NGB"
+              },
+              { "id": "31741008", "name": "Guntur", "company_id": "NGB" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

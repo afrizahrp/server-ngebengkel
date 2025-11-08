@@ -10,5 +10,3 @@ export class SendInvoiceDto {
   @IsOptional()
   type?: InvoiceType = InvoiceType.INVOICE;
 }
-
-

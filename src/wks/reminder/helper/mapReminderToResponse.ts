@@ -69,4 +69,3 @@ export function mapReminderToResponse(reminder: any): ReminderResponseDto {
     branch_id: reminder.branch_id,
   };
 }
-
