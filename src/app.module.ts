@@ -24,7 +24,7 @@ import { BookingModule } from './wks/booking/booking.module';
 import { BookingSlotModule } from './wks/booking-slot/booking-slot.module';
 import { ServiceOrderModule } from './wks/service-order/service-order.module';
 import { ReminderModule } from './wks/reminder/reminder.module';
-import { WaitingListModule } from './srv/wks/waiting-list/waiting-list.module';
+import { WaitingListModule } from './wks/waiting-list/waiting-list.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 @Module({

@@ -18,7 +18,7 @@ import { BetterJwtAuthGuard } from '../../auth/better-auth/guards/better-jwt-aut
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthJwtPayload } from '../../auth/types/auth-jwtPayload';
 
-@Controller('api/bookings')
+@Controller('/bookings')
 @UseGuards(BetterJwtAuthGuard)
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}

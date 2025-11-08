@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../../prisma/prisma.module';
+import { PrismaModule } from '../../prisma/prisma.module';
 import { WaitingListController } from './waiting-list.controller';
 import { WaitingListService } from './waiting-list.service';
 

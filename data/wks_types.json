@@ -1,0 +1,139 @@
+{
+  "motor": {
+    "kategori": "Bengkel Motor",
+    "jenis": [
+      {
+        "nama": "Bengkel Umum",
+        "deskripsi": "Melayani semua merek motor dengan layanan servis rutin dan perawatan umum",
+        "layanan": ["Servis rutin", "Tune up", "Ganti oli", "Rem", "Kopling"]
+      },
+      {
+        "nama": "Spesialis Injeksi & Kelistrikan",
+        "deskripsi": "Fokus pada sistem bahan bakar injeksi dan kelistrikan motor",
+        "layanan": ["Perbaikan injeksi", "Servis ECU", "Aki", "Starter", "Kabel"]
+      },
+      {
+        "nama": "Spesialis Mesin & Racing",
+        "deskripsi": "Meningkatkan performa dan tenaga mesin motor",
+        "layanan": ["Bore up", "Porting polish", "Camshaft racing", "Setting karburator"]
+      },
+      {
+        "nama": "Spesialis Suspensi",
+        "deskripsi": "Menangani sistem peredam dan kenyamanan motor",
+        "layanan": ["Servis shockbreaker", "Ganti oli shock", "Setting suspensi"]
+      },
+      {
+        "nama": "Spesialis Body & Cat",
+        "deskripsi": "Perbaikan tampilan bodi dan pengecatan motor",
+        "layanan": ["Cat ulang", "Airbrush", "Custom striping", "Repaint"]
+      },
+      {
+        "nama": "Spesialis Ban & Velg",
+        "deskripsi": "Menangani kaki-kaki, ban, dan velg motor",
+        "layanan": ["Tambal ban", "Ganti velg", "Isi angin nitrogen", "Balancing"]
+      },
+      {
+        "nama": "Servis Cepat & Oli",
+        "deskripsi": "Layanan perawatan ringan dan cepat untuk pengguna harian",
+        "layanan": ["Ganti oli", "Setel rem", "Cek rantai", "Pembersihan ringan"]
+      }
+    ]
+  },
+
+  "mobil": {
+    "kategori": "Bengkel Mobil",
+    "jenis": [
+      {
+        "nama": "Bengkel Umum",
+        "deskripsi": "Melayani berbagai merek mobil untuk servis dan perawatan umum",
+        "layanan": ["Servis berkala", "Tune up", "Rem", "Ganti oli", "Filter udara"]
+      },
+      {
+        "nama": "Spesialis AC Mobil",
+        "deskripsi": "Menangani sistem pendingin kabin mobil",
+        "layanan": ["Cuci evaporator", "Isi freon", "Perbaikan kompresor"]
+      },
+      {
+        "nama": "Spesialis Transmisi & Mesin",
+        "deskripsi": "Fokus pada sistem penggerak dan tenaga mobil",
+        "layanan": ["Overhaul transmisi", "Injektor cleaning", "Kalibrasi mesin"]
+      },
+      {
+        "nama": "Spesialis Kelistrikan",
+        "deskripsi": "Menangani aki, starter, dan sistem kelistrikan mobil",
+        "layanan": ["Ganti aki", "Perbaikan alternator", "Kabel & relay"]
+      },
+      {
+        "nama": "Spesialis Kaki-Kaki & Spooring",
+        "deskripsi": "Menangani sistem suspensi dan keseimbangan roda",
+        "layanan": ["Ball joint", "Tie rod", "Spooring balancing", "Shock absorber"]
+      },
+      {
+        "nama": "Spesialis Body & Cat",
+        "deskripsi": "Perbaikan bodi dan pengecatan mobil",
+        "layanan": ["Ketok magic", "Oven painting", "Repaint full body"]
+      },
+      {
+        "nama": "Salon & Detailing",
+        "deskripsi": "Perawatan estetika dan kebersihan kendaraan",
+        "layanan": ["Cuci detailing", "Poles bodi", "Coating", "Interior cleaning"]
+      },
+      {
+        "nama": "Spesialis Ban & Velg",
+        "deskripsi": "Perawatan roda dan sistem traksi mobil",
+        "layanan": ["Ganti ban", "Balancing", "Velg repair", "Isi nitrogen"]
+      },
+      {
+        "nama": "Modifikasi & Custom",
+        "deskripsi": "Kustomisasi tampilan dan performa mobil",
+        "layanan": ["Audio", "Lampu", "Body kit", "Suspensi custom"]
+      }
+    ]
+  },
+
+  "truk_bus_karoseri": {
+    "kategori": "Bengkel Truk, Bus & Karoseri",
+    "jenis": [
+      {
+        "nama": "Bengkel Umum Kendaraan Berat",
+        "deskripsi": "Menangani servis dan perawatan kendaraan besar seperti truk dan bus",
+        "layanan": ["Servis mesin", "Gardan", "Transmisi", "Kopling"]
+      },
+      {
+        "nama": "Spesialis Rem Angin & Suspensi",
+        "deskripsi": "Fokus pada sistem pengereman dan suspensi kendaraan berat",
+        "layanan": ["Overhaul rem angin", "Ganti per daun", "Servis brake chamber"]
+      },
+      {
+        "nama": "Spesialis Diesel Pump & Injeksi",
+        "deskripsi": "Menangani sistem bahan bakar diesel kendaraan besar",
+        "layanan": ["Kalibrasi pump", "Servis nozzle", "Injector pump"]
+      },
+      {
+        "nama": "Spesialis Transmisi & Differential",
+        "deskripsi": "Perbaikan sistem penggerak truk dan bus",
+        "layanan": ["Overhaul gearbox", "Perbaikan differential", "As roda"]
+      },
+      {
+        "nama": "Spesialis Body & Cat Industri",
+        "deskripsi": "Perbaikan dan pengecatan bodi kendaraan besar",
+        "layanan": ["Cat oven truk", "Perbaikan panel besar", "Repaint bus"]
+      },
+      {
+        "nama": "Karoseri / Body Builder",
+        "deskripsi": "Pembuatan dan modifikasi bodi kendaraan komersial",
+        "layanan": ["Pembuatan bodi bus", "Box & bak", "Food truck", "Ambulans"]
+      },
+      {
+        "nama": "Bengkel Chassis & Las Industri",
+        "deskripsi": "Menangani struktur dan rangka kendaraan berat",
+        "layanan": ["Las rangka", "Perbaikan chassis", "Alignment"]
+      },
+      {
+        "nama": "Bengkel Ban & Spooring Truk",
+        "deskripsi": "Fokus pada roda besar dan keseimbangan kendaraan berat",
+        "layanan": ["Ganti ban besar", "Balancing", "Spooring heavy duty"]
+      }
+    ]
+  }
+}
