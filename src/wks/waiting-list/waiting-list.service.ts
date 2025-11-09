@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { isEmail } from 'class-validator';
 import { init } from '@paralleldrive/cuid2';
 import { Prisma } from '@prisma/client';
 
@@ -16,6 +17,8 @@ import {
   WorkshopCategoryResponseDto,
   WorkshopTypeResponseDto,
 } from './dto/workshop-category.dto';
+import { EmailService } from '../../email/email.service';
+import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availability.dto';
 
 const createWaitingListId = init({ length: 10 });
 const WAITING_LIST_SELECT = {
@@ -64,14 +67,20 @@ type WaitingListTypeRelation = WaitingListWithRelations['types'];
 
 @Injectable()
 export class WaitingListService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   private readonly waitingListSelect = WAITING_LIST_SELECT;
 
   async create(
     createWaitingListDto: CreateWaitingListDto,
   ): Promise<WaitingListResponseDto> {
-    const normalizedEmail = createWaitingListDto.email;
+    const { name, email: normalizedEmail } = this.validateNameAndEmail(
+      createWaitingListDto.name,
+      createWaitingListDto.email,
+    );
 
     const existing = await this.prisma.wks_waitingList.findFirst({
       where: { email: normalizedEmail, isDeleted: false },
@@ -103,7 +112,7 @@ export class WaitingListService {
       await tx.wks_waitingList.create({
         data: {
           id,
-          name: createWaitingListDto.name,
+          name,
           address: createWaitingListDto.address,
           city: createWaitingListDto.city,
           district: createWaitingListDto.district,
@@ -148,7 +157,27 @@ export class WaitingListService {
       return created;
     });
 
-    return this.toResponse(waitingList);
+    const response = this.toResponse(waitingList);
+
+    try {
+      const workshopTypeNames = response.workshopTypes
+        .map((type) => type.name)
+        .filter((name): name is string => Boolean(name));
+
+      await this.emailService.sendWaitingListThankYouEmail({
+        email: response.email,
+        name: response.name,
+        categoryName: response.categoryName ?? null,
+        workshopTypeNames,
+      });
+    } catch (error) {
+      console.error(
+        '❌ Error sending waiting list thank you email after submission:',
+        error,
+      );
+    }
+
+    return response;
   }
 
   async getWorkshopCategories(): Promise<WorkshopCategoryResponseDto[]> {
@@ -476,5 +505,69 @@ export class WaitingListService {
       createdAt: createdAt.toISOString(),
       updatedAt: updatedAt.toISOString(),
     };
+  }
+
+  async checkAvailability(payload: CheckWaitingListAvailabilityDto): Promise<{
+    nameAvailable: boolean;
+    emailAvailable: boolean;
+    conflicts: Array<{ field: 'name' | 'email'; message: string }>;
+  }> {
+    const { name, email } = this.validateNameAndEmail(
+      payload.name,
+      payload.email,
+    );
+
+    const conflicts: Array<{ field: 'name' | 'email'; message: string }> = [];
+
+    const existingName = await this.prisma.wks_waitingList.findFirst({
+      where: { name, isDeleted: false },
+      select: { id: true },
+    });
+
+    if (existingName) {
+      conflicts.push({
+        field: 'name',
+        message: 'Nama bengkel sudah terdaftar dalam waiting list.',
+      });
+    }
+
+    const existingEmail = await this.prisma.wks_waitingList.findFirst({
+      where: { email, isDeleted: false },
+      select: { id: true },
+    });
+
+    if (existingEmail) {
+      conflicts.push({
+        field: 'email',
+        message: 'Email sudah terdaftar dalam waiting list.',
+      });
+    }
+
+    return {
+      nameAvailable: !existingName,
+      emailAvailable: !existingEmail,
+      conflicts,
+    };
+  }
+
+  private validateNameAndEmail(
+    name: string | undefined,
+    email: string | undefined,
+  ): { name: string; email: string } {
+    const trimmedName = name?.trim();
+    if (!trimmedName) {
+      throw new BadRequestException('Nama wajib diisi');
+    }
+
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new BadRequestException('Email wajib diisi');
+    }
+
+    if (!isEmail(normalizedEmail)) {
+      throw new BadRequestException('Format email tidak valid');
+    }
+
+    return { name: trimmedName, email: normalizedEmail };
   }
 }

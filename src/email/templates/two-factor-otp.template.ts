@@ -21,7 +21,7 @@ export function getTwoFactorOtpTemplate(name: string, otpCode: string): string {
           <!-- Header -->
           <tr>
             <td style="background-color: #ffffff; padding: 30px 20px; text-align: center; border-bottom: 3px solid #00b055;">
-              <img src="https://res.cloudinary.com/ngebengkel/image/upload/v1760515547/logo_oli2ld.webp" alt="Ngebengkel" style="height: 50px; width: auto;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+              <img src="https://ik.imagekit.io/wnhatkskj/logo.webp?updatedAt=1762686364424" alt="Ngebengkel" style="height: 50px; width: auto;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
               <div style="display: none; color: #045693; font-size: 24px; font-weight: bold;">🔒 Ngebengkel</div>
             </td>
           </tr>

@@ -13,6 +13,7 @@ import { CreateWaitingListDto } from './dto/create-waiting-list.dto';
 import { WaitingListResponseDto } from './dto/response-waiting-list.dto';
 import { UpdateWaitingListDto } from './dto/update-waiting-list.dto';
 import { WorkshopCategoryResponseDto } from './dto/workshop-category.dto';
+import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availability.dto';
 
 @Controller('/waiting-list')
 export class WaitingListController {
@@ -41,6 +42,24 @@ export class WaitingListController {
 
     return {
       message: 'Daftar kategori bengkel berhasil dimuat',
+      data,
+    };
+  }
+
+  @Post('check-availability')
+  @Public()
+  async checkAvailability(
+    @Body() payload: CheckWaitingListAvailabilityDto,
+  ): Promise<{
+    message: string;
+    data: Awaited<
+      ReturnType<typeof this.waitingListService.checkAvailability>
+    >;
+  }> {
+    const data = await this.waitingListService.checkAvailability(payload);
+
+    return {
+      message: 'Validasi ketersediaan berhasil',
       data,
     };
   }

@@ -14,6 +14,10 @@ import {
   getTwoFactorOtpTemplate,
   getTwoFactorOtpTextVersion,
 } from './templates/two-factor-otp.template';
+import {
+  getWaitingListThankYouTemplate,
+  getWaitingListThankYouTextVersion,
+} from './templates/waiting-list-thank-you.template';
 
 @Injectable()
 export class EmailService {
@@ -60,7 +64,7 @@ export class EmailService {
     };
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
+      await this.transporter.sendMail(mailOptions);
       console.log(`✅ Verification email sent to ${email}`);
     } catch (error) {
       console.error('❌ Error sending verification email:', error);
@@ -87,11 +91,49 @@ export class EmailService {
     };
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
+      await this.transporter.sendMail(mailOptions);
       console.log(`✅ 2FA OTP sent to ${email}`);
     } catch (error) {
       console.error('❌ Error sending 2FA OTP email:', error);
       throw new InternalServerErrorException('Failed to send 2FA OTP email');
+    }
+  }
+
+  /**
+   * Kirim email konfirmasi waiting list
+   */
+  async sendWaitingListThankYouEmail(params: {
+    email: string;
+    name: string;
+    categoryName?: string | null;
+    workshopTypeNames?: string[];
+  }): Promise<void> {
+    const { email, name, categoryName = null, workshopTypeNames = [] } = params;
+
+    const mailOptions = {
+      from: `"${this.emailConfiguration.from.name}" <${this.emailConfiguration.from.address}>`,
+      to: email,
+      subject: 'Terima kasih bergabung di Waiting List Ngebengkel',
+      text: getWaitingListThankYouTextVersion(
+        name,
+        categoryName,
+        workshopTypeNames,
+      ),
+      html: getWaitingListThankYouTemplate(
+        name,
+        categoryName,
+        workshopTypeNames,
+      ),
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log(`✅ Waiting list thank you email sent to ${email}`);
+    } catch (error) {
+      console.error('❌ Error sending waiting list thank you email:', error);
+      throw new InternalServerErrorException(
+        'Failed to send waiting list thank you email',
+      );
     }
   }
 
