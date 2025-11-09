@@ -6,8 +6,15 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import {
+  ThrottleFormSubmission,
+  ThrottleCheckAvailability,
+  ThrottleGetEndpoints,
+} from '../../auth/decorators/throttle.decorator';
+import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { WaitingListService } from './waiting-list.service';
 import { CreateWaitingListDto } from './dto/create-waiting-list.dto';
 import { WaitingListResponseDto } from './dto/response-waiting-list.dto';
@@ -21,10 +28,14 @@ export class WaitingListController {
 
   @Post()
   @Public()
+  @UseGuards(RecaptchaGuard) // Require CAPTCHA verification
+  @ThrottleFormSubmission() // 10 requests per hour
   async register(
     @Body() createWaitingListDto: CreateWaitingListDto,
   ): Promise<{ message: string; data: WaitingListResponseDto }> {
-    const data = await this.waitingListService.create(createWaitingListDto);
+    // Remove CAPTCHA token dari DTO sebelum save ke database
+    const { recaptchaToken, recaptchaAction, ...dataToSave } = createWaitingListDto;
+    const data = await this.waitingListService.create(dataToSave);
 
     return {
       message: 'Pendaftaran waiting list berhasil',
@@ -34,6 +45,7 @@ export class WaitingListController {
 
   @Get('categories')
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   async categories(): Promise<{
     message: string;
     data: WorkshopCategoryResponseDto[];
@@ -48,6 +60,7 @@ export class WaitingListController {
 
   @Post('check-availability')
   @Public()
+  @ThrottleCheckAvailability() // 30 requests per minute
   async checkAvailability(
     @Body() payload: CheckWaitingListAvailabilityDto,
   ): Promise<{

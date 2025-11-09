@@ -8,11 +8,13 @@ import {
   Delete,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 import { Sys_CompanyService } from './sys_Company.service';
 import { Sys_CreateCompanyDto } from './dto/sys_CreateCompany.dto';
 import { Sys_UpdateCompanyDto } from './dto/sys_UpdateCompany.dto';
 import { Sys_ResponseCompanyDto } from './dto/sys_ResponseCompany.dto';
 import { Sys_ResponseCompanyWithBranchesDto } from './dto/sys_ResponseCompanyWithBranches.dto';
+import { Sys_PublicCompanyDto } from './dto/sys_PublicCompanyDto';
 
 @Controller('sys_company')
 export class sys_CompanyController {
@@ -27,8 +29,10 @@ export class sys_CompanyController {
 
   @Get()
   @Public()
-  async findAll(): Promise<Sys_ResponseCompanyDto[]> {
-    return this.companyService.findAll();
+  @ThrottleGetEndpoints() // 100 requests per minute
+  async findAll(): Promise<Sys_PublicCompanyDto[]> {
+    // Use public-safe method untuk prevent data exposure
+    return this.companyService.findAllPublic();
   }
 
   @Get(':id')
@@ -41,6 +45,7 @@ export class sys_CompanyController {
    * Endpoint khusus untuk login flow
    */
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get(':id/with-branches')
   async findOneWithBranches(
     @Param('id') id: string,

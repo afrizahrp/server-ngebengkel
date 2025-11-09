@@ -8,6 +8,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 import { Sys_CityService } from './sys_City.service';
 import { Sys_CreateCityDto } from './dto/sys_CreateCity.dto';
 import { Sys_UpdateCityDto } from './dto/sys_UpdateCity.dto';
@@ -23,12 +24,14 @@ export class sys_CityController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(): Promise<Sys_ResponseCityDto[]> {
     return this.cityService.findAll();
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get('province/:province_id')
   async findByProvince(
     @Param('province_id') province_id: string,
@@ -37,6 +40,7 @@ export class sys_CityController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseCityDto> {
     return this.cityService.findOne(id);

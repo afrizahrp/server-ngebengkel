@@ -12,6 +12,7 @@ import { Sys_CreateMenuPermissionDto } from './dto/sys_CreateMenuPermission.dto'
 import { Sys_UpdateMenuPermissionDto } from './dto/sys_UpdateMenuPermission.dto';
 import { Sys_ResponseMenuPermissionDto } from './dto/sys_ResponseMenuPermission.dto';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 
 @Controller('sys_menu_permission')
 export class sys_MenuPermissionController {
@@ -27,6 +28,7 @@ export class sys_MenuPermissionController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(): Promise<Sys_ResponseMenuPermissionDto[]> {
     return this.menuPermissionService.findAll();

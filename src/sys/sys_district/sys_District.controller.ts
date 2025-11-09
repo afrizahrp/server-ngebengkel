@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 import { Sys_DistrictService } from './sys_District.service';
 import { Sys_CreateDistrictDto } from './dto/sys_CreateDistrict.dto';
 import { Sys_UpdateDistrictDto } from './dto/sys_UpdateDistrict.dto';
@@ -26,6 +27,7 @@ export class sys_DistrictController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(
     @Query('city_id') city_id?: string,
@@ -38,6 +40,7 @@ export class sys_DistrictController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get('city/:city_id')
   async findByCity(
     @Param('city_id') city_id: string,
@@ -46,6 +49,7 @@ export class sys_DistrictController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseDistrictDto> {
     return this.districtService.findOne(id);

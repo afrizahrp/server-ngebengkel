@@ -8,6 +8,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 import { Sys_BranchService } from './sys_Branch.service';
 import { Sys_CreateBranchDto } from './dto/sys_CreateBranch.dto';
 import { Sys_UpdateBranchDto } from './dto/sys_UpdateBranch.dto';
@@ -25,6 +26,7 @@ export class sys_BranchController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(): Promise<Sys_ResponseBranchDto[]> {
     console.log('GET /sys_branch - Find all branches');
@@ -32,6 +34,7 @@ export class sys_BranchController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get('company/:company_id')
   async findByCompanyId(
     @Param('company_id') company_id: string,

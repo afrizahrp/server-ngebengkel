@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 import { sys_MenuService } from './sys_Menu.service';
 import { Sys_CreateMenuDto } from './dto/sys_CreateMenu.dto';
 import { Sys_UpdateMenuDto } from './dto/sys_UpdateMenu.dto';
@@ -27,6 +28,7 @@ export class sys_MenuController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(): Promise<Sys_ResponseMenuDto[]> {
     return this.menuService.findAll();
@@ -53,6 +55,7 @@ export class sys_MenuController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get('permissions/:userCompanyRole_id')
   async findMenusWithPermissions(
     @Param('userCompanyRole_id') userCompanyRole_id: number,

@@ -17,6 +17,7 @@ import {
   Sys_BulkAssignUserRoleDto,
 } from './dto/sys_AssignUserRole.dto';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 
 @Controller(':company_id/sys_user_company_role')
 export class Sys_UserCompanyRoleController {
@@ -35,6 +36,7 @@ export class Sys_UserCompanyRoleController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(
     @Param('company_id') company_id: string,
@@ -128,6 +130,7 @@ export class Sys_UserCompanyRoleController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get('available-user-roles')
   async getAvailableUserRoles(
     @Param('company_id') company_id: string,

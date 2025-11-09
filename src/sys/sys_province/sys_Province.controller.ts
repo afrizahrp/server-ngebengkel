@@ -8,6 +8,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 import { Sys_ProvinceService } from './sys_Province.service';
 import { Sys_CreateProvinceDto } from './dto/sys_CreateProvince.dto';
 import { Sys_UpdateProvinceDto } from './dto/sys_UpdateProvince.dto';
@@ -25,12 +26,14 @@ export class sys_ProvinceController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(): Promise<Sys_ResponseProvinceDto[]> {
     return this.provinceService.findAll();
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseProvinceDto> {
     return this.provinceService.findOne(id);

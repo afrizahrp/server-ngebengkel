@@ -13,6 +13,7 @@ import { Sys_CreateUserRoleDto } from './dto/sys_CreateUserRole.dto';
 import { Sys_UpdateUserRoleDto } from './dto/sys_UpdateUserRole.dto';
 import { Sys_ResponseUserRoleDto } from './dto/sys_ResponseUserRole.dto';
 import { Public } from '../../auth/decorators/public.decorator';
+import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 
 @Controller('sys_user_role')
 export class Sys_UserRoleController {
@@ -26,6 +27,7 @@ export class Sys_UserRoleController {
   }
 
   @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(): Promise<Sys_ResponseUserRoleDto[]> {
     return this.userRoleService.findAll();

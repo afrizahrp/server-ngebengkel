@@ -17,6 +17,17 @@ import { Response } from 'express';
 import { AuthRequest } from '../types/auth-request.interface';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { AuthenticatedUser } from '../types/auth-request.interface';
+import {
+  ThrottleAuthVeryStrict,
+  ThrottleAuthStrict,
+  ThrottleAuth,
+} from '../decorators/throttle.decorator';
+import { RegisterDto } from '../dto/register.dto';
+import { LoginDto } from '../dto/login.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { ResendVerificationEmailDto } from '../dto/resend-verification-email.dto';
+import { Verify2FaDto } from '../dto/verify-2fa.dto';
 
 @Controller('auth')
 export class BetterAuthController {
@@ -26,18 +37,9 @@ export class BetterAuthController {
    * Register user baru
    */
   @Public()
+  @ThrottleAuthStrict() // 5 requests per hour
   @Post('register')
-  async register(
-    @Body()
-    body: {
-      name: string;
-      email: string;
-      password: string;
-      image?: string;
-      company_id?: string;
-      branch_id?: string;
-    },
-  ) {
+  async register(@Body() body: RegisterDto) {
     console.log('=== REGISTER CONTROLLER ===');
     console.log('Received data:', body);
     console.log('company_id:', body.company_id);
@@ -49,20 +51,12 @@ export class BetterAuthController {
    * Login dengan email & password
    */
   @Public()
+  @ThrottleAuth() // 10 requests per 15 minutes
   @Post('login')
-  async login(
-    @Body() body: { email: string; password: string; deviceName?: string },
-    @Request() req: any,
-  ) {
-    const { email, password, deviceName } = body;
-
-    if (!email || !password) {
-      throw new UnauthorizedException('Email and password are required');
-    }
-
+  async login(@Body() body: LoginDto, @Request() req: any) {
     // Extract device info dari request
     const deviceInfo = {
-      deviceName: deviceName || 'Unknown Device',
+      deviceName: body.deviceName || 'Unknown Device',
       ipAddress:
         req.ip ||
         req.headers['x-forwarded-for'] ||
@@ -70,13 +64,18 @@ export class BetterAuthController {
       userAgent: req.headers['user-agent'],
     };
 
-    return await this.betterAuthService.login(email, password, deviceInfo);
+    return await this.betterAuthService.login(
+      body.email,
+      body.password,
+      deviceInfo,
+    );
   }
 
   /**
    * Refresh access token
    */
   @Public()
+  @ThrottleAuth() // 10 requests per 15 minutes
   @UseGuards(BetterRefreshGuard)
   @Post('refresh')
   async refreshToken(@Request() req: AuthRequest) {
@@ -106,15 +105,10 @@ export class BetterAuthController {
    * User input email, sistem kirim link reset password
    */
   @Public()
+  @ThrottleAuthVeryStrict() // 3 requests per hour
   @Post('forgot-password')
-  async forgotPassword(@Body() body: { email: string }) {
-    const { email } = body;
-
-    if (!email) {
-      throw new UnauthorizedException('Email is required');
-    }
-
-    return await this.betterAuthService.forgotPassword(email);
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    return await this.betterAuthService.forgotPassword(body.email);
   }
 
   /**
@@ -122,17 +116,13 @@ export class BetterAuthController {
    * User klik link dari email, input password baru
    */
   @Public()
+  @ThrottleAuthStrict() // 5 requests per hour
   @Post('reset-password')
-  async resetPasswordWithToken(
-    @Body() body: { token: string; password: string },
-  ) {
-    const { token, password } = body;
-
-    if (!token || !password) {
-      throw new UnauthorizedException('Token and password are required');
-    }
-
-    return await this.betterAuthService.resetPasswordWithToken(token, password);
+  async resetPasswordWithToken(@Body() body: ResetPasswordDto) {
+    return await this.betterAuthService.resetPasswordWithToken(
+      body.token,
+      body.password,
+    );
   }
 
   /**
@@ -318,38 +308,22 @@ export class BetterAuthController {
    * Resend verification email
    */
   @Public()
+  @ThrottleAuthVeryStrict() // 3 requests per hour
   @Post('resend-verification-email')
-  async resendVerificationEmail(@Body() body: { email: string }) {
-    const { email } = body;
-
-    if (!email) {
-      throw new UnauthorizedException('Email is required');
-    }
-
-    return await this.betterAuthService.resendVerificationEmail(email);
+  async resendVerificationEmail(@Body() body: ResendVerificationEmailDto) {
+    return await this.betterAuthService.resendVerificationEmail(body.email);
   }
 
   /**
    * Verify OTP dan complete login (Step 2 dari 2FA login)
    */
   @Public()
+  @ThrottleAuth() // 10 requests per 15 minutes
   @Post('verify-2fa')
-  async verifyTwoFactor(
-    @Body() body: { userId: number; otpCode: string; deviceName?: string },
-    @Request() req: any,
-  ) {
-    const { userId, otpCode, deviceName } = body;
-
-    if (!userId || !otpCode) {
-      throw new UnauthorizedException('User ID and OTP code are required');
-    }
-
-    // Ensure otpCode is string
-    const otpCodeString = String(otpCode);
-
+  async verifyTwoFactor(@Body() body: Verify2FaDto, @Request() req: any) {
     // Extract device info dari request
     const deviceInfo = {
-      deviceName: deviceName || 'Unknown Device',
+      deviceName: body.deviceName || 'Unknown Device',
       ipAddress:
         req.ip ||
         req.headers['x-forwarded-for'] ||
@@ -358,8 +332,8 @@ export class BetterAuthController {
     };
 
     return await this.betterAuthService.verifyOtpAndLogin(
-      userId,
-      otpCodeString,
+      body.userId,
+      body.otpCode,
       deviceInfo,
     );
   }

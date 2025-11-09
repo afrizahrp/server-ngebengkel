@@ -4,6 +4,7 @@ import { Sys_CreateCompanyDto } from './dto/sys_CreateCompany.dto';
 import { Sys_UpdateCompanyDto } from './dto/sys_UpdateCompany.dto';
 import { Sys_ResponseCompanyDto } from './dto/sys_ResponseCompany.dto';
 import { Sys_ResponseCompanyWithBranchesDto } from './dto/sys_ResponseCompanyWithBranches.dto';
+import { Sys_PublicCompanyDto } from './dto/sys_PublicCompanyDto';
 
 @Injectable()
 export class Sys_CompanyService {
@@ -28,6 +29,30 @@ export class Sys_CompanyService {
       },
     });
     return companies.map(this.mapToResponseDto);
+  }
+
+  /**
+   * Get all companies (public-safe version)
+   * Only exposes non-sensitive data
+   */
+  async findAllPublic(): Promise<Sys_PublicCompanyDto[]> {
+    const companies = await this.prisma.sys_Company.findMany({
+      select: {
+        id: true,
+        name: true,
+        officialWebsite: true,
+        companyLogo: true,
+      },
+      orderBy: {
+        seq_no: 'asc',
+      },
+    });
+    return companies.map((company) => ({
+      id: company.id.trim(),
+      name: company.name?.trim(),
+      officialWebsite: company.officialWebsite?.trim(),
+      companyLogo: company.companyLogo?.trim(),
+    }));
   }
 
   async findOne(id: string): Promise<Sys_ResponseCompanyDto> {

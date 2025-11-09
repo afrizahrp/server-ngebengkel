@@ -90,4 +90,13 @@ export class CreateWaitingListDto {
   @MaxLength(20)
   @Transform(({ value }) => value?.trim())
   mobile?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  recaptchaToken?: string; // reCAPTCHA token dari frontend
+
+  @IsOptional()
+  @IsString()
+  recaptchaAction?: string; // Action untuk reCAPTCHA v3 (default: 'submit')
 }
