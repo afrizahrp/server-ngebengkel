@@ -13,18 +13,6 @@ export class Sys_CreateCompanyDto {
 
   @IsString()
   @IsOptional()
-  province?: string;
-
-  @IsString()
-  @IsOptional()
-  district?: string;
-
-  @IsString()
-  @IsOptional()
-  city?: string;
-
-  @IsString()
-  @IsOptional()
   address1?: string;
 
   @IsString()

@@ -12,6 +12,7 @@ import { WaitingListService } from './waiting-list.service';
 import { CreateWaitingListDto } from './dto/create-waiting-list.dto';
 import { WaitingListResponseDto } from './dto/response-waiting-list.dto';
 import { UpdateWaitingListDto } from './dto/update-waiting-list.dto';
+import { WorkshopCategoryResponseDto } from './dto/workshop-category.dto';
 
 @Controller('/waiting-list')
 export class WaitingListController {
@@ -26,6 +27,20 @@ export class WaitingListController {
 
     return {
       message: 'Pendaftaran waiting list berhasil',
+      data,
+    };
+  }
+
+  @Get('categories')
+  @Public()
+  async categories(): Promise<{
+    message: string;
+    data: WorkshopCategoryResponseDto[];
+  }> {
+    const data = await this.waitingListService.getWorkshopCategories();
+
+    return {
+      message: 'Daftar kategori bengkel berhasil dimuat',
       data,
     };
   }

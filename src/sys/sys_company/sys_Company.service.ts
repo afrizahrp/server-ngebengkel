@@ -114,12 +114,13 @@ export class Sys_CompanyService {
   private mapToResponseDto(company: any): Sys_ResponseCompanyDto {
     return {
       ...company,
-      seq_no: company.seqNo,
-      id: company.id.trim(),
+      seq_no: company.seq_no,
+      id: company.id?.trim(),
       name: company.name?.trim(),
-      province: company.province?.trim(),
-      district: company.district?.trim(),
-      city: company.city?.trim(),
+      province_id: company.province_id?.trim(),
+      city_id: company.city_id?.trim(),
+      district_id: company.district_id?.trim(),
+      subdistrict_id: company.subdistrict_id?.trim(),
       address1: company.address1?.trim(),
       address2: company.address2?.trim(),
       address3: company.address3?.trim(),

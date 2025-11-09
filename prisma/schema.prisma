@@ -299,12 +299,8 @@ model saas_CompanyAddon {
 
 model sys_Company {
   seq_no           Int                        @db.SmallInt
-  id               String                     @id @db.Char(5)
+  id               String                     @id @db.Char(21)
   name             String?                    @db.VarChar(50)
-  province_id      String?                    @db.Char(5)
-  city_id          String?                    @db.Char(15)
-  district_id      String?                    @db.Char(15)
-  subdistrict_id   String?                    @db.Char(20)
   iStatus          MasterRecordStatusEnum     @default(Active)
   isMain           Boolean?                   @default(false)
   email1           String?                    @db.VarChar(100)
@@ -322,49 +318,41 @@ model sys_Company {
   usageTracking    saas_UsageTracking[]
   companyAddons    saas_CompanyAddon[]
   branches         sys_Branch[]
-  province         sys_Province?              @relation(fields: [province_id], references: [id], onUpdate: NoAction)
-  city             sys_City?                  @relation(fields: [city_id], references: [id], onUpdate: NoAction)
-  district         sys_District?              @relation(fields: [district_id], references: [id], onUpdate: NoAction)
-  subdistrict      sys_SubDistrict?           @relation(fields: [subdistrict_id], references: [id], onUpdate: NoAction)
-
+  
   @@index([seq_no], map: "idx_sys_Company_seq_no")
-  @@index([province_id], map: "idx_sys_company_province")
-  @@index([city_id], map: "idx_sys_company_city")
-  @@index([district_id], map: "idx_sys_company_district")
-  @@index([subdistrict_id], map: "idx_sys_company_subdistrict")
 }
 
 model sys_Branch {
-  company_id String                 @db.Char(10)
-  id         String                 @id @db.Char(10)
-  name       String                 @db.VarChar(50)
-  isMain     Boolean?               @default(false)
-  iStatus    MasterRecordStatusEnum @default(Active)
-  remarks    String?                @db.VarChar(255)
-  company    sys_Company            @relation(fields: [company_id], references: [id])
-  province_id String?               @db.Char(5)
-  city_id     String?               @db.Char(15)
-  district_id String?               @db.Char(15)
-  subdistrict_id String?            @db.Char(20)
-  address1   String?                @db.VarChar(250)
-  address2   String?                @db.VarChar(250)
-  address3   String?                @db.VarChar(250)
-  postalCode String?                @db.Char(6)
-  phone1     String?                @db.VarChar(20)
-  phone2     String?                @db.VarChar(20)
-  phone3     String?                @db.VarChar(20)
-  mobile1    String?                @db.VarChar(20)
-  mobile2    String?                @db.VarChar(20)
-  mobile3    String?                @db.VarChar(20)
-  createdBy  String?                @db.Char(10)
-  createdAt  DateTime
-  updatedBy  String?                @db.Char(10)
-  updatedAt  DateTime
-  workshopTypes wks_WorkshopType[]
-  province   sys_Province?          @relation(fields: [province_id], references: [id], onUpdate: NoAction)
-  city       sys_City?              @relation(fields: [city_id], references: [id], onUpdate: NoAction)
-  district   sys_District?          @relation(fields: [district_id], references: [id], onUpdate: NoAction)
-  subdistrict sys_SubDistrict?      @relation(fields: [subdistrict_id], references: [id], onUpdate: NoAction)
+  company_id     String                 @db.Char(10)
+  id             String                 @id @db.Char(10)
+  name           String                 @db.VarChar(50)
+  isMain         Boolean?               @default(false)
+  iStatus        MasterRecordStatusEnum @default(Active)
+  remarks        String?                @db.VarChar(255)
+  company        sys_Company            @relation(fields: [company_id], references: [id])
+  province_id    String?                @db.Char(5)
+  city_id        String?                @db.Char(15)
+  district_id    String?                @db.Char(15)
+  subdistrict_id String?                @db.Char(20)
+  address1       String?                @db.VarChar(250)
+  address2       String?                @db.VarChar(250)
+  address3       String?                @db.VarChar(250)
+  postalCode     String?                @db.Char(6)
+  phone1         String?                @db.VarChar(20)
+  phone2         String?                @db.VarChar(20)
+  phone3         String?                @db.VarChar(20)
+  mobile1        String?                @db.VarChar(20)
+  mobile2        String?                @db.VarChar(20)
+  mobile3        String?                @db.VarChar(20)
+  createdBy      String?                @db.Char(10)
+  createdAt      DateTime
+  updatedBy      String?                @db.Char(10)
+  updatedAt      DateTime
+  workshopTypes  wks_WorkshopType[]
+  province       sys_Province?          @relation(fields: [province_id], references: [id], onUpdate: NoAction)
+  city           sys_City?              @relation(fields: [city_id], references: [id], onUpdate: NoAction)
+  district       sys_District?          @relation(fields: [district_id], references: [id], onUpdate: NoAction)
+  subdistrict    sys_SubDistrict?       @relation(fields: [subdistrict_id], references: [id], onUpdate: NoAction)
 
   @@index([company_id], map: "idx_sys_Branch_company_id")
   @@index([province_id], map: "idx_sys_branch_province")
@@ -1467,40 +1455,39 @@ model wks_ServiceBay {
 }
 
 model wks_WorkshopCategory {
-  id              String                  @id @db.Char(5)
-  code            String                  @db.VarChar(20)
-  name            String                  @db.VarChar(120)
-  description     String?                 @db.VarChar(250)
-  specialization  wks_specializationEnum
-  seq             Int?                    @default(0)
-  isActive        Boolean                 @default(true)
-  createdBy       String?                 @db.Char(10)
-  createdAt       DateTime                @default(now())
-  updatedBy       String?                 @db.Char(10)
-  updatedAt       DateTime                @updatedAt
-  workshopTypes   wks_WorkshopType[]
+  id            String                @id @db.Char(5)
+  code          String                @db.VarChar(20)
+  name          String                @db.VarChar(120)
+  description   String?               @db.VarChar(250)
+  seq           Int?                  @default(0)
+  isActive      Boolean               @default(true)
+  createdBy     String?               @db.Char(10)
+  createdAt     DateTime              @default(now())
+  updatedBy     String?               @db.Char(10)
+  updatedAt     DateTime              @updatedAt
+  workshopTypes wks_WorkshopType[]
+  waitingLists  wks_waitingList[]
 
   @@unique([code], map: "unique_workshop_category_code")
-  @@index([specialization], map: "idx_workshop_category_specialization")
 }
 
 model wks_WorkshopType {
-  company_id     String?                @db.Char(10)
-  branch_id      String?                @db.Char(10)
-  id             String                 @id @db.Char(10)
-  category_id    String                 @db.Char(5)
-  name           String                 @db.VarChar(150)
-  description    String?                @db.Text
-  iconName       String?                @db.VarChar(100)
-  seq            Int?                   @default(0)
-  isActive       Boolean                @default(true)
-  createdBy      String?                @db.Char(10)
-  createdAt      DateTime               @default(now())
-  updatedBy      String?                @db.Char(10)
-  updatedAt      DateTime               @updatedAt
-  category       wks_WorkshopCategory   @relation(fields: [category_id], references: [id], onUpdate: NoAction)
-  branch         sys_Branch?            @relation(fields: [branch_id], references: [id], onUpdate: NoAction)
-  waitingLists   wks_WaitingListType[]
+  company_id   String?               @db.Char(10)
+  branch_id    String?               @db.Char(10)
+  id           String                @id @db.Char(10)
+  category_id  String                @db.Char(5)
+  name         String                @db.VarChar(150)
+  description  String?               @db.Text
+  iconName     String?               @db.VarChar(100)
+  seq          Int?                  @default(0)
+  isActive     Boolean               @default(true)
+  createdBy    String?               @db.Char(10)
+  createdAt    DateTime              @default(now())
+  updatedBy    String?               @db.Char(10)
+  updatedAt    DateTime              @updatedAt
+  category     wks_WorkshopCategory  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  branch       sys_Branch?           @relation(fields: [branch_id], references: [id], onUpdate: NoAction)
+  waitingLists wks_WaitingListType[]
 
   @@index([category_id], map: "idx_workshop_type_category")
   @@index([branch_id], map: "idx_workshop_type_branch")
@@ -1508,14 +1495,14 @@ model wks_WorkshopType {
 }
 
 model wks_WaitingListType {
-  id               Int                 @id @default(autoincrement())
-  waitingList_id   String              @db.Char(10)
-  workshopType_id  String              @db.Char(10)
-  assignedAt       DateTime            @default(now())
-  createdBy        String?             @db.Char(10)
-  createdAt        DateTime            @default(now())
-  waitingList      wks_waitingList     @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
-  workshopType     wks_WorkshopType    @relation(fields: [workshopType_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  id              Int              @id @default(autoincrement())
+  waitingList_id  String           @db.Char(10)
+  workshopType_id String           @db.Char(10)
+  assignedAt      DateTime         @default(now())
+  createdBy       String?          @db.Char(10)
+  createdAt       DateTime         @default(now())
+  waitingList     wks_waitingList  @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  workshopType    wks_WorkshopType @relation(fields: [workshopType_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
   @@unique([waitingList_id, workshopType_id], map: "unique_waitinglist_type")
   @@index([workshopType_id], map: "idx_waitinglist_type_type")
@@ -4342,24 +4329,27 @@ model tmp_sys_Branch {
 }
 
 model wks_waitingList {
-  id       String @id @db.Char(10)   @default(cuid())
-  name     String @db.VarChar(50)
-  specialization wks_specializationEnum @default(MOTORCYCLE)
-  logo            String?          @db.VarChar(255)
-  address  String @db.VarChar(250)
-  province String @db.Char(5)
-  city     String @db.Char(15)
-  district String @db.Char(15)
-  subdistrict String @db.Char(20)
-  email    String @db.VarChar(100)
-  phone    String @db.VarChar(20)
-  mobile   String @db.VarChar(20)
-  isDeleted Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdBy String? @db.Char(10)
-  updatedBy String? @db.Char(10)
-  types    wks_WaitingListType[]
+  id           String                 @id @default(cuid()) @db.Char(21)
+  name         String                 @db.VarChar(50)
+  category_id  String?                @db.Char(5)
+  logo         String?                @db.VarChar(255)
+  address      String                 @db.VarChar(250)
+  province     String                 @db.Char(5)
+  city         String                 @db.Char(15)
+  district     String                 @db.Char(15)
+  subdistrict  String                 @db.Char(20)
+  email        String                 @db.VarChar(100)
+  phone        String                 @db.VarChar(20)
+  mobile       String                 @db.VarChar(20)
+  isDeleted    Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  createdBy    String?                @db.Char(10)
+  updatedBy    String?                @db.Char(10)
+  types        wks_WaitingListType[]
+  category     wks_WorkshopCategory?  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+
+  @@index([category_id], map: "idx_wks_waitinglist_category")
 }
 
 model tmp_customer {
@@ -4379,15 +4369,14 @@ model tmp_customer {
 }
 
 model sys_Province {
-  company_id String     @db.Char(10)
-  id         String     @id @db.Char(5)
-  name       String     @db.VarChar(100)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  createdBy  String?    @db.Char(10)
-  updatedBy  String?    @db.Char(10)
+  company_id String        @db.Char(10)
+  id         String        @id @db.Char(5)
+  name       String        @db.VarChar(100)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  createdBy  String?       @db.Char(10)
+  updatedBy  String?       @db.Char(10)
   cities     sys_City[]
-  companies  sys_Company[]
   branches   sys_Branch[]
 }
 
@@ -4395,14 +4384,13 @@ model sys_City {
   company_id  String         @db.Char(10)
   id          String         @id @db.Char(15)
   name        String         @db.VarChar(100)
-  province_id String        @db.Char(5)
+  province_id String         @db.Char(5)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   createdBy   String?        @db.Char(10)
   updatedBy   String?        @db.Char(10)
   province    sys_Province?  @relation(fields: [province_id], references: [id])
   districts   sys_District[]
-  companies   sys_Company[]
   branches    sys_Branch[]
   // subdistricts sys_SubDistrict[] @relation("CitySubdistricts")
 
@@ -4413,42 +4401,31 @@ model sys_District {
   company_id   String            @db.Char(10)
   id           String            @id @db.Char(15)
   name         String            @db.VarChar(100)
-  city_id      String           @db.Char(15)
+  city_id      String            @db.Char(15)
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   createdBy    String?           @db.Char(10)
   updatedBy    String?           @db.Char(10)
   city         sys_City?         @relation(fields: [city_id], references: [id])
   subdistricts sys_SubDistrict[]
-  companies    sys_Company[]
   branches     sys_Branch[]
 
   @@index([city_id])
 }
 
 model sys_SubDistrict {
-  company_id  String       @db.Char(10)
-  id          String       @id @db.Char(20)
-  name        String       @db.VarChar(100)
-  district_id String       @db.Char(15)
-  city_id     String       @db.Char(15)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  createdBy   String?      @db.Char(10)
-  updatedBy   String?      @db.Char(10)
-  district    sys_District @relation(fields: [district_id], references: [id])
-  // city        sys_City     @relation("CitySubdistricts", fields: [city_id], references: [id])
-  companies   sys_Company[]
+  company_id  String        @db.Char(10)
+  id          String        @id @db.Char(20)
+  name        String        @db.VarChar(100)
+  district_id String        @db.Char(15)
+  city_id     String        @db.Char(15)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdBy   String?       @db.Char(10)
+  updatedBy   String?       @db.Char(10)
+  district    sys_District  @relation(fields: [district_id], references: [id])
   branches    sys_Branch[]
 
   @@index([district_id])
   @@index([city_id])
-}
-
-enum wks_specializationEnum {
-  MOTORCYCLE @map("MC") // Motor
-  CAR @map("CA") // Mobil
-  TRUCK @map("TR") // Truk
-  BUS @map("BU") // Bus
-
 }

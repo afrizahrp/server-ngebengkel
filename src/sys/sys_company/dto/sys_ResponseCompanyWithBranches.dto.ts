@@ -36,15 +36,19 @@ export class Sys_ResponseCompanyWithBranchesDto {
 
   @IsString()
   @IsOptional()
-  province?: string;
+  province_id?: string;
 
   @IsString()
   @IsOptional()
-  district?: string;
+  city_id?: string;
 
   @IsString()
   @IsOptional()
-  city?: string;
+  district_id?: string;
+
+  @IsString()
+  @IsOptional()
+  subdistrict_id?: string;
 
   @IsString()
   @IsOptional()

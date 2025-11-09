@@ -196,6 +196,9 @@ CREATE TYPE "public"."ReminderStatusEnum" AS ENUM ('P', 'S', 'T', 'F', 'C');
 -- CreateEnum
 CREATE TYPE "public"."ReminderLogTypeEnum" AS ENUM ('S', 'F', 'C', 'U');
 
+-- CreateEnum
+CREATE TYPE "public"."wks_specializationEnum" AS ENUM ('MC', 'CA', 'TR', 'BU');
+
 -- CreateTable
 CREATE TABLE "public"."saas_SubscriptionPlan" (
     "id" CHAR(10) NOT NULL,
@@ -232,10 +235,10 @@ CREATE TABLE "public"."saas_SubscriptionPlan" (
 
 -- CreateTable
 CREATE TABLE "public"."saas_CompanySubscription" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "subscriptionNumber" VARCHAR(30) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
     "plan_id" CHAR(10) NOT NULL,
     "startDate" DATE NOT NULL,
     "endDate" DATE NOT NULL,
@@ -285,13 +288,13 @@ CREATE TABLE "public"."saas_PlanFeature" (
 
 -- CreateTable
 CREATE TABLE "public"."saas_SubscriptionBilling" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "billingNumber" VARCHAR(30) NOT NULL,
     "billingDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "dueDate" DATE NOT NULL,
     "subscription_id" CHAR(30) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
     "periodStart" DATE NOT NULL,
     "periodEnd" DATE NOT NULL,
     "billingCycle" "public"."BillingCycleEnum" NOT NULL,
@@ -321,10 +324,10 @@ CREATE TABLE "public"."saas_SubscriptionBilling" (
 
 -- CreateTable
 CREATE TABLE "public"."saas_UsageTracking" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "subscription_id" CHAR(30) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
     "trackingDate" DATE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "totalUsers" INTEGER DEFAULT 0,
     "totalBranches" INTEGER DEFAULT 0,
@@ -375,10 +378,10 @@ CREATE TABLE "public"."saas_AddonFeature" (
 
 -- CreateTable
 CREATE TABLE "public"."saas_CompanyAddon" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "subscription_id" CHAR(30) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
     "addon_id" CHAR(10) NOT NULL,
     "activatedDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "expiryDate" DATE,
@@ -401,23 +404,10 @@ CREATE TABLE "public"."saas_CompanyAddon" (
 -- CreateTable
 CREATE TABLE "public"."sys_Company" (
     "seq_no" SMALLINT NOT NULL,
-    "id" CHAR(5) NOT NULL,
+    "id" CHAR(10) NOT NULL,
     "name" VARCHAR(50),
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
     "isMain" BOOLEAN DEFAULT false,
-    "province" VARCHAR(50),
-    "district" VARCHAR(50),
-    "city" VARCHAR(50),
-    "address1" VARCHAR(250),
-    "address2" VARCHAR(250),
-    "address3" VARCHAR(250),
-    "postalCode" CHAR(6),
-    "phone1" VARCHAR(20),
-    "phone2" VARCHAR(20),
-    "phone3" VARCHAR(20),
-    "mobile1" VARCHAR(20),
-    "mobile2" VARCHAR(20),
-    "mobile3" VARCHAR(20),
     "email1" VARCHAR(100),
     "email2" VARCHAR(100),
     "email3" VARCHAR(100),
@@ -433,24 +423,42 @@ CREATE TABLE "public"."sys_Company" (
 
 -- CreateTable
 CREATE TABLE "public"."sys_Branch" (
+    "company_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "name" VARCHAR(50) NOT NULL,
+    "isMain" BOOLEAN DEFAULT false,
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
     "remarks" VARCHAR(255),
-    "company_id" CHAR(5) NOT NULL,
-    "isMain" BOOLEAN DEFAULT false,
+    "province_id" CHAR(5),
+    "city_id" CHAR(15),
+    "district_id" CHAR(15),
+    "subdistrict_id" CHAR(20),
+    "address1" VARCHAR(250),
+    "address2" VARCHAR(250),
+    "address3" VARCHAR(250),
+    "postalCode" CHAR(6),
+    "phone1" VARCHAR(20),
+    "phone2" VARCHAR(20),
+    "phone3" VARCHAR(20),
+    "mobile1" VARCHAR(20),
+    "mobile2" VARCHAR(20),
+    "mobile3" VARCHAR(20),
+    "createdBy" CHAR(10),
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedBy" CHAR(10),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "sys_Branch_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_Role" (
+    "company_id" CHAR(10),
+    "branch_id" CHAR(10),
     "id" CHAR(20) NOT NULL,
-    "name" VARCHAR(20) NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
     "remarks" VARCHAR(255),
-    "company_id" CHAR(5),
-    "branch_id" CHAR(10),
 
     CONSTRAINT "sys_Role_pkey" PRIMARY KEY ("id")
 );
@@ -467,6 +475,8 @@ CREATE TABLE "public"."sys_WhiteListEmail" (
 
 -- CreateTable
 CREATE TABLE "public"."sys_User" (
+    "company_id" CHAR(10),
+    "branch_id" CHAR(10),
     "id" SMALLINT NOT NULL,
     "name" VARCHAR(50) NOT NULL,
     "email" VARCHAR(100) NOT NULL,
@@ -479,55 +489,55 @@ CREATE TABLE "public"."sys_User" (
     "hashedRefreshToken" VARCHAR(255),
     "twoFactorEnabled" BOOLEAN NOT NULL DEFAULT false,
     "employee_id" CHAR(20),
-    "company_id" CHAR(5),
-    "branch_id" CHAR(10),
 
     CONSTRAINT "sys_User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_EmailVerification" (
+    "company_id" CHAR(10),
+    "branch_id" CHAR(10),
     "id" VARCHAR(50) NOT NULL,
     "user_id" SMALLINT NOT NULL,
     "token" VARCHAR(255) NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5),
-    "branch_id" CHAR(10),
 
     CONSTRAINT "sys_EmailVerification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_TwoFactorToken" (
+    "company_id" CHAR(10),
+    "branch_id" CHAR(10),
     "id" VARCHAR(50) NOT NULL,
     "user_id" SMALLINT NOT NULL,
     "code" VARCHAR(6) NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "used" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5),
-    "branch_id" CHAR(10),
 
     CONSTRAINT "sys_TwoFactorToken_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_PasswordReset" (
+    "company_id" CHAR(10),
+    "branch_id" CHAR(10),
     "id" SERIAL NOT NULL,
     "user_id" SMALLINT NOT NULL,
     "token" VARCHAR(255) NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "used" BOOLEAN NOT NULL DEFAULT false,
-    "company_id" CHAR(5),
-    "branch_id" CHAR(10),
 
     CONSTRAINT "sys_PasswordReset_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_Session" (
+    "company_id" CHAR(10),
+    "branch_id" CHAR(10),
     "id" VARCHAR(50) NOT NULL,
     "user_id" INTEGER NOT NULL,
     "refreshToken" VARCHAR(500) NOT NULL,
@@ -545,31 +555,29 @@ CREATE TABLE "public"."sys_Session" (
     "revokedReason" VARCHAR(255),
     "hasRefreshedToken" BOOLEAN NOT NULL DEFAULT false,
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
-    "company_id" CHAR(5),
-    "branch_id" CHAR(10),
 
     CONSTRAINT "sys_Session_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_UserRole" (
+    "company_id" CHAR(10),
+    "branch_id" CHAR(10),
     "id" SMALLINT NOT NULL,
     "user_id" SMALLINT NOT NULL,
     "role_id" CHAR(20) NOT NULL,
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
     "isDefault" BOOLEAN DEFAULT false,
-    "company_id" CHAR(5),
-    "branch_id" CHAR(10),
 
     CONSTRAINT "sys_UserRole_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_UserCompanyRole" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" SMALLINT NOT NULL,
     "userRole_id" SMALLINT NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
     "isDefault" BOOLEAN DEFAULT false,
 
@@ -636,6 +644,8 @@ CREATE TABLE "public"."sys_Module" (
 
 -- CreateTable
 CREATE TABLE "public"."sys_Numbering" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "module_id" VARCHAR(3) NOT NULL,
     "id" VARCHAR(10) NOT NULL,
     "description" VARCHAR(100),
@@ -655,14 +665,14 @@ CREATE TABLE "public"."sys_Numbering" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_sys_Numbering" PRIMARY KEY ("company_id","branch_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_Warehouse" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(4) NOT NULL,
     "name" CHAR(60),
     "iMain" INTEGER,
@@ -674,14 +684,14 @@ CREATE TABLE "public"."imc_Warehouse" (
     "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "imc_Warehouse_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_Floor" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "warehouse_id" CHAR(4) NOT NULL,
     "id" CHAR(5) NOT NULL,
     "name" CHAR(35),
@@ -690,14 +700,14 @@ CREATE TABLE "public"."imc_Floor" (
     "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_ic_floor" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_Shelf" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "floor_id" CHAR(5) NOT NULL,
     "id" CHAR(15) NOT NULL,
     "name" CHAR(35),
@@ -706,14 +716,14 @@ CREATE TABLE "public"."imc_Shelf" (
     "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_ic_shelf" PRIMARY KEY ("floor_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_Row" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "floor_id" CHAR(5) NOT NULL,
     "shelf_id" CHAR(15) NOT NULL,
     "id" CHAR(15) NOT NULL,
@@ -723,8 +733,6 @@ CREATE TABLE "public"."imc_Row" (
     "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
     "storages" CHAR(15),
 
     CONSTRAINT "pk_ic_row" PRIMARY KEY ("floor_id","shelf_id","id")
@@ -732,6 +740,8 @@ CREATE TABLE "public"."imc_Row" (
 
 -- CreateTable
 CREATE TABLE "public"."imc_Uom" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "name" VARCHAR(50),
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
@@ -740,14 +750,14 @@ CREATE TABLE "public"."imc_Uom" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_Uoms" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_CategoryType" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10),
     "id" SMALLSERIAL NOT NULL,
     "name" VARCHAR(20),
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
@@ -757,18 +767,18 @@ CREATE TABLE "public"."imc_CategoryType" (
     "cogs_acct" CHAR(10),
     "expense_acct" CHAR(10),
     "asset_acct" CHAR(10),
-    "company_id" CHAR(5) NOT NULL,
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3),
-    "branch_id" CHAR(10),
 
     CONSTRAINT "imc_CategoryType_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_Category" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "type" SMALLINT NOT NULL,
     "id" CHAR(10) NOT NULL,
     "name" VARCHAR(80),
@@ -780,8 +790,6 @@ CREATE TABLE "public"."imc_Category" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
     "href" VARCHAR(150),
     "icon" VARCHAR(50),
 
@@ -790,6 +798,8 @@ CREATE TABLE "public"."imc_Category" (
 
 -- CreateTable
 CREATE TABLE "public"."imc_SubCategory" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "seq" INTEGER DEFAULT 0,
     "imageURL" VARCHAR(250),
@@ -802,14 +812,14 @@ CREATE TABLE "public"."imc_SubCategory" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_SubCategories" PRIMARY KEY ("company_id","category_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_Brand" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "name" VARCHAR(50) NOT NULL,
     "slug" VARCHAR(50),
@@ -819,14 +829,14 @@ CREATE TABLE "public"."imc_Brand" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_Brands" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_Product" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "register_id" CHAR(20),
     "catalog_id" CHAR(20),
@@ -847,14 +857,14 @@ CREATE TABLE "public"."imc_Product" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(50),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_Products" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_ProductStock" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
     "warehouse_id" CHAR(4) NOT NULL,
@@ -886,14 +896,14 @@ CREATE TABLE "public"."imc_ProductStock" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(50),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "imc_ProductStock_pkey" PRIMARY KEY ("id","floor_id","shelf_id","row_id","mExpired_dt","yExpired_dt","warehouse_id","company_id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_ProductStockCard" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "customer_or_supplier_id" CHAR(20) NOT NULL,
     "trx_id" CHAR(2) NOT NULL,
     "trx_class" CHAR(2) NOT NULL,
@@ -931,14 +941,14 @@ CREATE TABLE "public"."imc_ProductStockCard" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(50),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "imc_ProductStockCard_pkey" PRIMARY KEY ("product_id","floor_id","shelf_id","row_id","mExpired_dt","yExpired_dt","doc_id","mutation_id","srn_seq","batch_no_item","warehouse_id","company_id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_ProductImage" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(150) NOT NULL,
     "product_id" CHAR(20) NOT NULL,
     "imageURL" VARCHAR(250) NOT NULL,
@@ -950,14 +960,14 @@ CREATE TABLE "public"."imc_ProductImage" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_ProductImages" PRIMARY KEY ("product_id","company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_VariantType" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "name" VARCHAR(50) NOT NULL,
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
@@ -967,14 +977,14 @@ CREATE TABLE "public"."imc_VariantType" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_VariantType" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_VariantOption" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(15) NOT NULL,
     "variantType_id" CHAR(10) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
@@ -988,14 +998,14 @@ CREATE TABLE "public"."imc_VariantOption" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_VariantOption" PRIMARY KEY ("company_id","variantType_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_ProductVariantType" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "product_id" CHAR(20) NOT NULL,
     "variantType_id" CHAR(10) NOT NULL,
     "isRequired" BOOLEAN NOT NULL DEFAULT true,
@@ -1005,14 +1015,14 @@ CREATE TABLE "public"."imc_ProductVariantType" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_ProductVariantType" PRIMARY KEY ("company_id","product_id","variantType_id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_ProductVariant" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "product_id" CHAR(20) NOT NULL,
     "sku" VARCHAR(50) NOT NULL,
@@ -1032,26 +1042,26 @@ CREATE TABLE "public"."imc_ProductVariant" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_ProductVariant" PRIMARY KEY ("company_id","product_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_ProductVariantOption" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "productVariant_id" CHAR(30) NOT NULL,
     "product_id" CHAR(20) NOT NULL,
     "variantType_id" CHAR(10) NOT NULL,
     "variantOption_id" CHAR(15) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_ProductVariantOption" PRIMARY KEY ("company_id","product_id","productVariant_id","variantType_id","variantOption_id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."imc_ProductVariantImage" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(150) NOT NULL,
     "productVariant_id" CHAR(30) NOT NULL,
     "product_id" CHAR(20) NOT NULL,
@@ -1064,14 +1074,14 @@ CREATE TABLE "public"."imc_ProductVariantImage" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_imc_ProductVariantImage" PRIMARY KEY ("company_id","product_id","productVariant_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."cmf_Employee" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "employeeCode" VARCHAR(20) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
@@ -1102,8 +1112,6 @@ CREATE TABLE "public"."cmf_Employee" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_cmf_Employee" PRIMARY KEY ("company_id","id")
 );
@@ -1165,6 +1173,8 @@ CREATE TABLE "public"."wks_VehicleModel" (
 
 -- CreateTable
 CREATE TABLE "public"."cmf_Customer" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "customerType" "public"."CustomerTypeEnum" NOT NULL DEFAULT 'I',
     "name" VARCHAR(100) NOT NULL,
@@ -1222,14 +1232,14 @@ CREATE TABLE "public"."cmf_Customer" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_cmf_Customer" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."cmf_CustomerContactPerson" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "customer_id" CHAR(20) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
@@ -1249,14 +1259,14 @@ CREATE TABLE "public"."cmf_CustomerContactPerson" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_cmf_CustomerContactPerson" PRIMARY KEY ("company_id","customer_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."cmf_CustomerVehicle" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "customer_id" CHAR(20) NOT NULL,
     "vehicleType_id" CHAR(5) NOT NULL,
@@ -1290,14 +1300,14 @@ CREATE TABLE "public"."cmf_CustomerVehicle" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_cmf_CustomerVehicle" PRIMARY KEY ("company_id","customer_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ServiceType" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "category" "public"."ServiceCategoryEnum",
@@ -1311,14 +1321,14 @@ CREATE TABLE "public"."wks_ServiceType" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_wks_ServiceType" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."cmf_Mechanic" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "employee_id" CHAR(20) NOT NULL,
     "specialization" VARCHAR(100),
@@ -1332,14 +1342,14 @@ CREATE TABLE "public"."cmf_Mechanic" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_cmf_Mechanic" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ServiceBay" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "name" VARCHAR(50) NOT NULL,
     "bayType" "public"."ServiceBayTypeEnum",
@@ -1351,15 +1361,61 @@ CREATE TABLE "public"."wks_ServiceBay" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_wks_ServiceBay" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
+CREATE TABLE "public"."wks_WorkshopCategory" (
+    "id" CHAR(5) NOT NULL,
+    "code" VARCHAR(20) NOT NULL,
+    "name" VARCHAR(120) NOT NULL,
+    "description" VARCHAR(250),
+    "specialization" "public"."wks_specializationEnum" NOT NULL,
+    "seq" INTEGER DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdBy" CHAR(10),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedBy" CHAR(10),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "wks_WorkshopCategory_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."wks_WorkshopType" (
+    "company_id" CHAR(10),
+    "branch_id" CHAR(10),
+    "id" CHAR(10) NOT NULL,
+    "category_id" CHAR(5) NOT NULL,
+    "name" VARCHAR(150) NOT NULL,
+    "description" TEXT,
+    "iconName" VARCHAR(100),
+    "seq" INTEGER DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdBy" CHAR(10),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedBy" CHAR(10),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "wks_WorkshopType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."wks_WaitingListType" (
+    "id" SERIAL NOT NULL,
+    "waitingList_id" CHAR(10) NOT NULL,
+    "workshopType_id" CHAR(10) NOT NULL,
+    "assignedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdBy" CHAR(10),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "wks_WaitingListType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."wks_BranchWorkingHour" (
-    "company_id" CHAR(5) NOT NULL,
+    "company_id" CHAR(10) NOT NULL,
     "branch_id" CHAR(10) NOT NULL,
     "weekday" SMALLINT NOT NULL,
     "isOpen" BOOLEAN NOT NULL DEFAULT true,
@@ -1373,9 +1429,9 @@ CREATE TABLE "public"."wks_BranchWorkingHour" (
 
 -- CreateTable
 CREATE TABLE "public"."wks_BranchHoliday" (
-    "id" CHAR(20) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
+    "company_id" CHAR(10) NOT NULL,
     "branch_id" CHAR(10),
+    "id" CHAR(20) NOT NULL,
     "date" DATE NOT NULL,
     "name" VARCHAR(100),
     "isClosed" BOOLEAN NOT NULL DEFAULT true,
@@ -1387,8 +1443,8 @@ CREATE TABLE "public"."wks_BranchHoliday" (
 
 -- CreateTable
 CREATE TABLE "public"."wks_MechanicAvailability" (
+    "company_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
     "mechanic_id" CHAR(10) NOT NULL,
     "date" DATE NOT NULL,
     "availableStart" CHAR(5),
@@ -1403,9 +1459,9 @@ CREATE TABLE "public"."wks_MechanicAvailability" (
 
 -- CreateTable
 CREATE TABLE "public"."wks_BayBlock" (
-    "id" CHAR(20) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
+    "company_id" CHAR(10) NOT NULL,
     "branch_id" CHAR(10) NOT NULL,
+    "id" CHAR(20) NOT NULL,
     "bay_id" CHAR(10) NOT NULL,
     "startTime" TIMESTAMP(3) NOT NULL,
     "endTime" TIMESTAMP(3) NOT NULL,
@@ -1418,9 +1474,9 @@ CREATE TABLE "public"."wks_BayBlock" (
 
 -- CreateTable
 CREATE TABLE "public"."wks_BookingSlot" (
-    "id" CHAR(20) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
+    "company_id" CHAR(10) NOT NULL,
     "branch_id" CHAR(10) NOT NULL,
+    "id" CHAR(20) NOT NULL,
     "bay_id" CHAR(10),
     "date" DATE NOT NULL,
     "startTime" TIMESTAMP(3) NOT NULL,
@@ -1430,17 +1486,23 @@ CREATE TABLE "public"."wks_BookingSlot" (
     "slotStatus" "public"."SlotStatusEnum" NOT NULL DEFAULT 'OPEN',
     "remarks" VARCHAR(250),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdBy" CHAR(10),
+    "updatedBy" CHAR(10),
+    "updatedAt" TIMESTAMP(3),
+    "isDeleted" BOOLEAN DEFAULT false,
+    "deletedAt" TIMESTAMP(3),
+    "deletedBy" CHAR(10),
 
     CONSTRAINT "pk_wks_BookingSlot" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ServiceBooking" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "bookingNumber" VARCHAR(30) NOT NULL,
     "bookingDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
     "customer_id" CHAR(20) NOT NULL,
     "customerVehicle_id" CHAR(20) NOT NULL,
     "vehicle_customer_id" CHAR(20) NOT NULL,
@@ -1468,13 +1530,15 @@ CREATE TABLE "public"."wks_ServiceBooking" (
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "pk_wks_ServiceBooking" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ServiceOrder" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "orderNumber" VARCHAR(30) NOT NULL,
     "orderDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1520,14 +1584,14 @@ CREATE TABLE "public"."wks_ServiceOrder" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_wks_ServiceOrder" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ServiceOrderDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "serviceOrder_id" CHAR(20) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -1560,14 +1624,14 @@ CREATE TABLE "public"."wks_ServiceOrderDetail" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_wks_ServiceOrderDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ServiceHistory" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "serviceOrder_id" CHAR(20) NOT NULL,
     "customer_id" CHAR(20) NOT NULL,
@@ -1595,14 +1659,14 @@ CREATE TABLE "public"."wks_ServiceHistory" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_wks_ServiceHistory" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_Reminder" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "reminderNumber" VARCHAR(30) NOT NULL,
     "entityType" "public"."ReminderEntityTypeEnum" NOT NULL,
@@ -1645,14 +1709,14 @@ CREATE TABLE "public"."sys_Reminder" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_sys_Reminder" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."sys_ReminderLog" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "reminder_id" CHAR(30) NOT NULL,
     "logType" "public"."ReminderLogTypeEnum" NOT NULL DEFAULT 'S',
@@ -1672,14 +1736,14 @@ CREATE TABLE "public"."sys_ReminderLog" (
     "remarks" VARCHAR(250),
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_sys_ReminderLog" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_CustomerComplaint" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "complaintNumber" VARCHAR(30) NOT NULL,
     "complaintDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1740,14 +1804,14 @@ CREATE TABLE "public"."wks_CustomerComplaint" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_cmf_CustomerComplaint" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ComplaintLog" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "complaint_id" CHAR(30) NOT NULL,
     "logDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1765,14 +1829,14 @@ CREATE TABLE "public"."wks_ComplaintLog" (
     "deletedBy" CHAR(10),
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_wks_ComplaintLog" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ServiceRework" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "reworkNumber" VARCHAR(30) NOT NULL,
     "reworkDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1814,14 +1878,14 @@ CREATE TABLE "public"."wks_ServiceRework" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_wks_ServiceRework" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."wks_ServiceReworkItem" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "serviceRework_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -1846,14 +1910,14 @@ CREATE TABLE "public"."wks_ServiceReworkItem" (
     "remarks" VARCHAR(250),
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_wks_ServiceReworkItem" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."arm_CreditNote" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "creditNoteNumber" VARCHAR(30) NOT NULL,
     "creditNoteDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1898,14 +1962,14 @@ CREATE TABLE "public"."arm_CreditNote" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_arm_CreditNote" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."arm_CreditNoteDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "creditNote_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -1930,14 +1994,14 @@ CREATE TABLE "public"."arm_CreditNoteDetail" (
     "remarks" VARCHAR(250),
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_arm_CreditNoteDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."prc_Supplier" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "supplierCode" CHAR(20),
     "supplierType" "public"."SupplierTypeEnum" NOT NULL DEFAULT 'V',
@@ -1982,14 +2046,14 @@ CREATE TABLE "public"."prc_Supplier" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_prc_Supplier" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."prc_PurchaseOrder" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "poNumber" VARCHAR(30) NOT NULL,
     "poDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2036,14 +2100,14 @@ CREATE TABLE "public"."prc_PurchaseOrder" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_prc_PurchaseOrder" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."prc_PurchaseOrderDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "purchaseOrder_id" CHAR(20) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2076,14 +2140,14 @@ CREATE TABLE "public"."prc_PurchaseOrderDetail" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_prc_PurchaseOrderDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."prc_PurchaseReceive" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(20) NOT NULL,
     "receiveNumber" VARCHAR(30) NOT NULL,
     "receiveDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2124,14 +2188,14 @@ CREATE TABLE "public"."prc_PurchaseReceive" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_prc_PurchaseReceive" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."prc_PurchaseReceiveDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "purchaseReceive_id" CHAR(20) NOT NULL,
     "purchaseOrderDetail_id" CHAR(30) NOT NULL,
@@ -2170,14 +2234,14 @@ CREATE TABLE "public"."prc_PurchaseReceiveDetail" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_prc_PurchaseReceiveDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."inv_InternalMovement" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "movementNumber" VARCHAR(30) NOT NULL,
     "movementDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2210,14 +2274,14 @@ CREATE TABLE "public"."inv_InternalMovement" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_inv_InternalMovement" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."inv_InternalMovementDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "internalMovement_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2250,8 +2314,6 @@ CREATE TABLE "public"."inv_InternalMovementDetail" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_inv_InternalMovementDetail" PRIMARY KEY ("company_id","id")
 );
@@ -2312,6 +2374,8 @@ CREATE TABLE "public"."cmf_PaymentMethod" (
 
 -- CreateTable
 CREATE TABLE "public"."acc_COA" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(15) NOT NULL,
     "accountCode" VARCHAR(20) NOT NULL,
     "accountName" VARCHAR(150) NOT NULL,
@@ -2339,14 +2403,14 @@ CREATE TABLE "public"."acc_COA" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_acc_COA" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."acc_BankAccount" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "coa_id" CHAR(15) NOT NULL,
     "bankName" VARCHAR(100) NOT NULL,
@@ -2364,14 +2428,14 @@ CREATE TABLE "public"."acc_BankAccount" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_acc_BankAccount" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."cmf_TaxScheme" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(5) NOT NULL,
     "schemeCode" VARCHAR(10) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
@@ -2391,14 +2455,14 @@ CREATE TABLE "public"."cmf_TaxScheme" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_cmf_TaxScheme" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."cmf_TaxSchemeDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(10) NOT NULL,
     "taxScheme_id" CHAR(5) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2415,14 +2479,14 @@ CREATE TABLE "public"."cmf_TaxSchemeDetail" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_cmf_TaxSchemeDetail" PRIMARY KEY ("company_id","taxScheme_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."arm_Invoice" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "invoiceNumber" VARCHAR(30) NOT NULL,
     "invoiceDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2466,14 +2530,14 @@ CREATE TABLE "public"."arm_Invoice" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_arm_Invoice" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."arm_InvoiceDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "invoice_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2500,14 +2564,14 @@ CREATE TABLE "public"."arm_InvoiceDetail" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_arm_InvoiceDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."arm_Payment" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "paymentNumber" VARCHAR(30) NOT NULL,
     "paymentDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2540,14 +2604,14 @@ CREATE TABLE "public"."arm_Payment" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_arm_Payment" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."arm_PaymentDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "payment_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2561,14 +2625,14 @@ CREATE TABLE "public"."arm_PaymentDetail" (
     "deletedBy" CHAR(10),
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_arm_PaymentDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."arm_CashReceipt" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "receiptNumber" VARCHAR(30) NOT NULL,
     "receiptDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2592,14 +2656,14 @@ CREATE TABLE "public"."arm_CashReceipt" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_arm_CashReceipt" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."arm_CashReceiptDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "cashReceipt_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2612,14 +2676,14 @@ CREATE TABLE "public"."arm_CashReceiptDetail" (
     "deletedBy" CHAR(10),
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_arm_CashReceiptDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."apm_Invoice" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "invoiceNumber" VARCHAR(30) NOT NULL,
     "invoiceDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2667,14 +2731,14 @@ CREATE TABLE "public"."apm_Invoice" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_apm_Invoice" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."apm_InvoiceDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "apInvoice_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2701,14 +2765,14 @@ CREATE TABLE "public"."apm_InvoiceDetail" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_apm_InvoiceDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."apm_Payment" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "paymentNumber" VARCHAR(30) NOT NULL,
     "paymentDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2741,14 +2805,14 @@ CREATE TABLE "public"."apm_Payment" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_apm_Payment" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."apm_PaymentDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "apPayment_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2762,14 +2826,14 @@ CREATE TABLE "public"."apm_PaymentDetail" (
     "deletedBy" CHAR(10),
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_apm_PaymentDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."prc_PurchaseReturn" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "returnNumber" VARCHAR(30) NOT NULL,
     "returnDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2804,14 +2868,14 @@ CREATE TABLE "public"."prc_PurchaseReturn" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_prc_PurchaseReturn" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."prc_PurchaseReturnDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "purchaseReturn_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2843,14 +2907,14 @@ CREATE TABLE "public"."prc_PurchaseReturnDetail" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_prc_PurchaseReturnDetail" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."acc_GLTrans" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "journalNumber" VARCHAR(30) NOT NULL,
     "journalDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2885,14 +2949,14 @@ CREATE TABLE "public"."acc_GLTrans" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedBy" CHAR(10),
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_acc_GLTrans" PRIMARY KEY ("company_id","id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."acc_GLTransDetail" (
+    "company_id" CHAR(10) NOT NULL,
+    "branch_id" CHAR(10) NOT NULL,
     "id" CHAR(30) NOT NULL,
     "glTrans_id" CHAR(30) NOT NULL,
     "lineNumber" SMALLINT NOT NULL,
@@ -2906,10 +2970,154 @@ CREATE TABLE "public"."acc_GLTransDetail" (
     "iStatus" "public"."MasterRecordStatusEnum" NOT NULL DEFAULT '1',
     "createdBy" CHAR(10),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" CHAR(5) NOT NULL,
-    "branch_id" CHAR(10) NOT NULL,
 
     CONSTRAINT "pk_acc_GLTransDetail" PRIMARY KEY ("company_id","id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."tmp_sys_Company" (
+    "seq_no" SMALLINT NOT NULL,
+    "id" CHAR(5) NOT NULL,
+    "name" VARCHAR(50),
+    "logo" VARCHAR(255),
+    "isMain" BOOLEAN DEFAULT false,
+    "email1" VARCHAR(100),
+    "email2" VARCHAR(100),
+    "email3" VARCHAR(100),
+    "officialWebsite" VARCHAR(100),
+    "companyLogo" VARCHAR(255),
+    "createdBy" CHAR(10),
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedBy" CHAR(10),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "tmp_sys_Company_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."tmp_sys_Branch" (
+    "company_id" CHAR(10) NOT NULL,
+    "id" CHAR(10) NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "isMain" BOOLEAN DEFAULT false,
+    "remarks" VARCHAR(255),
+    "province" VARCHAR(50),
+    "district" VARCHAR(50),
+    "city" VARCHAR(50),
+    "address1" VARCHAR(250),
+    "address2" VARCHAR(250),
+    "address3" VARCHAR(250),
+    "postalCode" CHAR(6),
+    "phone1" VARCHAR(20),
+    "phone2" VARCHAR(20),
+    "phone3" VARCHAR(20),
+    "mobile1" VARCHAR(20),
+    "mobile2" VARCHAR(20),
+    "mobile3" VARCHAR(20),
+    "createdBy" CHAR(10),
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedBy" CHAR(10),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "tmp_sys_Branch_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."wks_waitingList" (
+    "id" CHAR(10) NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "specialization" "public"."wks_specializationEnum" NOT NULL DEFAULT 'MC',
+    "logo" VARCHAR(255),
+    "address" VARCHAR(250) NOT NULL,
+    "province" CHAR(5) NOT NULL,
+    "city" CHAR(15) NOT NULL,
+    "district" CHAR(15) NOT NULL,
+    "subdistrict" CHAR(20) NOT NULL,
+    "email" VARCHAR(100) NOT NULL,
+    "phone" VARCHAR(20) NOT NULL,
+    "mobile" VARCHAR(20) NOT NULL,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdBy" CHAR(10),
+    "updatedBy" CHAR(10),
+
+    CONSTRAINT "wks_waitingList_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."tmp_customer" (
+    "id" CHAR(10) NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "email" VARCHAR(100),
+    "phone" VARCHAR(20),
+    "vehicle" VARCHAR(50),
+    "plateNumber" VARCHAR(20),
+    "vehicleType" VARCHAR(50),
+    "vehicleYear" VARCHAR(4),
+    "vehicleColor" VARCHAR(50),
+    "vehicleEngine" VARCHAR(50),
+    "vehicleTransmission" VARCHAR(50),
+    "vehicleFuel" VARCHAR(50),
+    "mobile" VARCHAR(20),
+
+    CONSTRAINT "tmp_customer_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."sys_Province" (
+    "company_id" CHAR(10) NOT NULL,
+    "id" CHAR(5) NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdBy" CHAR(10),
+    "updatedBy" CHAR(10),
+
+    CONSTRAINT "sys_Province_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."sys_City" (
+    "company_id" CHAR(10) NOT NULL,
+    "id" CHAR(15) NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "province_id" CHAR(5) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdBy" CHAR(10),
+    "updatedBy" CHAR(10),
+
+    CONSTRAINT "sys_City_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."sys_District" (
+    "company_id" CHAR(10) NOT NULL,
+    "id" CHAR(15) NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "city_id" CHAR(15) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdBy" CHAR(10),
+    "updatedBy" CHAR(10),
+
+    CONSTRAINT "sys_District_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."sys_SubDistrict" (
+    "company_id" CHAR(10) NOT NULL,
+    "id" CHAR(20) NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "district_id" CHAR(15) NOT NULL,
+    "city_id" CHAR(15) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdBy" CHAR(10),
+    "updatedBy" CHAR(10),
+
+    CONSTRAINT "sys_SubDistrict_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -2965,6 +3173,18 @@ CREATE INDEX "idx_sys_Company_seq_no" ON "public"."sys_Company"("seq_no");
 
 -- CreateIndex
 CREATE INDEX "idx_sys_Branch_company_id" ON "public"."sys_Branch"("company_id");
+
+-- CreateIndex
+CREATE INDEX "idx_sys_branch_province" ON "public"."sys_Branch"("province_id");
+
+-- CreateIndex
+CREATE INDEX "idx_sys_branch_city" ON "public"."sys_Branch"("city_id");
+
+-- CreateIndex
+CREATE INDEX "idx_sys_branch_district" ON "public"."sys_Branch"("district_id");
+
+-- CreateIndex
+CREATE INDEX "idx_sys_branch_subdistrict" ON "public"."sys_Branch"("subdistrict_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "sys_WhiteListEmail_email_key" ON "public"."sys_WhiteListEmail"("email");
@@ -3076,6 +3296,27 @@ CREATE INDEX "idx_mechanic_specialization" ON "public"."cmf_Mechanic"("company_i
 
 -- CreateIndex
 CREATE UNIQUE INDEX "unique_mechanic_employee" ON "public"."cmf_Mechanic"("company_id", "employee_id");
+
+-- CreateIndex
+CREATE INDEX "idx_workshop_category_specialization" ON "public"."wks_WorkshopCategory"("specialization");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "unique_workshop_category_code" ON "public"."wks_WorkshopCategory"("code");
+
+-- CreateIndex
+CREATE INDEX "idx_workshop_type_category" ON "public"."wks_WorkshopType"("category_id");
+
+-- CreateIndex
+CREATE INDEX "idx_workshop_type_branch" ON "public"."wks_WorkshopType"("branch_id");
+
+-- CreateIndex
+CREATE INDEX "idx_workshop_type_active_seq" ON "public"."wks_WorkshopType"("isActive", "seq");
+
+-- CreateIndex
+CREATE INDEX "idx_waitinglist_type_type" ON "public"."wks_WaitingListType"("workshopType_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "unique_waitinglist_type" ON "public"."wks_WaitingListType"("waitingList_id", "workshopType_id");
 
 -- CreateIndex
 CREATE INDEX "idx_branch_workinghour_branch" ON "public"."wks_BranchWorkingHour"("company_id", "branch_id");
@@ -3359,6 +3600,24 @@ CREATE INDEX "idx_gl_detail" ON "public"."acc_GLTransDetail"("company_id", "glTr
 -- CreateIndex
 CREATE INDEX "idx_gl_detail_coa" ON "public"."acc_GLTransDetail"("company_id", "coa_id");
 
+-- CreateIndex
+CREATE INDEX "idx_tmp_sys_Company_seq_no" ON "public"."tmp_sys_Company"("seq_no");
+
+-- CreateIndex
+CREATE INDEX "idx_tmp_sys_Branch_company_id" ON "public"."tmp_sys_Branch"("company_id");
+
+-- CreateIndex
+CREATE INDEX "sys_City_province_id_idx" ON "public"."sys_City"("province_id");
+
+-- CreateIndex
+CREATE INDEX "sys_District_city_id_idx" ON "public"."sys_District"("city_id");
+
+-- CreateIndex
+CREATE INDEX "sys_SubDistrict_district_id_idx" ON "public"."sys_SubDistrict"("district_id");
+
+-- CreateIndex
+CREATE INDEX "sys_SubDistrict_city_id_idx" ON "public"."sys_SubDistrict"("city_id");
+
 -- AddForeignKey
 ALTER TABLE "public"."saas_CompanySubscription" ADD CONSTRAINT "saas_CompanySubscription_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."sys_Company"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
 
@@ -3391,6 +3650,18 @@ ALTER TABLE "public"."saas_CompanyAddon" ADD CONSTRAINT "saas_CompanyAddon_addon
 
 -- AddForeignKey
 ALTER TABLE "public"."sys_Branch" ADD CONSTRAINT "sys_Branch_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."sys_Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."sys_Branch" ADD CONSTRAINT "sys_Branch_province_id_fkey" FOREIGN KEY ("province_id") REFERENCES "public"."sys_Province"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."sys_Branch" ADD CONSTRAINT "sys_Branch_city_id_fkey" FOREIGN KEY ("city_id") REFERENCES "public"."sys_City"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."sys_Branch" ADD CONSTRAINT "sys_Branch_district_id_fkey" FOREIGN KEY ("district_id") REFERENCES "public"."sys_District"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."sys_Branch" ADD CONSTRAINT "sys_Branch_subdistrict_id_fkey" FOREIGN KEY ("subdistrict_id") REFERENCES "public"."sys_SubDistrict"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "public"."sys_User" ADD CONSTRAINT "sys_User_company_id_employee_id_fkey" FOREIGN KEY ("company_id", "employee_id") REFERENCES "public"."cmf_Employee"("company_id", "id") ON DELETE SET NULL ON UPDATE NO ACTION;
@@ -3508,6 +3779,18 @@ ALTER TABLE "public"."cmf_CustomerVehicle" ADD CONSTRAINT "cmf_CustomerVehicle_v
 
 -- AddForeignKey
 ALTER TABLE "public"."cmf_Mechanic" ADD CONSTRAINT "cmf_Mechanic_company_id_employee_id_fkey" FOREIGN KEY ("company_id", "employee_id") REFERENCES "public"."cmf_Employee"("company_id", "id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."wks_WorkshopType" ADD CONSTRAINT "wks_WorkshopType_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "public"."wks_WorkshopCategory"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."wks_WorkshopType" ADD CONSTRAINT "wks_WorkshopType_branch_id_fkey" FOREIGN KEY ("branch_id") REFERENCES "public"."sys_Branch"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."wks_WaitingListType" ADD CONSTRAINT "wks_WaitingListType_waitingList_id_fkey" FOREIGN KEY ("waitingList_id") REFERENCES "public"."wks_waitingList"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."wks_WaitingListType" ADD CONSTRAINT "wks_WaitingListType_workshopType_id_fkey" FOREIGN KEY ("workshopType_id") REFERENCES "public"."wks_WorkshopType"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "public"."wks_MechanicAvailability" ADD CONSTRAINT "wks_MechanicAvailability_company_id_mechanic_id_fkey" FOREIGN KEY ("company_id", "mechanic_id") REFERENCES "public"."cmf_Mechanic"("company_id", "id") ON DELETE RESTRICT ON UPDATE NO ACTION;
@@ -3750,7 +4033,7 @@ ALTER TABLE "public"."apm_Payment" ADD CONSTRAINT "apm_Payment_company_id_apInvo
 ALTER TABLE "public"."apm_Payment" ADD CONSTRAINT "apm_Payment_company_id_supplier_id_fkey" FOREIGN KEY ("company_id", "supplier_id") REFERENCES "public"."prc_Supplier"("company_id", "id") ON DELETE RESTRICT ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "public"."apm_Payment" ADD CONSTRAINT "apm_Payment_id_fkey" FOREIGN KEY ("id") REFERENCES "public"."cmf_PaymentMethod"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+ALTER TABLE "public"."apm_Payment" ADD CONSTRAINT "apm_Payment_paymentMethod_id_fkey" FOREIGN KEY ("paymentMethod_id") REFERENCES "public"."cmf_PaymentMethod"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "public"."apm_Payment" ADD CONSTRAINT "apm_Payment_company_id_bankAccount_id_fkey" FOREIGN KEY ("company_id", "bankAccount_id") REFERENCES "public"."acc_BankAccount"("company_id", "id") ON DELETE RESTRICT ON UPDATE NO ACTION;
@@ -3808,3 +4091,15 @@ ALTER TABLE "public"."acc_GLTransDetail" ADD CONSTRAINT "acc_GLTransDetail_compa
 
 -- AddForeignKey
 ALTER TABLE "public"."acc_GLTransDetail" ADD CONSTRAINT "acc_GLTransDetail_company_id_coa_id_fkey" FOREIGN KEY ("company_id", "coa_id") REFERENCES "public"."acc_COA"("company_id", "id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."tmp_sys_Branch" ADD CONSTRAINT "tmp_sys_Branch_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."tmp_sys_Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."sys_City" ADD CONSTRAINT "sys_City_province_id_fkey" FOREIGN KEY ("province_id") REFERENCES "public"."sys_Province"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."sys_District" ADD CONSTRAINT "sys_District_city_id_fkey" FOREIGN KEY ("city_id") REFERENCES "public"."sys_City"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."sys_SubDistrict" ADD CONSTRAINT "sys_SubDistrict_district_id_fkey" FOREIGN KEY ("district_id") REFERENCES "public"."sys_District"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

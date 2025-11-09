@@ -1,3 +1,5 @@
+import { WorkshopTypeResponseDto } from './workshop-category.dto';
+
 export class WaitingListResponseDto {
   id!: string;
   name!: string;
@@ -9,7 +11,10 @@ export class WaitingListResponseDto {
   email!: string;
   phone!: string | null;
   mobile!: string | null;
-  specialization!: string;
+  categoryId!: string | null;
+  categoryCode?: string | null;
+  categoryName?: string | null;
+  workshopTypes!: WorkshopTypeResponseDto[];
   createdAt!: string;
   updatedAt!: string;
   createdBy!: string | null;
