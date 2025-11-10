@@ -62,6 +62,9 @@ export function getWaitingListThankYouTemplate(
               <p style="margin: 25px 0 0 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
                 Jangan ragu untuk membalas email ini jika ada pertanyaan tambahan. Kami siap membantu kebutuhan bengkelmu!
               </p>
+              <p style="margin: 18px 0 0 0; color: #b91c1c; font-size: 13px; line-height: 1.6;">
+                Waspada penipuan: tim Ngebengkel hanya akan menghubungi kamu lewat email resmi @ngebengkel.com. Jangan pernah membagikan kode OTP, kata sandi, atau data sensitif kepada pihak mana pun.
+              </p>
             </td>
           </tr>
           
@@ -116,6 +119,9 @@ export function getWaitingListThankYouTextVersion(
   lines.push(
     '',
     'Jika ada pertanyaan, balas saja email ini ya.',
+    '',
+    'Waspada penipuan: tim Ngebengkel hanya akan menghubungi kamu lewat email resmi @ngebengkel.com atau nomor yang tertera di website kami.',
+    'Jangan pernah membagikan kode OTP, kata sandi, atau data sensitif kepada pihak mana pun.',
     '',
     `© ${new Date().getFullYear()} Ngebengkel. All rights reserved.`,
   );

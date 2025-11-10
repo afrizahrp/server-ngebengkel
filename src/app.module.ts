@@ -72,6 +72,11 @@ import { CommonModule } from './common/common.module';
         ttl: 60, // 1 minute
         limit: 100, // 100 requests per minute
       },
+      {
+        name: 'check-availability',
+        ttl: 60, // 1 minute
+        limit: 30, // 30 requests per minute
+      },
     ]),
     ScheduleModule.forRoot(),
     EmailModule,
