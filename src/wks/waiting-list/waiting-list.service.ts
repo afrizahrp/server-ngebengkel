@@ -159,23 +159,23 @@ export class WaitingListService {
 
     const response = this.toResponse(waitingList);
 
-    try {
-      const workshopTypeNames = response.workshopTypes
-        .map((type) => type.name)
-        .filter((name): name is string => Boolean(name));
+    const workshopTypeNames = response.workshopTypes
+      .map((type) => type.name)
+      .filter((name): name is string => Boolean(name));
 
-      await this.emailService.sendWaitingListThankYouEmail({
+    void this.emailService
+      .sendWaitingListThankYouEmail({
         email: response.email,
         name: response.name,
         categoryName: response.categoryName ?? null,
         workshopTypeNames,
+      })
+      .catch((error) => {
+        console.error(
+          '❌ Error sending waiting list thank you email after submission:',
+          error,
+        );
       });
-    } catch (error) {
-      console.error(
-        '❌ Error sending waiting list thank you email after submission:',
-        error,
-      );
-    }
 
     return response;
   }
