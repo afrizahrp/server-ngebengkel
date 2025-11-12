@@ -49,7 +49,7 @@ async function bootstrap() {
     ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
     : isProduction
       ? ['https://ngebengkel.com', 'https://www.ngebengkel.com']
-      : [
+      : [  'http://localhost:3000',
           'http://localhost:3100',
           'http://localhost:3200',
           'http://localhost:3300',
