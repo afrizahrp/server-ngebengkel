@@ -1,0 +1,118 @@
+{
+    "province": [
+      {
+        "id": "34000",
+        "name": "DI Yogyakarta",
+        "company_id": "NGB"
+      }
+    ],
+    "city": [
+      {
+        "id": "34040",
+        "name": "Kabupaten Sleman",
+        "company_id": "NGB"
+      }
+    ],
+    "district": [
+      { "id": "340401", "name": "Moyudan", "company_id": "NGB" },
+      { "id": "340402", "name": "Minggir", "company_id": "NGB" },
+      { "id": "340403", "name": "Seyegan", "company_id": "NGB" },
+      { "id": "340404", "name": "Godean", "company_id": "NGB" },
+      { "id": "340405", "name": "Gamping", "company_id": "NGB" },
+      { "id": "340406", "name": "Mlati", "company_id": "NGB" },
+      { "id": "340407", "name": "Depok", "company_id": "NGB" },
+      { "id": "340408", "name": "Berbah", "company_id": "NGB" },
+      { "id": "340409", "name": "Prambanan", "company_id": "NGB" },
+      { "id": "340410", "name": "Kalasan", "company_id": "NGB" },
+      { "id": "340411", "name": "Ngemplak", "company_id": "NGB" },
+      { "id": "340412", "name": "Ngaglik", "company_id": "NGB" },
+      { "id": "340413", "name": "Sleman", "company_id": "NGB" },
+      { "id": "340414", "name": "Tempel", "company_id": "NGB" },
+      { "id": "340415", "name": "Turi", "company_id": "NGB" },
+      { "id": "340416", "name": "Pakem", "company_id": "NGB" },
+      { "id": "340417", "name": "Cangkringan", "company_id": "NGB" }
+    ],
+    "subdistrict": [
+      { "id": "34040101", "district_id": "340401", "name": "Sumberagung", "company_id": "NGB" },
+      { "id": "34040102", "district_id": "340401", "name": "Sumberarum", "company_id": "NGB" },
+      { "id": "34040103", "district_id": "340401", "name": "Sumberrahayu", "company_id": "NGB" },
+      { "id": "34040104", "district_id": "340401", "name": "Pandanrejo", "company_id": "NGB" },
+  
+      { "id": "34040201", "district_id": "340402", "name": "Sendangarum", "company_id": "NGB" },
+      { "id": "34040202", "district_id": "340402", "name": "Sendangsari", "company_id": "NGB" },
+      { "id": "34040203", "district_id": "340402", "name": "Tempel", "company_id": "NGB" },
+      { "id": "34040204", "district_id": "340402", "name": "Minggir", "company_id": "NGB" },
+  
+      { "id": "34040301", "district_id": "340403", "name": "Margoagung", "company_id": "NGB" },
+      { "id": "34040302", "district_id": "340403", "name": "Margokaton", "company_id": "NGB" },
+      { "id": "34040303", "district_id": "340403", "name": "Margodadi", "company_id": "NGB" },
+  
+      { "id": "34040401", "district_id": "340404", "name": "Sidoagung", "company_id": "NGB" },
+      { "id": "34040402", "district_id": "340404", "name": "Sidoluhur", "company_id": "NGB" },
+      { "id": "34040403", "district_id": "340404", "name": "Sidomulyo", "company_id": "NGB" },
+      { "id": "34040404", "district_id": "340404", "name": "Ngestiharjo", "company_id": "NGB" },
+      { "id": "34040405", "district_id": "340404", "name": "Godean", "company_id": "NGB" },
+  
+      { "id": "34040501", "district_id": "340405", "name": "Balecatur", "company_id": "NGB" },
+      { "id": "34040502", "district_id": "340405", "name": "Banyuraden", "company_id": "NGB" },
+      { "id": "34040503", "district_id": "340405", "name": "Ambarketawang", "company_id": "NGB" },
+  
+      { "id": "34040601", "district_id": "340406", "name": "Sendangadi", "company_id": "NGB" },
+      { "id": "34040602", "district_id": "340406", "name": "Tlogoadi", "company_id": "NGB" },
+      { "id": "34040603", "district_id": "340406", "name": "Sinduadi", "company_id": "NGB" },
+      { "id": "34040604", "district_id": "340406", "name": "Sumberadi", "company_id": "NGB" },
+      { "id": "34040605", "district_id": "340406", "name": "Caturharjo", "company_id": "NGB" },
+  
+      { "id": "34040701", "district_id": "340407", "name": "Condongcatur", "company_id": "NGB" },
+      { "id": "34040702", "district_id": "340407", "name": "Maguwoharjo", "company_id": "NGB" },
+      { "id": "34040703", "district_id": "340407", "name": "Caturtunggal", "company_id": "NGB" },
+  
+      { "id": "34040801", "district_id": "340408", "name": "Jogotirto", "company_id": "NGB" },
+      { "id": "34040802", "district_id": "340408", "name": "Kalitirto", "company_id": "NGB" },
+      { "id": "34040803", "district_id": "340408", "name": "Tirtoadi", "company_id": "NGB" },
+  
+      { "id": "34040901", "district_id": "340409", "name": "Sambirejo", "company_id": "NGB" },
+      { "id": "34040902", "district_id": "340409", "name": "Madurejo", "company_id": "NGB" },
+      { "id": "34040903", "district_id": "340409", "name": "Bokoharjo", "company_id": "NGB" },
+      { "id": "34040904", "district_id": "340409", "name": "Wukirharjo", "company_id": "NGB" },
+  
+      { "id": "34041001", "district_id": "340410", "name": "Tirtomartani", "company_id": "NGB" },
+      { "id": "34041002", "district_id": "340410", "name": "Tamanmartani", "company_id": "NGB" },
+      { "id": "34041003", "district_id": "340410", "name": "Purwomartani", "company_id": "NGB" },
+      { "id": "34041004", "district_id": "340410", "name": "Selomartani", "company_id": "NGB" },
+  
+      { "id": "34041101", "district_id": "340411", "name": "Umbulmartani", "company_id": "NGB" },
+      { "id": "34041102", "district_id": "340411", "name": "Widodomartani", "company_id": "NGB" },
+      { "id": "34041103", "district_id": "340411", "name": "Wedomartani", "company_id": "NGB" },
+      { "id": "34041104", "district_id": "340411", "name": "Sindumartani", "company_id": "NGB" },
+  
+      { "id": "34041201", "district_id": "340412", "name": "Sariharjo", "company_id": "NGB" },
+      { "id": "34041202", "district_id": "340412", "name": "Minomartani", "company_id": "NGB" },
+      { "id": "34041203", "district_id": "340412", "name": "Sinduharjo", "company_id": "NGB" },
+      { "id": "34041204", "district_id": "340412", "name": "Donoharjo", "company_id": "NGB" },
+      { "id": "34041205", "district_id": "340412", "name": "Banyuraden", "company_id": "NGB" },
+  
+      { "id": "34041301", "district_id": "340413", "name": "Caturharjo", "company_id": "NGB" },
+      { "id": "34041302", "district_id": "340413", "name": "Triharjo", "company_id": "NGB" },
+      { "id": "34041303", "district_id": "340413", "name": "Pandowoharjo", "company_id": "NGB" },
+  
+      { "id": "34041401", "district_id": "340414", "name": "Pondokrejo", "company_id": "NGB" },
+      { "id": "34041402", "district_id": "340414", "name": "Merdikorejo", "company_id": "NGB" },
+      { "id": "34041403", "district_id": "340414", "name": "Bangunkerto", "company_id": "NGB" },
+      { "id": "34041404", "district_id": "340414", "name": "Lumbungrejo", "company_id": "NGB" },
+  
+      { "id": "34041501", "district_id": "340415", "name": "Wonokerto", "company_id": "NGB" },
+      { "id": "34041502", "district_id": "340415", "name": "Donokerto", "company_id": "NGB" },
+      { "id": "34041503", "district_id": "340415", "name": "Bangunkerto", "company_id": "NGB" },
+  
+      { "id": "34041601", "district_id": "340416", "name": "Pakembinangun", "company_id": "NGB" },
+      { "id": "34041602", "district_id": "340416", "name": "Harjobinangun", "company_id": "NGB" },
+      { "id": "34041603", "district_id": "340416", "name": "Hargobinangun", "company_id": "NGB" },
+  
+      { "id": "34041701", "district_id": "340417", "name": "Umbulharjo", "company_id": "NGB" },
+      { "id": "34041702", "district_id": "340417", "name": "Glagaharjo", "company_id": "NGB" },
+      { "id": "34041703", "district_id": "340417", "name": "Kepuharjo", "company_id": "NGB" },
+      { "id": "34041704", "district_id": "340417", "name": "Wukirsari", "company_id": "NGB" }
+    ]
+  }
+  

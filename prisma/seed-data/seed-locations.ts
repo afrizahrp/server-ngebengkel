@@ -93,47 +93,134 @@ async function loadLocationRecords(): Promise<LocationRecords> {
   for (const file of files) {
     const filePath = path.join(dataDir, file);
     const raw = await fs.readFile(filePath, 'utf-8');
-    const parsed = JSON.parse(raw) as ProvinceFile;
+    const parsed = JSON.parse(raw) as ProvinceFile | any;
 
-    const province = parsed.province;
-    if (!province) {
-      console.warn(`⚠️  File ${file} tidak memiliki data province.`);
-      continue;
-    }
+    // Mendukung 2 format:
+    // 1) Nested (ProvinceFile) -> { province: { cities: [ { districts: [ { subdistricts: [] } ] } ] } }
+    // 2) Flat (seperti slemanData.json) -> { province: [], city: [], district: [], subdistrict: [] }
+    const isFlatFormat =
+      Array.isArray((parsed as any).province) ||
+      Array.isArray((parsed as any).city) ||
+      Array.isArray((parsed as any).district) ||
+      Array.isArray((parsed as any).subdistrict);
 
-    provinces.set(province.id, {
-      id: province.id,
-      name: province.name,
-      company_id: province.company_id,
-    });
+    if (isFlatFormat) {
+      const flat = parsed as {
+        province?: Array<{ id: string; name: string; company_id: string }>;
+        city?: Array<{ id: string; name: string; company_id: string; province_id?: string }>;
+        district?: Array<{ id: string; name: string; company_id: string; city_id?: string }>;
+        subdistrict?: Array<{ id: string; name: string; company_id: string; district_id: string }>;
+      };
 
-    province.cities?.forEach((city) => {
-      cities.set(city.id, {
-        id: city.id,
-        name: city.name,
-        company_id: city.company_id,
-        province_id: province.id,
+      const firstProvinceId =
+        flat.province && flat.province.length > 0 ? flat.province[0].id : undefined;
+      const firstCityId =
+        flat.city && flat.city.length > 0 ? flat.city[0].id : undefined;
+
+      // Province
+      flat.province?.forEach((p) => {
+        if (!p?.id) return;
+        provinces.set(p.id, { id: p.id, name: p.name, company_id: p.company_id });
       });
 
-      city.districts?.forEach((district) => {
-        districts.set(district.id, {
-          id: district.id,
-          name: district.name,
-          company_id: district.company_id,
-          city_id: city.id,
+      // City (fallback province_id ke firstProvinceId jika tidak tersedia)
+      flat.city?.forEach((c) => {
+        if (!c?.id) return;
+        const province_id = c.province_id ?? firstProvinceId;
+        if (!province_id) {
+          console.warn(
+            `⚠️  File ${file}: city ${c.id} tidak punya province_id dan tidak ada province di file. Melewati city ini.`,
+          );
+          return;
+        }
+        cities.set(c.id, {
+          id: c.id,
+          name: c.name,
+          company_id: c.company_id,
+          province_id,
+        });
+      });
+
+      // District (fallback city_id ke firstCityId jika tidak tersedia)
+      flat.district?.forEach((d) => {
+        if (!d?.id) return;
+        const city_id = (d as any).city_id ?? firstCityId;
+        if (!city_id) {
+          console.warn(
+            `⚠️  File ${file}: district ${d.id} tidak punya city_id dan tidak ada city di file. Melewati district ini.`,
+          );
+          return;
+        }
+        districts.set(d.id, {
+          id: d.id,
+          name: d.name,
+          company_id: d.company_id,
+          city_id,
+        });
+      });
+
+      // SubDistrict (gunakan district_id dari data, turunkan city_id dari district map)
+      flat.subdistrict?.forEach((sd) => {
+        if (!sd?.id) return;
+        const district_id = sd.district_id;
+        const parentDistrict = district_id ? districts.get(district_id) : undefined;
+        const city_id = parentDistrict?.city_id ?? firstCityId;
+        if (!district_id || !city_id) {
+          console.warn(
+            `⚠️  File ${file}: subdistrict ${sd.id} tidak punya district_id atau tidak dapat menurunkan city_id. Melewati subdistrict ini.`,
+          );
+          return;
+        }
+        subDistricts.set(sd.id, {
+          id: sd.id,
+          name: sd.name,
+          company_id: sd.company_id,
+          district_id,
+          city_id,
+        });
+      });
+    } else {
+      // FORMAT NESTED (existing)
+      const province = (parsed as ProvinceFile).province;
+      if (!province) {
+        console.warn(`⚠️  File ${file} tidak memiliki data province.`);
+        continue;
+      }
+
+      provinces.set(province.id, {
+        id: province.id,
+        name: province.name,
+        company_id: province.company_id,
+      });
+
+      province.cities?.forEach((city) => {
+        cities.set(city.id, {
+          id: city.id,
+          name: city.name,
+          company_id: city.company_id,
+          province_id: province.id,
         });
 
-        district.subdistricts?.forEach((subDistrict) => {
-          subDistricts.set(subDistrict.id, {
-            id: subDistrict.id,
-            name: subDistrict.name,
-            company_id: subDistrict.company_id,
-            district_id: district.id,
+        city.districts?.forEach((district) => {
+          districts.set(district.id, {
+            id: district.id,
+            name: district.name,
+            company_id: district.company_id,
             city_id: city.id,
+          });
+
+          district.subdistricts?.forEach((subDistrict) => {
+            subDistricts.set(subDistrict.id, {
+              id: subDistrict.id,
+              name: subDistrict.name,
+              company_id: subDistrict.company_id,
+              district_id: district.id,
+              city_id: city.id,
+            });
           });
         });
       });
-    });
+    }
   }
 
   return {

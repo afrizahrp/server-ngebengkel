@@ -1,0 +1,92 @@
+{
+    "province": [
+      {
+        "id": "34000",
+        "name": "DI Yogyakarta",
+        "company_id": "NGB"
+      }
+    ],
+  
+    "city": [
+      {
+        "id": "34710",
+        "name": "Kota Yogyakarta",
+        "company_id": "NGB"
+      }
+    ],
+  
+    "district": [
+      { "id": "34711", "name": "Tegalrejo", "company_id": "NGB" },
+      { "id": "34712", "name": "Jetis", "company_id": "NGB" },
+      { "id": "34713", "name": "Gondokusuman", "company_id": "NGB" },
+      { "id": "34714", "name": "Danurejan", "company_id": "NGB" },
+      { "id": "34715", "name": "Gedong Tengen", "company_id": "NGB" },
+      { "id": "34716", "name": "Ngampilan", "company_id": "NGB" },
+      { "id": "34717", "name": "Wirobrajan", "company_id": "NGB" },
+      { "id": "34718", "name": "Mantrijeron", "company_id": "NGB" },
+      { "id": "34719", "name": "Kraton", "company_id": "NGB" },
+      { "id": "34720", "name": "Gondomanan", "company_id": "NGB" },
+      { "id": "34721", "name": "Pakualaman", "company_id": "NGB" },
+      { "id": "34722", "name": "Mergangsan", "company_id": "NGB" },
+      { "id": "34723", "name": "Umbulharjo", "company_id": "NGB" },
+      { "id": "34724", "name": "Kotagede", "company_id": "NGB" }
+    ],
+  
+    "subdistrict": [
+      { "id": "34711001", "district_id": "34711", "name": "Kricak", "company_id": "NGB" },
+      { "id": "34711002", "district_id": "34711", "name": "Bener", "company_id": "NGB" },
+      { "id": "34711003", "district_id": "34711", "name": "Karangwaru", "company_id": "NGB" },
+      { "id": "34711004", "district_id": "34711", "name": "Tegalrejo", "company_id": "NGB" },
+  
+      { "id": "34712001", "district_id": "34712", "name": "Cokrodiningratan", "company_id": "NGB" },
+      { "id": "34712002", "district_id": "34712", "name": "Gowongan", "company_id": "NGB" },
+      { "id": "34712003", "district_id": "34712", "name": "Bumijo", "company_id": "NGB" },
+  
+      { "id": "34713001", "district_id": "34713", "name": "Kotabaru", "company_id": "NGB" },
+      { "id": "34713002", "district_id": "34713", "name": "Demangan", "company_id": "NGB" },
+      { "id": "34713003", "district_id": "34713", "name": "Terban", "company_id": "NGB" },
+      { "id": "34713004", "district_id": "34713", "name": "Baciro", "company_id": "NGB" },
+  
+      { "id": "34714001", "district_id": "34714", "name": "Suryatmajan", "company_id": "NGB" },
+      { "id": "34714002", "district_id": "34714", "name": "Tegalpanggung", "company_id": "NGB" },
+  
+      { "id": "34715001", "district_id": "34715", "name": "Pringgokusuman", "company_id": "NGB" },
+      { "id": "34715002", "district_id": "34715", "name": "Sosromenduran", "company_id": "NGB" },
+  
+      { "id": "34716001", "district_id": "34716", "name": "Notoprajan", "company_id": "NGB" },
+      { "id": "34716002", "district_id": "34716", "name": "Ngampilan", "company_id": "NGB" },
+  
+      { "id": "34717001", "district_id": "34717", "name": "Wirobrajan", "company_id": "NGB" },
+      { "id": "34717002", "district_id": "34717", "name": "Patangpuluhan", "company_id": "NGB" },
+      { "id": "34717003", "district_id": "34717", "name": "Wirogunan", "company_id": "NGB" },
+  
+      { "id": "34718001", "district_id": "34718", "name": "Suryodiningratan", "company_id": "NGB" },
+      { "id": "34718002", "district_id": "34718", "name": "Mantrijeron", "company_id": "NGB" },
+      { "id": "34718003", "district_id": "34718", "name": "Gedongkiwo", "company_id": "NGB" },
+  
+      { "id": "34719001", "district_id": "34719", "name": "Kadipaten", "company_id": "NGB" },
+      { "id": "34719002", "district_id": "34719", "name": "Patehan", "company_id": "NGB" },
+  
+      { "id": "34720001", "district_id": "34720", "name": "Ngupasan", "company_id": "NGB" },
+      { "id": "34720002", "district_id": "34720", "name": "Prawirodirjan", "company_id": "NGB" },
+  
+      { "id": "34721001", "district_id": "34721", "name": "Gunungketur", "company_id": "NGB" },
+      { "id": "34721002", "district_id": "34721", "name": "Purwokinanti", "company_id": "NGB" },
+  
+      { "id": "34722001", "district_id": "34722", "name": "Wirogunan", "company_id": "NGB" },
+      { "id": "34722002", "district_id": "34722", "name": "Keparakan", "company_id": "NGB" },
+      { "id": "34722003", "district_id": "34722", "name": "Brontokusuman", "company_id": "NGB" },
+  
+      { "id": "34723001", "district_id": "34723", "name": "Pandeyan", "company_id": "NGB" },
+      { "id": "34723002", "district_id": "34723", "name": "Giwangan", "company_id": "NGB" },
+      { "id": "34723003", "district_id": "34723", "name": "Sorogenen", "company_id": "NGB" },
+      { "id": "34723004", "district_id": "34723", "name": "Warungboto", "company_id": "NGB" },
+      { "id": "34723005", "district_id": "34723", "name": "Tahunan", "company_id": "NGB" },
+      { "id": "34723006", "district_id": "34723", "name": "Muja Muju", "company_id": "NGB" },
+  
+      { "id": "34724001", "district_id": "34724", "name": "Rejowinangun", "company_id": "NGB" },
+      { "id": "34724002", "district_id": "34724", "name": "Prenggan", "company_id": "NGB" },
+      { "id": "34724003", "district_id": "34724", "name": "Basen", "company_id": "NGB" }
+    ]
+  }
+  

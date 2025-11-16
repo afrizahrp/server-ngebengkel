@@ -16,6 +16,7 @@ import {
 } from '../../auth/decorators/throttle.decorator';
 import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { WaitingListService } from './waiting-list.service';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { CreateWaitingListDto } from './dto/create-waiting-list.dto';
 import { WaitingListResponseDto } from './dto/response-waiting-list.dto';
 import { UpdateWaitingListDto } from './dto/update-waiting-list.dto';
@@ -87,6 +88,23 @@ export class WaitingListController {
     return this.waitingListService.findOne(id);
   }
 
+  @Get(':id/promo')
+  @Roles('ADMIN','READ')
+  async getPromos(@Param('id') id: string): Promise<{
+    message: string;
+    data: Array<{
+      id: string;
+      title: string;
+      description: string | null;
+      promoType: string;
+      checklist?: string[] | null;
+      valuePercent?: number | null;
+      valueNominal?: number | null;
+    }>;
+  }> {
+    const data = await this.waitingListService.findPromosByWaitingList(id);
+    return { message: 'Daftar promo berhasil dimuat', data };
+  }
   @Patch(':id')
   async update(
     @Param('id') id: string,

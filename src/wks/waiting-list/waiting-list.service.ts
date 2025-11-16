@@ -42,14 +42,26 @@ const WAITING_LIST_SELECT = {
   },
   types: {
     select: {
-      workshopType_id: true,
-      workshopType: {
-        select: {
-          id: true,
-          name: true,
-          description: true,
-        },
-      },
+      id: true,
+      name: true,
+      // description mungkin tidak ada di skema baru; akan dihandle di mapper
+    },
+  },
+  promos: {
+    where: {
+      isActive: true,
+      AND: [
+        { OR: [{ startAt: null }, { startAt: { lte: new Date() } }] },
+        { OR: [{ endAt: null }, { endAt: { gte: new Date() } }] },
+      ],
+    },
+    orderBy: [{ createdAt: 'desc' }],
+    take: 1,
+    select: {
+      id: true,
+      title: true,
+      promoType: true,
+      checklist: true,
     },
   },
   createdAt: true,
@@ -63,7 +75,7 @@ type WaitingListWithRelations = Prisma.wks_waitingListGetPayload<{
   select: typeof WAITING_LIST_SELECT;
 }>;
 
-type WaitingListTypeRelation = WaitingListWithRelations['types'];
+type WaitingListTypeRelation = { id: string; name: string | null } | null;
 
 @Injectable()
 export class WaitingListService {
@@ -103,11 +115,21 @@ export class WaitingListService {
         throw new NotFoundException('Kategori bengkel tidak ditemukan');
       }
 
-      const workshopTypeIds = await this.validateWorkshopTypes(
-        tx,
-        createWaitingListDto.workshopTypeIds,
-        category.id,
-      );
+      // Schema baru: single relation type via type_id (optional), mengikuti pola seperti categoryId.
+      let selectedTypeId: string | null = null;
+      if (createWaitingListDto.typeId) {
+        const typeData = await tx.wks_WorkshopType.findFirst({
+          where: { id: createWaitingListDto.typeId, isActive: true },
+          select: { id: true, category_id: true },
+        });
+        if (!typeData) {
+          throw new NotFoundException('Jenis bengkel tidak ditemukan');
+        }
+        if (typeData.category_id !== category.id) {
+          throw new BadRequestException('Jenis bengkel tidak sesuai dengan kategori yang dipilih');
+        }
+        selectedTypeId = typeData.id;
+      }
 
       await tx.wks_waitingList.create({
         data: {
@@ -123,25 +145,12 @@ export class WaitingListService {
           mobile: createWaitingListDto.mobile ?? '',
           createdBy: 'website',
           updatedBy: 'website',
+          types: selectedTypeId ? { connect: { id: selectedTypeId } } : undefined,
           category: {
             connect: { id: category.id },
           },
         },
       });
-
-      if (workshopTypeIds.length > 0) {
-        const now = new Date();
-        await tx.wks_WaitingListType.createMany({
-          data: workshopTypeIds.map((workshopTypeId) => ({
-            waitingList_id: id,
-            workshopType_id: workshopTypeId,
-            assignedAt: now,
-            createdAt: now,
-            createdBy: 'website',
-          })),
-          skipDuplicates: true,
-        });
-      }
 
       const created = await tx.wks_waitingList.findUnique({
         where: { id },
@@ -284,23 +293,34 @@ export class WaitingListService {
         targetCategoryId = category.id;
       }
 
-      const shouldUpdateTypes =
-        updateWaitingListDto.workshopTypeIds !== undefined;
-
-      let workshopTypeIds: string[] = [];
-
-      if (shouldUpdateTypes) {
-        if (!targetCategoryId) {
-          throw new BadRequestException(
-            'Kategori bengkel harus dipilih sebelum mengatur jenis bengkel',
-          );
+      // Update type mengikuti pola category: jika disediakan typeId, validasi dan set; jika tidak disediakan, tidak diubah
+      const hasTypeUpdate = Object.prototype.hasOwnProperty.call(updateWaitingListDto, 'typeId');
+      let selectedTypeId: string | null | undefined = undefined;
+      if (hasTypeUpdate) {
+        if (updateWaitingListDto.typeId === undefined || updateWaitingListDto.typeId === null) {
+          selectedTypeId = null;
+        } else if (updateWaitingListDto.typeId === '') {
+          selectedTypeId = null;
+        } else {
+          if (!targetCategoryId) {
+            throw new BadRequestException(
+              'Kategori bengkel harus dipilih sebelum mengatur jenis bengkel',
+            );
+          }
+          const typeData = await tx.wks_WorkshopType.findFirst({
+            where: { id: updateWaitingListDto.typeId, isActive: true },
+            select: { id: true, category_id: true },
+          });
+          if (!typeData) {
+            throw new NotFoundException('Jenis bengkel tidak ditemukan');
+          }
+          if (typeData.category_id !== targetCategoryId) {
+            throw new BadRequestException(
+              'Jenis bengkel tidak sesuai dengan kategori yang dipilih',
+            );
+          }
+          selectedTypeId = typeData.id;
         }
-
-        workshopTypeIds = await this.validateWorkshopTypes(
-          tx,
-          updateWaitingListDto.workshopTypeIds ?? [],
-          targetCategoryId,
-        );
       }
 
       const updateData: Prisma.wks_waitingListUpdateInput = {};
@@ -351,32 +371,21 @@ export class WaitingListService {
         }
       }
 
+      if (hasTypeUpdate) {
+        // Atur relasi types via connect/disconnect agar konsisten dengan category
+        if (selectedTypeId === null) {
+          updateData.types = { disconnect: true };
+        } else if (selectedTypeId !== undefined) {
+          updateData.types = { connect: { id: selectedTypeId } };
+        }
+      }
+
       updateData.updatedBy = 'website';
 
       await tx.wks_waitingList.update({
         where: { id },
         data: updateData,
       });
-
-      if (shouldUpdateTypes) {
-        await tx.wks_WaitingListType.deleteMany({
-          where: { waitingList_id: id },
-        });
-
-        if (workshopTypeIds.length > 0) {
-          const now = new Date();
-          await tx.wks_WaitingListType.createMany({
-            data: workshopTypeIds.map((workshopTypeId) => ({
-              waitingList_id: id,
-              workshopType_id: workshopTypeId,
-              assignedAt: now,
-              createdAt: now,
-              createdBy: 'website',
-            })),
-            skipDuplicates: true,
-          });
-        }
-      }
 
       const updated = await tx.wks_waitingList.findUnique({
         where: { id },
@@ -468,20 +477,15 @@ export class WaitingListService {
     );
   }
 
-  private mapWorkshopTypes(
-    types: WaitingListTypeRelation,
-  ): WorkshopTypeResponseDto[] {
-    if (!types?.length) {
-      return [];
-    }
-
-    return types
-      .filter((type) => Boolean(type.workshopType))
-      .map((type) => ({
-        id: type.workshopType!.id,
-        name: type.workshopType!.name,
-        description: type.workshopType!.description ?? null,
-      }));
+  private mapWorkshopTypes(types: WaitingListTypeRelation): WorkshopTypeResponseDto[] {
+    if (!types) return [];
+    return [
+      {
+        id: types.id,
+        name: types.name ?? '',
+        description: null,
+      },
+    ];
   }
 
   private toResponse(data: WaitingListWithRelations): WaitingListResponseDto {
@@ -492,16 +496,34 @@ export class WaitingListService {
       category,
       category_id,
       types,
+      promos,
       ...rest
     } = data;
     void isDeleted;
 
+    const firstPromo =
+      Array.isArray(promos) && promos.length > 0
+        ? promos[0]
+        : null;
+
     return {
       ...rest,
+      typeId: types ? types.id : null,
       categoryId: category_id ?? null,
       categoryCode: category?.code ?? null,
       categoryName: category?.name ?? null,
       workshopTypes: this.mapWorkshopTypes(types),
+      hasPromo: Boolean(firstPromo),
+      promoPreview: firstPromo
+        ? {
+            id: firstPromo.id,
+            title: firstPromo.title,
+            promoType: firstPromo.promoType,
+            checklist: Array.isArray(firstPromo.checklist)
+              ? (firstPromo.checklist as unknown as string[]).slice(0, 5)
+              : null,
+          }
+        : null,
       createdAt: createdAt.toISOString(),
       updatedAt: updatedAt.toISOString(),
     };
@@ -548,6 +570,53 @@ export class WaitingListService {
       emailAvailable: !existingEmail,
       conflicts,
     };
+  }
+
+  async findPromosByWaitingList(id: string): Promise<
+    Array<{
+      id: string;
+      title: string;
+      description: string | null;
+      promoType: string;
+      checklist?: string[] | null;
+      valuePercent?: number | null;
+      valueNominal?: number | null;
+    }>
+  > {
+    const promos = await this.prisma.wks_promo.findMany({
+      where: {
+        waitingList_id: id,
+        isActive: true,
+        AND: [
+          {
+            OR: [{ startAt: null }, { startAt: { lte: new Date() } }],
+          },
+          {
+            OR: [{ endAt: null }, { endAt: { gte: new Date() } }],
+          },
+        ],
+      },
+      orderBy: [{ createdAt: 'desc' }],
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        promoType: true,
+        checklist: true,
+        valuePercent: true,
+        valueNominal: true,
+      },
+    });
+
+    return promos.map((p) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description ?? null,
+      promoType: p.promoType,
+      checklist: Array.isArray(p.checklist) ? (p.checklist as unknown as string[]) : null,
+      valuePercent: p.valuePercent ? Number(p.valuePercent) : null,
+      valueNominal: p.valueNominal ?? null,
+    }));
   }
 
   private validateNameAndEmail(

@@ -12,9 +12,17 @@ export class WaitingListResponseDto {
   phone!: string | null;
   mobile!: string | null;
   categoryId!: string | null;
+  typeId!:string|null;
   categoryCode?: string | null;
   categoryName?: string | null;
   workshopTypes!: WorkshopTypeResponseDto[];
+  hasPromo?: boolean;
+  promoPreview?: {
+    id: string;
+    title: string;
+    promoType: string;
+    checklist?: string[] | null;
+  } | null;
   createdAt!: string;
   updatedAt!: string;
   createdBy!: string | null;

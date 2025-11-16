@@ -8,12 +8,14 @@ import {
   Put,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 import { Sys_CityService } from './sys_City.service';
 import { Sys_CreateCityDto } from './dto/sys_CreateCity.dto';
 import { Sys_UpdateCityDto } from './dto/sys_UpdateCity.dto';
 import { Sys_ResponseCityDto } from './dto/sys_ResponseCity.dto';
 
+@Roles('ADMIN','READ')
 @Controller('sys_city')
 export class sys_CityController {
   constructor(private readonly cityService: Sys_CityService) {}
@@ -23,15 +25,15 @@ export class sys_CityController {
     return this.cityService.create(dto);
   }
 
-  @Public()
   @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @Get()
   async findAll(): Promise<Sys_ResponseCityDto[]> {
     return this.cityService.findAll();
   }
 
-  @Public()
   @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @Get('province/:province_id')
   async findByProvince(
     @Param('province_id') province_id: string,
@@ -39,8 +41,8 @@ export class sys_CityController {
     return this.cityService.findByProvinceId(province_id);
   }
 
-  @Public()
   @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseCityDto> {
     return this.cityService.findOne(id);

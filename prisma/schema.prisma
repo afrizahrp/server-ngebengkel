@@ -299,7 +299,7 @@ model saas_CompanyAddon {
 
 model sys_Company {
   seq_no           Int                        @db.SmallInt
-  id               String                     @id @db.Char(21)
+  id               String                     @id @db.Char(10)
   name             String?                    @db.VarChar(50)
   iStatus          MasterRecordStatusEnum     @default(Active)
   isMain           Boolean?                   @default(false)
@@ -1487,7 +1487,8 @@ model wks_WorkshopType {
   updatedAt    DateTime              @updatedAt
   category     wks_WorkshopCategory  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
   branch       sys_Branch?           @relation(fields: [branch_id], references: [id], onUpdate: NoAction)
-  waitingLists wks_WaitingListType[]
+  // waitingLists wks_WaitingListType[]
+  waitngList   wks_waitingList[]
 
   @@index([category_id], map: "idx_workshop_type_category")
   @@index([branch_id], map: "idx_workshop_type_branch")
@@ -1501,8 +1502,8 @@ model wks_WaitingListType {
   assignedAt      DateTime         @default(now())
   createdBy       String?          @db.Char(10)
   createdAt       DateTime         @default(now())
-  waitingList     wks_waitingList  @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
-  workshopType    wks_WorkshopType @relation(fields: [workshopType_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  // waitingList     wks_waitingList  @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  // workshopType    wks_WorkshopType @relation(fields: [workshopType_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
   @@unique([waitingList_id, workshopType_id], map: "unique_waitinglist_type")
   @@index([workshopType_id], map: "idx_waitinglist_type_type")
@@ -4332,6 +4333,7 @@ model wks_waitingList {
   id           String                 @id @default(cuid()) @db.Char(21)
   name         String                 @db.VarChar(50)
   category_id  String?                @db.Char(5)
+  type_id      String?                @db.Char(10)
   logo         String?                @db.VarChar(255)
   address      String                 @db.VarChar(250)
   province     String                 @db.Char(5)
@@ -4346,8 +4348,9 @@ model wks_waitingList {
   updatedAt    DateTime               @updatedAt
   createdBy    String?                @db.Char(10)
   updatedBy    String?                @db.Char(10)
-  types        wks_WaitingListType[]
+  types        wks_WorkshopType?      @relation(fields: [type_id], references: [id], onUpdate: NoAction)
   category     wks_WorkshopCategory?  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  promos       wks_promo[]
 
   @@index([category_id], map: "idx_wks_waitinglist_category")
 }
@@ -4428,4 +4431,46 @@ model sys_SubDistrict {
 
   @@index([district_id])
   @@index([city_id])
+}
+
+// =========================
+// Promotions
+// =========================
+
+enum wks_PromoType {
+  FREE_CHECKLIST
+  DISCOUNT_PERCENT
+  DISCOUNT_NOMINAL
+  BUNDLE
+  OTHER
+}
+
+model wks_promo {
+  id              String          @id @default(cuid()) @db.Char(21)
+  waitingList_id  String          @db.Char(21)
+  waitingList     wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction)
+
+  title           String          @db.VarChar(80)
+  description     String?         @db.Text
+  promoType       wks_PromoType
+
+  // Nilai diskon opsional (gunakan salah satu sesuai promoType)
+  valuePercent    Decimal?        @db.Decimal(5, 2)
+  valueNominal    Int?
+
+  // Konten fleksibel untuk berbagai tipe promo
+  checklist       Json?           // Untuk FREE_CHECKLIST: array string
+  applicableItems Json?           // Untuk DISCOUNT/BUNDLE/OTHER: array objek { code?, name, note? }
+
+  startAt         DateTime?
+  endAt           DateTime?
+  isActive        Boolean         @default(true)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdBy       String?         @db.VarChar(50)
+  updatedBy       String?         @db.VarChar(50)
+
+  @@index([waitingList_id, isActive])
+  @@index([isActive, startAt, endAt])
 }

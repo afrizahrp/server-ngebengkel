@@ -9,12 +9,14 @@ import {
   Query,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
 import { Sys_SubDistrictService } from './sys_SubDistrict.service';
 import { Sys_CreateSubDistrictDto } from './dto/sys_CreateSubDistrict.dto';
 import { Sys_UpdateSubDistrictDto } from './dto/sys_UpdateSubDistrict.dto';
 import { Sys_ResponseSubDistrictDto } from './dto/sys_ResponseSubDistrict.dto';
 
+@Roles('ADMIN','READ')
 @Controller('sys_subdistrict')
 export class sys_SubDistrictController {
   constructor(private readonly subdistrictService: Sys_SubDistrictService) {}
@@ -26,7 +28,8 @@ export class sys_SubDistrictController {
     return this.subdistrictService.create(dto);
   }
 
-  @Public()
+  @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(
@@ -44,8 +47,8 @@ export class sys_SubDistrictController {
     return this.subdistrictService.findAll();
   }
 
-  @Public()
   @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @Get('district/:district_id')
   async findByDistrict(
     @Param('district_id') district_id: string,
@@ -53,8 +56,8 @@ export class sys_SubDistrictController {
     return this.subdistrictService.findByDistrictId(district_id);
   }
 
-  @Public()
   @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @Get('city/:city_id')
   async findByCity(
     @Param('city_id') city_id: string,
@@ -62,8 +65,8 @@ export class sys_SubDistrictController {
     return this.subdistrictService.findByCityId(city_id);
   }
 
-  @Public()
   @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseSubDistrictDto> {
     return this.subdistrictService.findOne(id);

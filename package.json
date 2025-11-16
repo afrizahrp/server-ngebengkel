@@ -29,6 +29,7 @@
     "@nestjs/platform-express": "^11.0.11",
     "@nestjs/schedule": "^6.0.1",
     "@nestjs/throttler": "^6.4.0",
+    "@paralleldrive/cuid2": "^3.0.4",
     "@prisma/client": "^6.15.0",
     "@types/pdfmake": "^0.2.12",
     "argon2": "^0.41.1",

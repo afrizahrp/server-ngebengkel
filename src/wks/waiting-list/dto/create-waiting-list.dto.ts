@@ -61,23 +61,12 @@ export class CreateWaitingListDto {
   @Transform(({ value }) => value?.trim().toUpperCase())
   categoryId!: string;
 
-  @IsArray()
-  @ArrayNotEmpty()
-  @ArrayMaxSize(50)
-  @ArrayUnique()
-  @IsString({ each: true })
-  @Transform(({ value }) =>
-    Array.isArray(value)
-      ? value
-          .map((item: string | null | undefined) => item?.trim())
-          .filter(
-            (item: string | null | undefined): item is string =>
-              Boolean(item && item.length > 0),
-          )
-          .map((item: string) => item.toUpperCase())
-      : [],
-  )
-  workshopTypeIds!: string[];
+  // Optional: mengikuti pola categoryId tapi boleh kosong
+  @IsOptional()
+  @IsString()
+  @Length(10, 10)
+  @Transform(({ value }) => value?.trim().toUpperCase())
+  typeId?: string;
 
   @IsOptional()
   @IsString()
