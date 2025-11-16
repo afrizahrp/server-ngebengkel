@@ -24,6 +24,7 @@ const createWaitingListId = init({ length: 10 });
 const WAITING_LIST_SELECT = {
   id: true,
   name: true,
+  logo: true,
   address: true,
   city: true,
   district: true,
