@@ -301,6 +301,7 @@ model sys_Company {
   seq_no           Int                        @db.SmallInt
   id               String                     @id @db.Char(10)
   name             String?                    @db.VarChar(50)
+  slug              String?                    @db.VarChar(50)
   iStatus          MasterRecordStatusEnum     @default(Active)
   isMain           Boolean?                   @default(false)
   email1           String?                    @db.VarChar(100)
@@ -326,6 +327,8 @@ model sys_Branch {
   company_id     String                 @db.Char(10)
   id             String                 @id @db.Char(10)
   name           String                 @db.VarChar(50)
+    slug              String?                    @db.VarChar(50)
+
   isMain         Boolean?               @default(false)
   iStatus        MasterRecordStatusEnum @default(Active)
   remarks        String?                @db.VarChar(255)
@@ -4332,6 +4335,7 @@ model tmp_sys_Branch {
 model wks_waitingList {
   id           String                 @id @default(cuid()) @db.Char(21)
   name         String                 @db.VarChar(50)
+  slug              String?                    @db.VarChar(50)
   category_id  String?                @db.Char(5)
   type_id      String?                @db.Char(10)
   logo         String?                @db.VarChar(255)
