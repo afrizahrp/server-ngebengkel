@@ -57,6 +57,31 @@ export class Sys_CityService {
     return this.mapToResponseDto(city);
   }
 
+  async findManyByIds(ids: string[]): Promise<Sys_ResponseCityDto[]> {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    // Remove duplicates and filter empty strings
+    const uniqueIds = Array.from(new Set(ids.filter(id => id && id.trim().length > 0)));
+
+    if (uniqueIds.length === 0) {
+      return [];
+    }
+
+    const cities = await this.prisma.sys_City.findMany({
+      where: {
+        id: {
+          in: uniqueIds,
+        },
+      },
+      include: this.defaultCityInclude(),
+      orderBy: { name: 'asc' },
+    });
+
+    return cities.map((city) => this.mapToResponseDto(city));
+  }
+
   async update(
     id: string,
     dto: Sys_UpdateCityDto,
