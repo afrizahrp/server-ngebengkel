@@ -50,6 +50,7 @@ export class Sys_CompanyService {
     return companies.map((company) => ({
       id: company.id.trim(),
       name: company.name?.trim(),
+      slug: company.name?.trim(),
       officialWebsite: company.officialWebsite?.trim(),
       companyLogo: company.companyLogo?.trim(),
     }));
@@ -82,6 +83,7 @@ export class Sys_CompanyService {
           select: {
             id: true,
             name: true,
+            slug: true,
             iStatus: true,
             isMain: true,
           },
@@ -101,6 +103,7 @@ export class Sys_CompanyService {
       branches: company.branches.map((branch) => ({
         id: branch.id.trim(),
         name: branch.name.trim(),
+        slug: branch.slug?.trim() ?? '',
         iStatus: branch.iStatus,
         isMain: branch.isMain ?? false,
       })),
@@ -142,6 +145,7 @@ export class Sys_CompanyService {
       seq_no: company.seq_no,
       id: company.id?.trim(),
       name: company.name?.trim(),
+      slug: company.slug?.trim(),
       province_id: company.province_id?.trim(),
       city_id: company.city_id?.trim(),
       district_id: company.district_id?.trim(),

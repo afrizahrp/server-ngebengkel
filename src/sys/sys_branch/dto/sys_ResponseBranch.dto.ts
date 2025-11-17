@@ -8,6 +8,10 @@ export class Sys_ResponseBranchDto {
   @IsString()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
   @IsEnum(MasterRecordStatusEnum)
   iStatus: MasterRecordStatusEnum;
 

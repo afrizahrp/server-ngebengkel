@@ -123,6 +123,7 @@ export class Sys_BranchService {
     return {
       id: branch.id?.trim(),
       name: branch.name?.trim(),
+      slug: branch.slug?.trim(),
       iStatus: branch.iStatus,
       remarks: branch.remarks?.trim(),
       company_id: branch.company_id?.trim(),

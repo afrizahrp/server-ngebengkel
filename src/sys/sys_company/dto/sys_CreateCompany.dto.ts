@@ -13,6 +13,10 @@ export class Sys_CreateCompanyDto {
 
   @IsString()
   @IsOptional()
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
   address1?: string;
 
   @IsString()

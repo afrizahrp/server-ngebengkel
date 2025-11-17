@@ -11,6 +11,10 @@ export class Sys_UpdateCompanyDto {
 
   @IsString()
   @IsOptional()
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
   address1?: string;
 
   @IsString()

@@ -16,6 +16,10 @@ export class Sys_BranchBasicDto {
 
   @IsString()
   @IsOptional()
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
   iStatus?: string;
 
   @IsBoolean()
@@ -33,6 +37,11 @@ export class Sys_ResponseCompanyWithBranchesDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
 
   @IsString()
   @IsOptional()

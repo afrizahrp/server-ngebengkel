@@ -3,6 +3,8 @@ import { WorkshopTypeResponseDto } from './workshop-category.dto';
 export class WaitingListResponseDto {
   id!: string;
   name!: string;
+  slug!: string;
+  description!: string;
   address!: string;
   city!: string;
   district!: string;

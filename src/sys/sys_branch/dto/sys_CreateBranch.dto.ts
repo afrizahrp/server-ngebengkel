@@ -8,6 +8,10 @@ export class Sys_CreateBranchDto {
   @IsString()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
   @IsEnum(MasterRecordStatusEnum)
   @IsOptional()
   iStatus?: MasterRecordStatusEnum;

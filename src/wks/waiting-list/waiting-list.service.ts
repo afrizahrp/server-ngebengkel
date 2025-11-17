@@ -24,6 +24,8 @@ const createWaitingListId = init({ length: 10 });
 const WAITING_LIST_SELECT = {
   id: true,
   name: true,
+  slug: true,
+  description: true,
   logo: true,
   address: true,
   city: true,
@@ -127,7 +129,9 @@ export class WaitingListService {
           throw new NotFoundException('Jenis bengkel tidak ditemukan');
         }
         if (typeData.category_id !== category.id) {
-          throw new BadRequestException('Jenis bengkel tidak sesuai dengan kategori yang dipilih');
+          throw new BadRequestException(
+            'Jenis bengkel tidak sesuai dengan kategori yang dipilih',
+          );
         }
         selectedTypeId = typeData.id;
       }
@@ -136,6 +140,8 @@ export class WaitingListService {
         data: {
           id,
           name,
+          description: createWaitingListDto.description,
+          slug: createWaitingListDto.slug,
           address: createWaitingListDto.address,
           city: createWaitingListDto.city,
           district: createWaitingListDto.district,
@@ -146,7 +152,9 @@ export class WaitingListService {
           mobile: createWaitingListDto.mobile ?? '',
           createdBy: 'website',
           updatedBy: 'website',
-          types: selectedTypeId ? { connect: { id: selectedTypeId } } : undefined,
+          types: selectedTypeId
+            ? { connect: { id: selectedTypeId } }
+            : undefined,
           category: {
             connect: { id: category.id },
           },
@@ -295,10 +303,16 @@ export class WaitingListService {
       }
 
       // Update type mengikuti pola category: jika disediakan typeId, validasi dan set; jika tidak disediakan, tidak diubah
-      const hasTypeUpdate = Object.prototype.hasOwnProperty.call(updateWaitingListDto, 'typeId');
+      const hasTypeUpdate = Object.prototype.hasOwnProperty.call(
+        updateWaitingListDto,
+        'typeId',
+      );
       let selectedTypeId: string | null | undefined = undefined;
       if (hasTypeUpdate) {
-        if (updateWaitingListDto.typeId === undefined || updateWaitingListDto.typeId === null) {
+        if (
+          updateWaitingListDto.typeId === undefined ||
+          updateWaitingListDto.typeId === null
+        ) {
           selectedTypeId = null;
         } else if (updateWaitingListDto.typeId === '') {
           selectedTypeId = null;
@@ -328,6 +342,14 @@ export class WaitingListService {
 
       if (updateWaitingListDto.name) {
         updateData.name = updateWaitingListDto.name;
+      }
+
+      if (updateWaitingListDto.slug) {
+        updateData.slug = updateWaitingListDto.slug;
+      }
+
+      if (updateWaitingListDto.description) {
+        updateData.description = updateWaitingListDto.description;
       }
 
       if (updateWaitingListDto.address) {
@@ -478,7 +500,9 @@ export class WaitingListService {
     );
   }
 
-  private mapWorkshopTypes(types: WaitingListTypeRelation): WorkshopTypeResponseDto[] {
+  private mapWorkshopTypes(
+    types: WaitingListTypeRelation,
+  ): WorkshopTypeResponseDto[] {
     if (!types) return [];
     return [
       {
@@ -503,12 +527,12 @@ export class WaitingListService {
     void isDeleted;
 
     const firstPromo =
-      Array.isArray(promos) && promos.length > 0
-        ? promos[0]
-        : null;
+      Array.isArray(promos) && promos.length > 0 ? promos[0] : null;
 
     return {
       ...rest,
+      slug: rest.slug ?? '',
+      description: rest.description ?? '',
       typeId: types ? types.id : null,
       categoryId: category_id ?? null,
       categoryCode: category?.code ?? null,
@@ -614,7 +638,9 @@ export class WaitingListService {
       title: p.title,
       description: p.description ?? null,
       promoType: p.promoType,
-      checklist: Array.isArray(p.checklist) ? (p.checklist as unknown as string[]) : null,
+      checklist: Array.isArray(p.checklist)
+        ? (p.checklist as unknown as string[])
+        : null,
       valuePercent: p.valuePercent ? Number(p.valuePercent) : null,
       valueNominal: p.valueNominal ?? null,
     }));

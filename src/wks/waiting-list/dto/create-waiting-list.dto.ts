@@ -21,9 +21,22 @@ export class CreateWaitingListDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(50)
+  @Transform(({ value }) => value?.trim())
+  slug!: string;
+
+  @IsString()
+  @IsNotEmpty()
   @MaxLength(250)
   @Transform(({ value }) => value?.trim())
   address!: string;
+
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(250)
+  @Transform(({ value }) => value?.trim())
+  description!: string;
 
   @IsString()
   @IsNotEmpty()
