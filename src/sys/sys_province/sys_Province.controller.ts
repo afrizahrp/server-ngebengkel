@@ -36,6 +36,15 @@ export class sys_ProvinceController {
 
   @ThrottleGetEndpoints() // 100 requests per minute
   @Roles('ADMIN','READ')
+  @Post('batch')
+  async findManyByIds(
+    @Body() body: { ids: string[] },
+  ): Promise<Sys_ResponseProvinceDto[]> {
+    return this.provinceService.findManyByIds(body.ids || []);
+  }
+
+  @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseProvinceDto> {
     return this.provinceService.findOne(id);

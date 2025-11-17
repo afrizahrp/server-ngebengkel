@@ -45,6 +45,31 @@ export class Sys_ProvinceService {
     return this.mapToResponseDto(province);
   }
 
+  async findManyByIds(ids: string[]): Promise<Sys_ResponseProvinceDto[]> {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    // Remove duplicates and filter empty strings
+    const uniqueIds = Array.from(new Set(ids.filter(id => id && id.trim().length > 0)));
+
+    if (uniqueIds.length === 0) {
+      return [];
+    }
+
+    const provinces = await this.prisma.sys_Province.findMany({
+      where: {
+        id: {
+          in: uniqueIds,
+        },
+      },
+      include: this.defaultProvinceInclude(),
+      orderBy: { name: 'asc' },
+    });
+
+    return provinces.map((province) => this.mapToResponseDto(province));
+  }
+
   async update(
     id: string,
     dto: Sys_UpdateProvinceDto,

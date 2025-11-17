@@ -236,6 +236,7 @@ export class WaitingListService {
     const waitingLists = await this.prisma.wks_waitingList.findMany({
       where: { isDeleted: false },
       select: this.waitingListSelect,
+      orderBy: { name: 'asc' }, // Urutkan berdasarkan nama, bukan ID
     });
 
     return waitingLists.map((entry) => this.toResponse(entry));

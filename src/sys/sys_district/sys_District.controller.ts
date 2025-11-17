@@ -52,6 +52,15 @@ export class sys_DistrictController {
 
   @ThrottleGetEndpoints() // 100 requests per minute
   @Roles('ADMIN','READ')
+  @Post('batch')
+  async findManyByIds(
+    @Body() body: { ids: string[] },
+  ): Promise<Sys_ResponseDistrictDto[]> {
+    return this.districtService.findManyByIds(body.ids || []);
+  }
+
+  @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseDistrictDto> {
     return this.districtService.findOne(id);

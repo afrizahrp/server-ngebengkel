@@ -30,7 +30,6 @@ export class sys_SubDistrictController {
 
   @ThrottleGetEndpoints() // 100 requests per minute
   @Roles('ADMIN','READ')
-  @ThrottleGetEndpoints() // 100 requests per minute
   @Get()
   async findAll(
     @Query('district_id') district_id?: string,
@@ -63,6 +62,15 @@ export class sys_SubDistrictController {
     @Param('city_id') city_id: string,
   ): Promise<Sys_ResponseSubDistrictDto[]> {
     return this.subdistrictService.findByCityId(city_id);
+  }
+
+  @ThrottleGetEndpoints() // 100 requests per minute
+  @Roles('ADMIN','READ')
+  @Post('batch')
+  async findManyByIds(
+    @Body() body: { ids: string[] },
+  ): Promise<Sys_ResponseSubDistrictDto[]> {
+    return this.subdistrictService.findManyByIds(body.ids || []);
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute

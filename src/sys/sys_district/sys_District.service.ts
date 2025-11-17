@@ -57,6 +57,31 @@ export class Sys_DistrictService {
     return this.mapToResponseDto(district);
   }
 
+  async findManyByIds(ids: string[]): Promise<Sys_ResponseDistrictDto[]> {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    // Remove duplicates and filter empty strings
+    const uniqueIds = Array.from(new Set(ids.filter(id => id && id.trim().length > 0)));
+
+    if (uniqueIds.length === 0) {
+      return [];
+    }
+
+    const districts = await this.prisma.sys_District.findMany({
+      where: {
+        id: {
+          in: uniqueIds,
+        },
+      },
+      include: this.defaultDistrictInclude(),
+      orderBy: { name: 'asc' },
+    });
+
+    return districts.map((district) => this.mapToResponseDto(district));
+  }
+
   async update(
     id: string,
     dto: Sys_UpdateDistrictDto,
