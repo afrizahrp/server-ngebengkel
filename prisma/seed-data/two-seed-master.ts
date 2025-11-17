@@ -2,6 +2,17 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Helper function to generate slug from name
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[&]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 async function main() {
   console.log('🌱 Starting master bulk insert seed...');
   console.log('📦 Seeding master and transaction tables (excluding SAAS, SYS tables)');
@@ -373,6 +384,7 @@ async function main() {
             type: categoryType1.id,
             id: 'CAT001',
             name: 'Oli & Fluida',
+            slug: generateSlug('Oli & Fluida'),
             seq: 1,
             iStatus: 'Active',
             createdBy,
@@ -390,6 +402,7 @@ async function main() {
             type: categoryType1.id,
             id: 'CAT002',
             name: 'Filter',
+            slug: generateSlug('Filter'),
             seq: 2,
             iStatus: 'Active',
             createdBy,
@@ -407,6 +420,7 @@ async function main() {
             type: categoryType1.id,
             id: 'CAT003',
             name: 'Ban',
+            slug: generateSlug('Ban'),
             seq: 3,
             iStatus: 'Active',
             createdBy,
@@ -424,6 +438,7 @@ async function main() {
             type: categoryType1.id,
             id: 'CAT004',
             name: 'Battery',
+            slug: generateSlug('Battery'),
             seq: 4,
             iStatus: 'Active',
             createdBy,
@@ -441,6 +456,7 @@ async function main() {
             type: categoryType1.id,
             id: 'CAT005',
             name: 'Lampu',
+            slug: generateSlug('Lampu'),
             seq: 5,
             iStatus: 'Active',
             createdBy,
@@ -466,6 +482,7 @@ async function main() {
             id: 'SCAT01',
             category_id: 'CAT001',
             name: 'Oli Mesin',
+            slug: generateSlug('Oli Mesin'),
             seq: 1,
             iStatus: 'Active',
             createdBy,
@@ -485,6 +502,7 @@ async function main() {
             id: 'SCAT02',
             category_id: 'CAT001',
             name: 'Oli Gardan',
+            slug: generateSlug('Oli Gardan'),
             seq: 2,
             iStatus: 'Active',
             createdBy,
@@ -504,6 +522,7 @@ async function main() {
             id: 'SCAT01',
             category_id: 'CAT002',
             name: 'Filter Udara',
+            slug: generateSlug('Filter Udara'),
             seq: 1,
             iStatus: 'Active',
             createdBy,
@@ -523,6 +542,7 @@ async function main() {
             id: 'SCAT02',
             category_id: 'CAT002',
             name: 'Filter Oli',
+            slug: generateSlug('Filter Oli'),
             seq: 2,
             iStatus: 'Active',
             createdBy,
@@ -542,6 +562,7 @@ async function main() {
             id: 'SCAT01',
             category_id: 'CAT003',
             name: 'Ban Mobil',
+            slug: generateSlug('Ban Mobil'),
             seq: 1,
             iStatus: 'Active',
             createdBy,
@@ -864,6 +885,7 @@ async function main() {
           create: {
             id: 'PROD001',
             name: 'Shell Helix Ultra 5W-40',
+            slug: generateSlug('Shell Helix Ultra 5W-40'),
             category_id: 'CAT001',
             subCategory_id: 'SCAT01',
             brand_id: 'BRAND01',
@@ -885,6 +907,7 @@ async function main() {
           create: {
             id: 'PROD002',
             name: 'Total Quartz 7000',
+            slug: generateSlug('Total Quartz 7000'),
             category_id: 'CAT001',
             subCategory_id: 'SCAT01',
             brand_id: 'BRAND02',
@@ -906,6 +929,7 @@ async function main() {
           create: {
             id: 'PROD003',
             name: 'Bosch Filter Udara',
+            slug: generateSlug('Bosch Filter Udara'),
             category_id: 'CAT002',
             subCategory_id: 'SCAT01',
             brand_id: 'BRAND04',
@@ -927,6 +951,7 @@ async function main() {
           create: {
             id: 'PROD004',
             name: 'Bosch Filter Oli',
+            slug: generateSlug('Bosch Filter Oli'),
             category_id: 'CAT002',
             subCategory_id: 'SCAT02',
             brand_id: 'BRAND04',
@@ -948,6 +973,7 @@ async function main() {
           create: {
             id: 'PROD005',
             name: 'Michelin Energy XM2 205/55R16',
+            slug: generateSlug('Michelin Energy XM2 205/55R16'),
             category_id: 'CAT003',
             subCategory_id: 'SCAT01',
             brand_id: 'BRAND05',
