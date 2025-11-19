@@ -405,6 +405,7 @@ model sys_User {
   emailVerifications sys_EmailVerification[]
   twoFactorTokens    sys_TwoFactorToken[]
   passwordResets     sys_PasswordReset[]
+  anonymousSessions  sys_AnonymousSession[] // Anonymous sessions yang sudah di-merge
 
   @@unique([company_id, employee_id], map: "unique_user_employee")
 }
@@ -481,6 +482,37 @@ model sys_Session {
   @@index([user_id])
   @@index([refreshToken])
   @@index([isActive])
+}
+
+model sys_AnonymousSession {
+  company_id        String?                @db.Char(10)
+  branch_id         String?                @db.Char(10)
+  id                String                 @id @default(uuid()) @db.Uuid // UUID v4
+  anonymous_id      String                 @unique @db.Uuid // UUID v4 untuk client-side
+  deviceName        String?                @db.VarChar(255)
+  deviceType        String?                @db.VarChar(50) // mobile, desktop, tablet
+  browser           String?                @db.VarChar(100)
+  os                String?                @db.VarChar(100)
+  ipAddress         String?                @db.VarChar(45) // IPv6 support
+  userAgent         String?                @db.Text
+  source            String?                @db.VarChar(20) // web, app, mobile
+  // Merge tracking
+  mergedToUserId    Int?                   @db.Integer // user_id setelah merge
+  mergedAt          DateTime?
+  isMerged          Boolean                @default(false)
+  // Activity tracking
+  lastActivityAt    DateTime               @default(now())
+  createdAt         DateTime               @default(now())
+  expiresAt         DateTime?             // Optional: bisa expire setelah X hari
+  iStatus           MasterRecordStatusEnum @default(Active)
+  // Relations (optional, jika merged)
+  mergedToUser     sys_User?               @relation(fields: [mergedToUserId], references: [id], onDelete: SetNull)
+
+  @@index([anonymous_id])
+  @@index([mergedToUserId])
+  @@index([isMerged])
+  @@index([iStatus])
+  @@index([createdAt])
 }
 
 model sys_UserRole {

@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
 import {
@@ -15,6 +16,7 @@ import {
   ThrottleGetEndpoints,
 } from '../../auth/decorators/throttle.decorator';
 import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
+import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
 import { WaitingListService } from './waiting-list.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CreateWaitingListDto } from './dto/create-waiting-list.dto';
@@ -24,6 +26,7 @@ import { WorkshopCategoryResponseDto } from './dto/workshop-category.dto';
 import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availability.dto';
 
 @Controller('/waiting-list')
+@UseInterceptors(AnonymousIdInterceptor) // Extract anonymous_id untuk tracking
 export class WaitingListController {
   constructor(private readonly waitingListService: WaitingListService) {}
 
@@ -78,11 +81,15 @@ export class WaitingListController {
     };
   }
 
+  @ThrottleGetEndpoints() // 100 requests per minute
+  @Public() // Read operations: public (support anonymous_id)
   @Get()
   async findAll(): Promise<WaitingListResponseDto[]> {
     return this.waitingListService.findAll();
   }
 
+  @ThrottleGetEndpoints() // 100 requests per minute
+  @Public() // Read operations: public (support anonymous_id)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<WaitingListResponseDto> {
     return this.waitingListService.findOne(id);

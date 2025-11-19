@@ -6,16 +6,21 @@ import {
   Param,
   Post,
   Put,
+  UseInterceptors,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
+import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
+import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
 import { Sys_CityService } from './sys_City.service';
 import { Sys_CreateCityDto } from './dto/sys_CreateCity.dto';
 import { Sys_UpdateCityDto } from './dto/sys_UpdateCity.dto';
 import { Sys_ResponseCityDto } from './dto/sys_ResponseCity.dto';
 
-@Roles('ADMIN', 'READ')
 @Controller('sys_city')
+@UseInterceptors(AnonymousIdInterceptor) // Extract anonymous_id untuk tracking
 export class sys_CityController {
   constructor(private readonly cityService: Sys_CityService) {}
 
@@ -25,14 +30,14 @@ export class sys_CityController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN', 'READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get()
   async findAll(): Promise<Sys_ResponseCityDto[]> {
     return this.cityService.findAll();
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN', 'READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get('province/:province_id')
   async findByProvince(
     @Param('province_id') province_id: string,
@@ -41,7 +46,8 @@ export class sys_CityController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN', 'READ')
+  @Public() // Read operations: public (support anonymous_id)
+  @HttpCode(HttpStatus.OK) // 200 OK untuk read operation
   @Post('batch')
   async findManyByIds(
     @Body() body: { ids: string[] },
@@ -50,7 +56,7 @@ export class sys_CityController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN', 'READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseCityDto> {
     return this.cityService.findOne(id);

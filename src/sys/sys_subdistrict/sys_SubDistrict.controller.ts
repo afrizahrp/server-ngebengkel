@@ -7,17 +7,21 @@ import {
   Post,
   Put,
   Query,
+  UseInterceptors,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
+import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
 import { Sys_SubDistrictService } from './sys_SubDistrict.service';
 import { Sys_CreateSubDistrictDto } from './dto/sys_CreateSubDistrict.dto';
 import { Sys_UpdateSubDistrictDto } from './dto/sys_UpdateSubDistrict.dto';
 import { Sys_ResponseSubDistrictDto } from './dto/sys_ResponseSubDistrict.dto';
 
-@Roles('ADMIN','READ')
 @Controller('sys_subdistrict')
+@UseInterceptors(AnonymousIdInterceptor) // Extract anonymous_id untuk tracking
 export class sys_SubDistrictController {
   constructor(private readonly subdistrictService: Sys_SubDistrictService) {}
 
@@ -29,7 +33,7 @@ export class sys_SubDistrictController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN','READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get()
   async findAll(
     @Query('district_id') district_id?: string,
@@ -47,7 +51,7 @@ export class sys_SubDistrictController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN','READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get('district/:district_id')
   async findByDistrict(
     @Param('district_id') district_id: string,
@@ -56,7 +60,7 @@ export class sys_SubDistrictController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN','READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get('city/:city_id')
   async findByCity(
     @Param('city_id') city_id: string,
@@ -65,7 +69,8 @@ export class sys_SubDistrictController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN','READ')
+  @Public() // Read operations: public (support anonymous_id)
+  @HttpCode(HttpStatus.OK) // 200 OK untuk read operation
   @Post('batch')
   async findManyByIds(
     @Body() body: { ids: string[] },
@@ -74,7 +79,7 @@ export class sys_SubDistrictController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN','READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseSubDistrictDto> {
     return this.subdistrictService.findOne(id);

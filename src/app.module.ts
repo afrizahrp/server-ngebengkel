@@ -22,6 +22,7 @@ import { sys_DistrictModule } from './sys/sys_district/sys_District.module';
 import { sys_SubDistrictModule } from './sys/sys_subdistrict/sys_SubDistrict.module';
 import { EmailModule } from './email/email.module';
 import { CleanupModule } from './auth/cleanup/cleanup.module';
+import { AnonymousSessionModule } from './auth/anonymous-session/anonymous-session.module';
 import { BookingModule } from './wks/booking/booking.module';
 import { BookingSlotModule } from './wks/booking-slot/booking-slot.module';
 import { ServiceOrderModule } from './wks/service-order/service-order.module';
@@ -83,6 +84,7 @@ import { CommonModule } from './common/common.module';
     WhatsAppModule,
     BetterAuthModule,
     CleanupModule,
+    AnonymousSessionModule,
     BookingModule,
     BookingSlotModule,
     ServiceOrderModule,

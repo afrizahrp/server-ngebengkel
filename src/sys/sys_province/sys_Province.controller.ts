@@ -6,17 +6,21 @@ import {
   Param,
   Post,
   Put,
+  UseInterceptors,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
+import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
 import { Sys_ProvinceService } from './sys_Province.service';
 import { Sys_CreateProvinceDto } from './dto/sys_CreateProvince.dto';
 import { Sys_UpdateProvinceDto } from './dto/sys_UpdateProvince.dto';
 import { Sys_ResponseProvinceDto } from './dto/sys_ResponseProvince.dto';
 
-@Roles('ADMIN','READ')
 @Controller('sys_province')
+@UseInterceptors(AnonymousIdInterceptor) // Extract anonymous_id untuk tracking
 export class sys_ProvinceController {
   constructor(private readonly provinceService: Sys_ProvinceService) {}
 
@@ -28,14 +32,15 @@ export class sys_ProvinceController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN','READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get()
   async findAll(): Promise<Sys_ResponseProvinceDto[]> {
     return this.provinceService.findAll();
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN','READ')
+  @Public() // Read operations: public (support anonymous_id)
+  @HttpCode(HttpStatus.OK) // 200 OK untuk read operation
   @Post('batch')
   async findManyByIds(
     @Body() body: { ids: string[] },
@@ -44,7 +49,7 @@ export class sys_ProvinceController {
   }
 
   @ThrottleGetEndpoints() // 100 requests per minute
-  @Roles('ADMIN','READ')
+  @Public() // Read operations: public (support anonymous_id)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Sys_ResponseProvinceDto> {
     return this.provinceService.findOne(id);
