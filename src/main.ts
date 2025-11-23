@@ -80,6 +80,10 @@ async function bootstrap() {
       'X-Requested-With',
       'Accept',
       'Origin',
+      'X-Anonymous-Id', // For anonymous login
+      'x-anonymous-id', // Case-insensitive support
+      'X-Refresh-Token', // For refresh token
+      'x-refresh-token', // Case-insensitive support
     ],
     exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
     credentials: true, // Allow cookies and credentials
