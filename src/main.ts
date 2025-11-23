@@ -48,15 +48,21 @@ async function bootstrap() {
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
     : isProduction
-      ? ['https://ngebengkel.com', 
-         'https://www.ngebengkel.com','https://workshop.ngebengkel.com','https://workshop.ngebengkel.com']
-      : [  'http://localhost:3000',
+      ? [
+          'https://ngebengkel.com',
+          'https://www.ngebengkel.com',
+          'https://workshop.ngebengkel.com',
+          'https://workshop.ngebengkel.com',
+        ]
+      : [
+          'http://localhost:3000',
           'http://localhost:3100',
           'http://localhost:3200',
           'http://localhost:3300',
           'https://ngebengkel.com',
           'https://www.ngebengkel.com',
-          'https://workshop.ngebengkel.com','https://workshop.ngebengkel.com'
+          'https://workshop.ngebengkel.com',
+          'https://workshop.ngebengkel.com',
         ];
 
   app.enableCors({
@@ -85,7 +91,11 @@ async function bootstrap() {
       'X-Refresh-Token', // For refresh token
       'x-refresh-token', // Case-insensitive support
     ],
-    exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
+    exposedHeaders: [
+      'X-RateLimit-Limit',
+      'X-RateLimit-Remaining',
+      'X-RateLimit-Reset',
+    ],
     credentials: true, // Allow cookies and credentials
     maxAge: 86400, // 24 hours
     preflightContinue: false,
