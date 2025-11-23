@@ -1,0 +1,99 @@
+### ============================================
+### TEST REFRESH TOKEN FLOW
+### ============================================
+### 
+### Prerequisites:
+### 1. Set environment variables:
+###    - SERVICE_EMAIL atau SERVICE_USERNAME
+###    - SERVICE_PASSWORD
+###    - BACKEND_URL atau NEXT_PUBLIC_API_URL
+### 
+### 2. Pastikan server sudah running di port 4000 (atau sesuai BACKEND_URL)
+###
+### ============================================
+
+@baseUrl = http://localhost:4000
+@serviceEmail = your-service-email@example.com
+@servicePassword = your-service-password
+
+### ============================================
+### STEP 1: Login untuk mendapatkan tokens
+### ============================================
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{serviceEmail}}",
+  "password": "{{servicePassword}}"
+}
+
+### Response akan berisi:
+### {
+###   "accessToken": "...",
+###   "refreshToken": "...",
+###   "sessionId": "..."
+### }
+###
+### Simpan refreshToken untuk step berikutnya
+
+### ============================================
+### STEP 2: Test Refresh Token Endpoint
+### ============================================
+### Ganti YOUR_REFRESH_TOKEN dengan refreshToken dari step 1
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+X-Refresh-Token: YOUR_REFRESH_TOKEN_HERE
+
+### Expected Response:
+### {
+###   "accessToken": "new_access_token...",
+###   "refreshToken": "new_refresh_token...",
+###   "sessionId": "..."
+### }
+
+### ============================================
+### STEP 3: Test dengan Access Token yang sudah expired
+### ============================================
+### Gunakan accessToken lama (yang sudah expired) untuk test protected endpoint
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer EXPIRED_ACCESS_TOKEN_HERE
+
+### Expected: 401 Unauthorized
+### Server seharusnya auto-refresh jika ada refresh token di cookie/header
+
+### ============================================
+### STEP 4: Test Refresh Token Rotation
+### ============================================
+### Refresh token seharusnya di-rotate (token lama tidak bisa digunakan lagi)
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+X-Refresh-Token: OLD_REFRESH_TOKEN_HERE
+
+### Expected: 401 Unauthorized (karena token sudah di-rotate)
+
+### ============================================
+### STEP 5: Test dengan Refresh Token yang expired
+### ============================================
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+X-Refresh-Token: EXPIRED_REFRESH_TOKEN_HERE
+
+### Expected: 401 Unauthorized
+
+### ============================================
+### STEP 6: Test tanpa Refresh Token
+### ============================================
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+### Expected: 401 Unauthorized - "No refresh token provided"
+
+### ============================================
+### STEP 7: Test dengan Invalid Refresh Token
+### ============================================
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+X-Refresh-Token: invalid_token_here
+
+### Expected: 401 Unauthorized - "Invalid refresh token"
+

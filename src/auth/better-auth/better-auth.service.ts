@@ -156,6 +156,10 @@ export class BetterAuthService {
 
     // Update session dengan refresh token baru
     const hashedRefreshToken = await hash(tokens.refreshToken);
+    
+    console.log('[RefreshToken] Updating session:', session.id);
+    console.log('[RefreshToken] New refresh token hash (first 30 chars):', hashedRefreshToken.substring(0, 30));
+    
     await this.prisma.sys_Session.update({
       where: { id: session.id },
       data: {
@@ -164,12 +168,51 @@ export class BetterAuthService {
         lastActivityAt: new Date(),
       },
     });
+    console.log('[RefreshToken] Session updated successfully');
 
     // Update hashed refresh token di user (backward compatibility)
-    await this.prisma.sys_User.update({
+    console.log('[RefreshToken] Updating user hashedRefreshToken for user:', userId);
+    console.log('[RefreshToken] New hash to save (first 30 chars):', hashedRefreshToken.substring(0, 30));
+    
+    // Check current state before update
+    const userBefore = await this.prisma.sys_User.findUnique({
       where: { id: userId },
-      data: { hashedRefreshToken },
+      select: { hashedRefreshToken: true, updatedAt: true },
     });
+    console.log('[RefreshToken] Before update - hash:', userBefore?.hashedRefreshToken?.substring(0, 30));
+    console.log('[RefreshToken] Before update - updatedAt:', userBefore?.updatedAt);
+    
+    const now = new Date();
+    console.log('[RefreshToken] About to update user with updatedAt:', now);
+    
+    const updatedUser = await this.prisma.sys_User.update({
+      where: { id: userId },
+      data: { 
+        hashedRefreshToken,
+        updatedAt: now, // Explicitly update updatedAt
+      },
+    });
+    
+    console.log('[RefreshToken] User updated successfully. UpdatedAt from response:', updatedUser.updatedAt);
+    console.log('[RefreshToken] UpdatedAt is null?', updatedUser.updatedAt === null);
+    console.log('[RefreshToken] UpdatedAt type:', typeof updatedUser.updatedAt);
+    console.log('[RefreshToken] After update - hash (first 30 chars):', updatedUser.hashedRefreshToken?.substring(0, 30));
+    
+    // Verify update dengan query langsung
+    const userAfter = await this.prisma.sys_User.findUnique({
+      where: { id: userId },
+      select: { hashedRefreshToken: true, updatedAt: true },
+    });
+    console.log('[RefreshToken] Verification query - hash:', userAfter?.hashedRefreshToken?.substring(0, 30));
+    console.log('[RefreshToken] Verification query - updatedAt:', userAfter?.updatedAt);
+    
+    if (userAfter?.hashedRefreshToken !== hashedRefreshToken) {
+      console.error('[RefreshToken] ⚠️ WARNING: Hash mismatch after update!');
+      console.error('[RefreshToken] Expected:', hashedRefreshToken.substring(0, 30));
+      console.error('[RefreshToken] Got:', userAfter?.hashedRefreshToken?.substring(0, 30));
+    } else {
+      console.log('[RefreshToken] ✅ Hash match confirmed');
+    }
 
     return {
       accessToken: tokens.accessToken,

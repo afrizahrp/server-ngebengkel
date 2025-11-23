@@ -83,10 +83,16 @@ export class BetterAuthController {
       throw new UnauthorizedException('No refresh token provided');
     }
 
-    return await this.betterAuthService.refreshToken(
+    console.log('[RefreshToken] Refresh endpoint called for user:', req.user.id);
+    console.log('[RefreshToken] Refresh token received (first 30 chars):', req.refreshToken.substring(0, 30));
+
+    const result = await this.betterAuthService.refreshToken(
       req.user.id,
       req.refreshToken,
     );
+
+    console.log('[RefreshToken] Refresh successful. New tokens generated.');
+    return result;
   }
 
   /**

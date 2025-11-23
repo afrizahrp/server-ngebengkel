@@ -398,6 +398,7 @@ model sys_User {
   twoFactorEnabled   Boolean                 @default(false)
   // Employee Reference (setiap user harus terdaftar sebagai employee)
   employee_id        String?                 @db.Char(20)
+  updatedAt         DateTime?               
   // Relations
   employee           cmf_Employee?           @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
   userRoles          sys_UserRole[]
