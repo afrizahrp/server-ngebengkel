@@ -631,6 +631,8 @@ export class WaitingListService {
         checklist: true,
         valuePercent: true,
         valueNominal: true,
+        startAt: true,
+        endAt: true,
       },
     });
 
@@ -644,6 +646,8 @@ export class WaitingListService {
         : null,
       valuePercent: p.valuePercent ? Number(p.valuePercent) : null,
       valueNominal: p.valueNominal ?? null,
+      startAt: p.startAt ? p.startAt.toISOString() : null,
+      endAt: p.endAt ? p.endAt.toISOString() : null,
     }));
   }
 

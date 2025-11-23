@@ -18,7 +18,6 @@ import {
 import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
 import { WaitingListService } from './waiting-list.service';
-import { Roles } from '../../auth/decorators/roles.decorator';
 import { CreateWaitingListDto } from './dto/create-waiting-list.dto';
 import { WaitingListResponseDto } from './dto/response-waiting-list.dto';
 import { UpdateWaitingListDto } from './dto/update-waiting-list.dto';
@@ -38,7 +37,9 @@ export class WaitingListController {
     @Body() createWaitingListDto: CreateWaitingListDto,
   ): Promise<{ message: string; data: WaitingListResponseDto }> {
     // Remove CAPTCHA token dari DTO sebelum save ke database
-    const { recaptchaToken, recaptchaAction, ...dataToSave } = createWaitingListDto;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { recaptchaToken, recaptchaAction, ...dataToSave } =
+      createWaitingListDto;
     const data = await this.waitingListService.create(dataToSave);
 
     return {
@@ -69,9 +70,7 @@ export class WaitingListController {
     @Body() payload: CheckWaitingListAvailabilityDto,
   ): Promise<{
     message: string;
-    data: Awaited<
-      ReturnType<typeof this.waitingListService.checkAvailability>
-    >;
+    data: Awaited<ReturnType<typeof this.waitingListService.checkAvailability>>;
   }> {
     const data = await this.waitingListService.checkAvailability(payload);
 
@@ -95,8 +94,9 @@ export class WaitingListController {
     return this.waitingListService.findOne(id);
   }
 
+  @ThrottleGetEndpoints() // 100 requests per minute
+  @Public() // Read operations: public (support anonymous_id, used for SEO)
   @Get(':id/promo')
-  @Roles('ADMIN','READ')
   async getPromos(@Param('id') id: string): Promise<{
     message: string;
     data: Array<{
@@ -107,6 +107,8 @@ export class WaitingListController {
       checklist?: string[] | null;
       valuePercent?: number | null;
       valueNominal?: number | null;
+      startAt?: string | null;
+      endAt?: string | null;
     }>;
   }> {
     const data = await this.waitingListService.findPromosByWaitingList(id);
