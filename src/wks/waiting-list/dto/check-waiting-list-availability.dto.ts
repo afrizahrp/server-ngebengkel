@@ -2,6 +2,7 @@ import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -18,8 +19,8 @@ export class CheckWaitingListAvailabilityDto {
   name!: string;
 
   @IsEmail({}, { message: 'Email must be a valid email address' })
-  @IsNotEmpty({ message: 'Email is required' })
+  @IsOptional()
   @MaxLength(100, { message: 'Email must not exceed 100 characters' })
   @Transform(({ value }) => value?.trim().toLowerCase())
-  email!: string;
+  email?: string;
 }

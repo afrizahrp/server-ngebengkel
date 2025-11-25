@@ -356,6 +356,8 @@ model sys_Branch {
   city           sys_City?              @relation(fields: [city_id], references: [id], onUpdate: NoAction)
   district       sys_District?          @relation(fields: [district_id], references: [id], onUpdate: NoAction)
   subdistrict    sys_SubDistrict?       @relation(fields: [subdistrict_id], references: [id], onUpdate: NoAction)
+  images         wks_Images[]
+  videos         wks_videos[]
 
   @@index([company_id], map: "idx_sys_Branch_company_id")
   @@index([province_id], map: "idx_sys_branch_province")
@@ -4392,8 +4394,56 @@ model wks_waitingList {
   types        wks_WorkshopType?      @relation(fields: [type_id], references: [id], onUpdate: NoAction)
   category     wks_WorkshopCategory?  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
   promos       wks_promo[]
+  images       wks_Images[]
+  videos       wks_videos[]
 
   @@index([category_id], map: "idx_wks_waitinglist_category")
+}
+
+model wks_Images {
+  id              String        @id @default(cuid()) @db.Char(21)
+  waitingList_id  String        @db.Char(21)
+  branch_id       String?       @db.Char(10)
+  imageURL        String        @db.VarChar(500)
+  title           String?       @db.VarChar(100)
+  description     String?       @db.VarChar(500)
+  isPrimary       Boolean       @default(false)
+  seq             Int?          @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  createdBy       String?       @db.VarChar(50)
+  updatedBy       String?       @db.VarChar(50)
+  waitingList     wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  branch          sys_Branch?   @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+
+  @@index([waitingList_id], map: "idx_wks_images_waitinglist")
+  @@index([branch_id], map: "idx_wks_images_branch")
+  @@index([waitingList_id, isActive], map: "idx_wks_images_waitinglist_active")
+}
+
+model wks_videos {
+  id              String        @id @default(cuid()) @db.Char(21)
+  waitingList_id  String        @db.Char(21)
+  branch_id       String?       @db.Char(10)
+  videoURL        String        @db.VarChar(500)
+  thumbnailURL    String?       @db.VarChar(500)
+  title           String?       @db.VarChar(100)
+  description     String?       @db.VarChar(500)
+  duration        Int?          // Duration in seconds
+  isPrimary       Boolean       @default(false)
+  seq             Int?          @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  createdBy       String?       @db.VarChar(50)
+  updatedBy       String?       @db.VarChar(50)
+  waitingList     wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  branch          sys_Branch?   @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+
+  @@index([waitingList_id], map: "idx_wks_videos_waitinglist")
+  @@index([branch_id], map: "idx_wks_videos_branch")
+  @@index([waitingList_id, isActive], map: "idx_wks_videos_waitinglist_active")
 }
 
 model tmp_customer {

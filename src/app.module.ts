@@ -28,6 +28,8 @@ import { BookingSlotModule } from './wks/booking-slot/booking-slot.module';
 import { ServiceOrderModule } from './wks/service-order/service-order.module';
 import { ReminderModule } from './wks/reminder/reminder.module';
 import { WaitingListModule } from './wks/waiting-list/waiting-list.module';
+import { ImagesModule } from './wks/images/images.module';
+import { VideosModule } from './wks/videos/videos.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { CommonModule } from './common/common.module';
 
@@ -90,6 +92,8 @@ import { CommonModule } from './common/common.module';
     ServiceOrderModule,
     ReminderModule,
     WaitingListModule,
+    ImagesModule,
+    VideosModule,
     sys_CompanyModule,
     sys_BranchModule,
     sys_UserModule,

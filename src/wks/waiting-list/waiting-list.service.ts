@@ -97,14 +97,14 @@ export class WaitingListService {
       createWaitingListDto.email,
     );
 
-    const existing = await this.prisma.wks_waitingList.findFirst({
-      where: { email: normalizedEmail, isDeleted: false },
-      select: { id: true },
-    });
+    // const existing = await this.prisma.wks_waitingList.findFirst({
+    //   where: { email: normalizedEmail, isDeleted: false },
+    //   select: { id: true },
+    // });
 
-    if (existing) {
-      throw new ConflictException('Email sudah terdaftar dalam waiting list');
-    }
+    // if (existing) {
+    //   throw new ConflictException('Email sudah terdaftar dalam waiting list');
+    // }
 
     const id = await this.generateId();
 
@@ -268,23 +268,23 @@ export class WaitingListService {
       throw new NotFoundException('Data waiting list tidak ditemukan');
     }
 
-    if (
-      updateWaitingListDto.email &&
-      updateWaitingListDto.email !== existing.email
-    ) {
-      const conflict = await this.prisma.wks_waitingList.findFirst({
-        where: {
-          email: updateWaitingListDto.email,
-          isDeleted: false,
-          NOT: { id },
-        },
-        select: { id: true },
-      });
+    // if (
+    //   updateWaitingListDto.email &&
+    //   updateWaitingListDto.email !== existing.email
+    // ) {
+    //   const conflict = await this.prisma.wks_waitingList.findFirst({
+    //     where: {
+    //       email: updateWaitingListDto.email,
+    //       isDeleted: false,
+    //       NOT: { id },
+    //     },
+    //     select: { id: true },
+    //   });
 
-      if (conflict) {
-        throw new ConflictException('Email sudah terdaftar dalam waiting list');
-      }
-    }
+    //   if (conflict) {
+    //     throw new ConflictException('Email sudah terdaftar dalam waiting list');
+    //   }
+    // }
 
     const waitingList = await this.prisma.$transaction(async (tx) => {
       let targetCategoryId =
@@ -557,18 +557,18 @@ export class WaitingListService {
 
   async checkAvailability(payload: CheckWaitingListAvailabilityDto): Promise<{
     nameAvailable: boolean;
-    emailAvailable: boolean;
+    // emailAvailable: boolean;
     conflicts: Array<{ field: 'name' | 'email'; message: string }>;
   }> {
-    const { name, email } = this.validateNameAndEmail(
-      payload.name,
-      payload.email,
-    );
+    const trimmedName = payload.name?.trim();
+    if (!trimmedName) {
+      throw new BadRequestException('Nama wajib diisi');
+    }
 
     const conflicts: Array<{ field: 'name' | 'email'; message: string }> = [];
 
     const existingName = await this.prisma.wks_waitingList.findFirst({
-      where: { name, isDeleted: false },
+      where: { name: trimmedName, isDeleted: false },
       select: { id: true },
     });
 
@@ -579,21 +579,22 @@ export class WaitingListService {
       });
     }
 
-    const existingEmail = await this.prisma.wks_waitingList.findFirst({
-      where: { email, isDeleted: false },
-      select: { id: true },
-    });
+    // Skip validasi existingEmail untuk tahap pendaftaran listing by public data
+    // const existingEmail = await this.prisma.wks_waitingList.findFirst({
+    //   where: { email, isDeleted: false },
+    //   select: { id: true },
+    // });
 
-    if (existingEmail) {
-      conflicts.push({
-        field: 'email',
-        message: 'Email sudah terdaftar dalam waiting list.',
-      });
-    }
+    // if (existingEmail) {
+    //   conflicts.push({
+    //     field: 'email',
+    //     message: 'Email sudah terdaftar dalam waiting list.',
+    //   });
+    // }
 
     return {
       nameAvailable: !existingName,
-      emailAvailable: !existingEmail,
+      // emailAvailable: !existingEmail,
       conflicts,
     };
   }
