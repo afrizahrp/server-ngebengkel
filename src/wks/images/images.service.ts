@@ -8,6 +8,7 @@ import { init } from '@paralleldrive/cuid2';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { CreateImageDto } from './dto/create-image.dto';
+import { CreateBatchImagesDto } from './dto/create-batch-images.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { ImageResponseDto } from './dto/response-image.dto';
 
@@ -96,6 +97,77 @@ export class ImagesService {
     });
 
     return this.toResponse(image);
+  }
+
+  async createBatch(createBatchImagesDto: CreateBatchImagesDto): Promise<ImageResponseDto[]> {
+    const { waitingListId, branchId, images } = createBatchImagesDto;
+
+    // Validasi waitingList exists
+    const waitingList = await this.prisma.wks_waitingList.findFirst({
+      where: { id: waitingListId, isDeleted: false },
+      select: { id: true },
+    });
+
+    if (!waitingList) {
+      throw new NotFoundException('Waiting list tidak ditemukan');
+    }
+
+    // Validasi branch jika disediakan
+    if (branchId) {
+      const branch = await this.prisma.sys_Branch.findUnique({
+        where: { id: branchId },
+        select: { id: true },
+      });
+
+      if (!branch) {
+        throw new NotFoundException('Branch tidak ditemukan');
+      }
+    }
+
+    // Cek apakah ada image dengan isPrimary = true
+    const hasPrimary = images.some((img) => img.isPrimary === true);
+    if (hasPrimary) {
+      // Set semua image lain dari waitingList yang sama menjadi false
+      await this.prisma.wks_Images.updateMany({
+        where: {
+          waitingList_id: waitingListId,
+          isPrimary: true,
+        },
+        data: { isPrimary: false },
+      });
+    }
+
+    // Generate IDs untuk semua images
+    const ids = await Promise.all(
+      Array.from({ length: images.length }, () => this.generateId()),
+    );
+
+    // Create semua images dalam transaction
+    const createdImages = await this.prisma.$transaction(async (tx) => {
+      const results: ImageWithRelations[] = [];
+      for (let i = 0; i < images.length; i++) {
+        const imageData = images[i];
+        const created = await tx.wks_Images.create({
+          data: {
+            id: ids[i],
+            waitingList_id: waitingListId,
+            branch_id: branchId ?? null,
+            imageURL: imageData.imageURL,
+            title: imageData.title ?? null,
+            description: imageData.description ?? null,
+            isPrimary: imageData.isPrimary ?? false,
+            seq: imageData.seq ?? i,
+            createdBy: 'website',
+            updatedBy: 'website',
+          },
+          select: this.imageSelect,
+        });
+        results.push(created);
+      }
+      return results;
+    });
+
+    return createdImages.map((image) => this.toResponse(image));
   }
 
   async findAll(waitingListId?: string, branchId?: string): Promise<ImageResponseDto[]> {

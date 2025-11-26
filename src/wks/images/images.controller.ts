@@ -16,6 +16,7 @@ import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
 import { ImagesService } from './images.service';
 import { CreateImageDto } from './dto/create-image.dto';
+import { CreateBatchImagesDto } from './dto/create-batch-images.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { ImageResponseDto } from './dto/response-image.dto';
 
@@ -35,6 +36,21 @@ export class ImagesController {
 
     return {
       message: 'Image berhasil ditambahkan',
+      data,
+    };
+  }
+
+  @Post('batch')
+  @Public()
+  @UseGuards(RecaptchaGuard) // Verify token sekali untuk seluruh batch
+  @ThrottleFormSubmission()
+  async createBatch(
+    @Body() createBatchImagesDto: CreateBatchImagesDto,
+  ): Promise<{ message: string; data: ImageResponseDto[] }> {
+    const data = await this.imagesService.createBatch(createBatchImagesDto);
+
+    return {
+      message: `${data.length} image berhasil ditambahkan`,
       data,
     };
   }

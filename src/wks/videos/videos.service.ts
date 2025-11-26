@@ -8,6 +8,7 @@ import { init } from '@paralleldrive/cuid2';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { CreateVideoDto } from './dto/create-video.dto';
+import { CreateBatchVideosDto } from './dto/create-batch-videos.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
 import { VideoResponseDto } from './dto/response-video.dto';
 
@@ -100,6 +101,79 @@ export class VideosService {
     });
 
     return this.toResponse(video);
+  }
+
+  async createBatch(createBatchVideosDto: CreateBatchVideosDto): Promise<VideoResponseDto[]> {
+    const { waitingListId, branchId, videos } = createBatchVideosDto;
+
+    // Validasi waitingList exists
+    const waitingList = await this.prisma.wks_waitingList.findFirst({
+      where: { id: waitingListId, isDeleted: false },
+      select: { id: true },
+    });
+
+    if (!waitingList) {
+      throw new NotFoundException('Waiting list tidak ditemukan');
+    }
+
+    // Validasi branch jika disediakan
+    if (branchId) {
+      const branch = await this.prisma.sys_Branch.findUnique({
+        where: { id: branchId },
+        select: { id: true },
+      });
+
+      if (!branch) {
+        throw new NotFoundException('Branch tidak ditemukan');
+      }
+    }
+
+    // Cek apakah ada video dengan isPrimary = true
+    const hasPrimary = videos.some((vid) => vid.isPrimary === true);
+    if (hasPrimary) {
+      // Set semua video lain dari waitingList yang sama menjadi false
+      await this.prisma.wks_videos.updateMany({
+        where: {
+          waitingList_id: waitingListId,
+          isPrimary: true,
+        },
+        data: { isPrimary: false },
+      });
+    }
+
+    // Generate IDs untuk semua videos
+    const ids = await Promise.all(
+      Array.from({ length: videos.length }, () => this.generateId()),
+    );
+
+    // Create semua videos dalam transaction
+    const createdVideos = await this.prisma.$transaction(async (tx) => {
+      const results: VideoWithRelations[] = [];
+      for (let i = 0; i < videos.length; i++) {
+        const videoData = videos[i];
+        const created = await tx.wks_videos.create({
+          data: {
+            id: ids[i],
+            waitingList_id: waitingListId,
+            branch_id: branchId ?? null,
+            videoURL: videoData.videoURL,
+            thumbnailURL: videoData.thumbnailURL ?? null,
+            title: videoData.title ?? null,
+            description: videoData.description ?? null,
+            duration: videoData.duration ?? null,
+            isPrimary: videoData.isPrimary ?? false,
+            seq: videoData.seq ?? i,
+            createdBy: 'website',
+            updatedBy: 'website',
+          },
+          select: this.videoSelect,
+        });
+        results.push(created);
+      }
+      return results;
+    });
+
+    return createdVideos.map((video) => this.toResponse(video));
   }
 
   async findAll(waitingListId?: string, branchId?: string): Promise<VideoResponseDto[]> {
