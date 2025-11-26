@@ -4370,6 +4370,25 @@ model tmp_sys_Branch {
   @@index([company_id], map: "idx_tmp_sys_Branch_company_id")
 }
 
+// =========================
+// Claim Status Enum
+// =========================
+
+enum wks_ClaimStatus {
+  UNCLAIMED           // Data publik, belum ada yang claim
+  PRE_APPROVED        // Owner sudah setuju via DM, bisa claim mudah
+  PENDING_VERIFICATION // Sedang proses verifikasi
+  CLAIMED             // Sudah diklaim dan verified
+  REJECTED            // Klaim ditolak
+}
+
+enum wks_VerificationMethod {
+  WHATSAPP
+  EMAIL
+  PHONE
+  MAGIC_LINK         // Untuk PRE_APPROVED
+}
+
 model wks_waitingList {
   id           String                 @id @default(cuid()) @db.Char(21)
   name         String                 @db.VarChar(50)
@@ -4391,13 +4410,69 @@ model wks_waitingList {
   updatedAt    DateTime               @updatedAt
   createdBy    String?                @db.Char(10)
   updatedBy    String?                @db.Char(10)
+  
+  // Claim fields
+  claimedBy              String?                @db.VarChar(50) // Phone number atau user ID
+  claimedAt              DateTime?
+  claimStatus            wks_ClaimStatus         @default(UNCLAIMED)
+  claimToken             String?                 @db.VarChar(100)
+  claimTokenExpiresAt    DateTime?
+  claimVerificationMethod wks_VerificationMethod?
+  isPublicData           Boolean                @default(true)
+  
+  // Pre-approval fields (untuk data dari DM FB)
+  preApprovedPhone       String?                @db.VarChar(20) // Nomor WhatsApp owner
+  preApprovedName        String?                @db.VarChar(100)
+  preApprovedAt          DateTime?
+  preApprovedBy          String?                @db.VarChar(50) // Admin yang approve
+  
+  // Management token untuk WhatsApp-only flow
+  managementToken        String?                @db.VarChar(100)
+  managementTokenExpiresAt DateTime?
+  
+  // Relations
   types        wks_WorkshopType?      @relation(fields: [type_id], references: [id], onUpdate: NoAction)
   category     wks_WorkshopCategory?  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
   promos       wks_promo[]
   images       wks_Images[]
   videos       wks_videos[]
+  claimRequests wks_ClaimRequest[]
 
   @@index([category_id], map: "idx_wks_waitinglist_category")
+  @@index([claimStatus], map: "idx_wks_waitinglist_claimstatus")
+  @@index([claimedBy], map: "idx_wks_waitinglist_claimedby")
+  @@index([preApprovedPhone], map: "idx_wks_waitinglist_preapprovedphone")
+}
+
+// =========================
+// Claim Request Model
+// =========================
+
+enum wks_ClaimRequestStatus {
+  PENDING
+  VERIFIED
+  EXPIRED
+  REJECTED
+}
+
+model wks_ClaimRequest {
+  id                String                  @id @default(cuid()) @db.Char(21)
+  waitingList_id    String                  @db.Char(21)
+  phone             String                  @db.VarChar(20)
+  email             String?                 @db.VarChar(100)
+  name              String                  @db.VarChar(100)
+  verificationCode  String                  @db.VarChar(10) // Hashed
+  verificationCodeExpiresAt DateTime
+  status            wks_ClaimRequestStatus   @default(PENDING)
+  verifiedAt        DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  
+  waitingList       wks_waitingList         @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  
+  @@index([waitingList_id], map: "idx_wks_claimrequest_waitinglist")
+  @@index([phone, status], map: "idx_wks_claimrequest_phone_status")
+  @@index([verificationCode], map: "idx_wks_claimrequest_verificationcode")
 }
 
 model wks_Images {

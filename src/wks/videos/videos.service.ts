@@ -11,6 +11,7 @@ import { CreateVideoDto } from './dto/create-video.dto';
 import { CreateBatchVideosDto } from './dto/create-batch-videos.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
 import { VideoResponseDto } from './dto/response-video.dto';
+import { UploadNotificationService } from '../waiting-list/services/upload-notification.service';
 
 const createVideoId = init({ length: 21 });
 
@@ -38,7 +39,10 @@ type VideoWithRelations = Prisma.wks_videosGetPayload<{
 
 @Injectable()
 export class VideosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadNotificationService: UploadNotificationService,
+  ) {}
 
   private readonly videoSelect = VIDEO_SELECT;
 
@@ -99,6 +103,15 @@ export class VideosService {
 
       return created;
     });
+
+    // TODO: Konfirmasi WhatsApp otomatis - sementara di-comment untuk manual confirmation
+    // Kirim konfirmasi WhatsApp setelah upload berhasil (async, tidak blocking)
+    // this.uploadNotificationService
+    //   .sendVideoUploadConfirmation(createVideoDto.waitingListId)
+    //   .catch((error) => {
+    //     // Error sudah di-handle di service, hanya log di sini jika perlu
+    //     console.error('Failed to send upload confirmation:', error);
+    //   });
 
     return this.toResponse(video);
   }
@@ -172,6 +185,16 @@ export class VideosService {
       }
       return results;
     });
+
+    // TODO: Konfirmasi WhatsApp otomatis - sementara di-comment untuk manual confirmation
+    // Kirim konfirmasi WhatsApp setelah batch upload berhasil (async, tidak blocking)
+    // Hanya kirim sekali untuk seluruh batch
+    // this.uploadNotificationService
+    //   .sendVideoUploadConfirmation(waitingListId)
+    //   .catch((error) => {
+    //     // Error sudah di-handle di service, hanya log di sini jika perlu
+    //     console.error('Failed to send batch upload confirmation:', error);
+    //   });
 
     return createdVideos.map((video) => this.toResponse(video));
   }

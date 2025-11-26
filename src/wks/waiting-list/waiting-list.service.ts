@@ -72,6 +72,11 @@ const WAITING_LIST_SELECT = {
   createdBy: true,
   updatedBy: true,
   isDeleted: true,
+  // Claim fields
+  claimStatus: true,
+  claimedBy: true,
+  claimedAt: true,
+  isPublicData: true,
 } as const satisfies Prisma.wks_waitingListSelect;
 
 type WaitingListWithRelations = Prisma.wks_waitingListGetPayload<{
@@ -253,6 +258,58 @@ export class WaitingListService {
     }
 
     return this.toResponse(waitingList);
+  }
+
+  /**
+   * Klaim bengkel (MVP): langsung set status menjadi CLAIMED
+   * dan simpan informasi dasar pemilik (name, phone, email).
+   * Verifikasi via WhatsApp akan ditambahkan di tahap berikutnya.
+   */
+  async claim(
+    id: string,
+    payload: { phone: string; name: string; email?: string },
+  ): Promise<WaitingListResponseDto> {
+    const trimmedId = id.trim();
+
+    if (!trimmedId) {
+      throw new BadRequestException('ID waiting list wajib diisi');
+    }
+
+    const existing = await this.prisma.wks_waitingList.findFirst({
+      where: { id: trimmedId, isDeleted: false },
+      select: {
+        id: true,
+        claimStatus: true,
+        claimedAt: true,
+        claimedBy: true,
+        preApprovedPhone: true,
+        preApprovedName: true,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Data waiting list tidak ditemukan');
+    }
+
+    // Untuk MVP: allow re-claim, tapi nanti bisa dibatasi
+    const now = new Date();
+
+    const updated = await this.prisma.wks_waitingList.update({
+      where: { id: trimmedId },
+      data: {
+        // Simpan informasi pemilik sementara menggunakan phone & name
+        claimedBy: payload.phone || existing.claimedBy || null,
+        claimedAt: existing.claimedAt ?? now,
+        claimStatus: 'CLAIMED',
+        preApprovedPhone: payload.phone || existing.preApprovedPhone || null,
+        preApprovedName: payload.name || existing.preApprovedName || null,
+        preApprovedAt: now,
+        updatedBy: 'website',
+      },
+      select: this.waitingListSelect,
+    });
+
+    return this.toResponse(updated);
   }
 
   async update(
@@ -552,6 +609,11 @@ export class WaitingListService {
         : null,
       createdAt: createdAt.toISOString(),
       updatedAt: updatedAt.toISOString(),
+      // Claim fields
+      claimStatus: rest.claimStatus ?? null,
+      claimedBy: rest.claimedBy ?? null,
+      claimedAt: rest.claimedAt ? rest.claimedAt.toISOString() : null,
+      isPublicData: rest.isPublicData ?? true,
     };
   }
 

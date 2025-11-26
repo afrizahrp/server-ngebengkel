@@ -11,6 +11,7 @@ import { CreateImageDto } from './dto/create-image.dto';
 import { CreateBatchImagesDto } from './dto/create-batch-images.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { ImageResponseDto } from './dto/response-image.dto';
+import { UploadNotificationService } from '../waiting-list/services/upload-notification.service';
 
 const createImageId = init({ length: 21 });
 
@@ -36,7 +37,10 @@ type ImageWithRelations = Prisma.wks_ImagesGetPayload<{
 
 @Injectable()
 export class ImagesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadNotificationService: UploadNotificationService,
+  ) {}
 
   private readonly imageSelect = IMAGE_SELECT;
 
@@ -95,6 +99,15 @@ export class ImagesService {
 
       return created;
     });
+
+    // TODO: Konfirmasi WhatsApp otomatis - sementara di-comment untuk manual confirmation
+    // Kirim konfirmasi WhatsApp setelah upload berhasil (async, tidak blocking)
+    // this.uploadNotificationService
+    //   .sendImageUploadConfirmation(createImageDto.waitingListId)
+    //   .catch((error) => {
+    //     // Error sudah di-handle di service, hanya log di sini jika perlu
+    //     console.error('Failed to send upload confirmation:', error);
+    //   });
 
     return this.toResponse(image);
   }
@@ -166,6 +179,16 @@ export class ImagesService {
       }
       return results;
     });
+
+    // TODO: Konfirmasi WhatsApp otomatis - sementara di-comment untuk manual confirmation
+    // Kirim konfirmasi WhatsApp setelah batch upload berhasil (async, tidak blocking)
+    // Hanya kirim sekali untuk seluruh batch
+    // this.uploadNotificationService
+    //   .sendImageUploadConfirmation(waitingListId)
+    //   .catch((error) => {
+    //     // Error sudah di-handle di service, hanya log di sini jika perlu
+    //     console.error('Failed to send batch upload confirmation:', error);
+    //   });
 
     return createdImages.map((image) => this.toResponse(image));
   }

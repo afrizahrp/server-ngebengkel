@@ -29,4 +29,9 @@ export class WaitingListResponseDto {
   updatedAt!: string;
   createdBy!: string | null;
   updatedBy!: string | null;
+  // Claim fields
+  claimStatus?: string | null;
+  claimedBy?: string | null;
+  claimedAt?: string | null;
+  isPublicData?: boolean;
 }

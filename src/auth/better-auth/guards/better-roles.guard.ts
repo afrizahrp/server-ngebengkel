@@ -49,11 +49,11 @@ export class BetterRolesGuard implements CanActivate {
       )
     );
     
-    console.log('[BetterRolesGuard] Handler:', handler?.name);
-    console.log('[BetterRolesGuard] Controller:', controller?.name);
-    console.log('[BetterRolesGuard] Handler Roles (raw):', handlerRoles);
-    console.log('[BetterRolesGuard] Class Roles (raw):', classRoles);
-    console.log('[BetterRolesGuard] Final Required Roles:', requiredRoles);
+    // console.log('[BetterRolesGuard] Handler:', handler?.name);
+    // console.log('[BetterRolesGuard] Controller:', controller?.name);
+    // console.log('[BetterRolesGuard] Handler Roles (raw):', handlerRoles);
+    // console.log('[BetterRolesGuard] Class Roles (raw):', classRoles);
+    // console.log('[BetterRolesGuard] Final Required Roles:', requiredRoles);
 
     if (requiredRoles.length === 0) {
       return true;
@@ -93,10 +93,10 @@ export class BetterRolesGuard implements CanActivate {
     // Compare with trimmed required roles (already trimmed above)
     const hasRequiredRole = requiredRoles.includes(userRoleId);
 
-    console.log('[BetterRolesGuard] User:', user.id);
-    console.log('[BetterRolesGuard] User Role:', userRoleId);
-    console.log('[BetterRolesGuard] Required Roles:', requiredRoles);
-    console.log('[BetterRolesGuard] Has required role:', hasRequiredRole);
+    // console.log('[BetterRolesGuard] User:', user.id);
+    // console.log('[BetterRolesGuard] User Role:', userRoleId);
+    // console.log('[BetterRolesGuard] Required Roles:', requiredRoles);
+    // console.log('[BetterRolesGuard] Has required role:', hasRequiredRole);
 
     return hasRequiredRole;
   }

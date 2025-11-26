@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -113,6 +115,29 @@ export class WaitingListController {
   }> {
     const data = await this.waitingListService.findPromosByWaitingList(id);
     return { message: 'Daftar promo berhasil dimuat', data };
+  }
+
+  // TODO: Endpoint claim - sementara sederhana untuk testing
+  @Post(':id/claim')
+  @Public()
+  @ThrottleFormSubmission() // 10 requests per hour
+  async initiateClaim(
+    @Param('id') id: string,
+    @Body() body: { phone: string; name: string; email?: string },
+  ): Promise<{ message: string; claimToken?: string }> {
+    const trimmedId = id.trim();
+    if (!trimmedId) {
+      throw new BadRequestException('ID waiting list wajib diisi');
+    }
+
+    // Simpan status klaim ke database (MVP: langsung CLAIMED)
+    await this.waitingListService.claim(trimmedId, body);
+
+    // Response masih sederhana untuk testing end-to-end
+    return {
+      message: 'Klaim bengkel berhasil. Silakan cek WhatsApp untuk kode verifikasi.',
+      claimToken: 'temp-token-for-testing',
+    };
   }
   @Patch(':id')
   async update(

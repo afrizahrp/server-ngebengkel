@@ -35,10 +35,12 @@ export class EmailService {
       auth: this.emailConfiguration.auth,
     });
 
-    // Verify connection configuration
+    // Verify connection configuration (non-blocking, hanya warning)
     this.transporter.verify((error) => {
       if (error) {
-        console.error('❌ Error configuring email transporter:', error);
+        // Log sebagai warning, bukan error, karena email opsional untuk beberapa fitur
+        console.warn('⚠️ Email transporter configuration failed (email features may not work):', error.message);
+        console.warn('   This is not critical if you are not using email features.');
       } else {
         console.log('✅ Email server is ready to send messages');
       }
