@@ -14,6 +14,8 @@ import { Public } from '../../auth/decorators/public.decorator';
 import { ThrottleGetEndpoints, ThrottleFormSubmission } from '../../auth/decorators/throttle.decorator';
 import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
+import { MenuPermissionGuard } from '../../auth/better-auth/guards/menu-permission.guard';
+import { MenuPermission } from '../../auth/better-auth/decorators/menu-permission.decorator';
 import { VideosService } from './videos.service';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { CreateBatchVideosDto } from './dto/create-batch-videos.dto';
@@ -47,6 +49,37 @@ export class VideosController {
   async createBatch(
     @Body() createBatchVideosDto: CreateBatchVideosDto,
   ): Promise<{ message: string; data: VideoResponseDto[] }> {
+    const data = await this.videosService.createBatch(createBatchVideosDto);
+
+    return {
+      message: `${data.length} video berhasil ditambahkan`,
+      data,
+    };
+  }
+
+  @Post('admin')
+  @UseGuards(MenuPermissionGuard)
+  @MenuPermission({ menuIds: [18, 19, 20, 21], permission: 'create' })
+  @ThrottleFormSubmission()
+  async createAdmin(
+    @Body() createVideoDto: CreateVideoDto,
+  ): Promise<{ message: string; data: VideoResponseDto }> {
+    // Endpoint khusus untuk admin, tidak menggunakan RecaptchaGuard
+    // Memerlukan permission create untuk menu 18, 19, 20, atau 21
+    const data = await this.videosService.create(createVideoDto);
+
+    return {
+      message: 'Video berhasil ditambahkan',
+      data,
+    };
+  }
+
+  @Post('admin/batch')
+  @ThrottleFormSubmission()
+  async createBatchAdmin(
+    @Body() createBatchVideosDto: CreateBatchVideosDto,
+  ): Promise<{ message: string; data: VideoResponseDto[] }> {
+    // Endpoint khusus untuk admin, tidak menggunakan RecaptchaGuard
     const data = await this.videosService.createBatch(createBatchVideosDto);
 
     return {

@@ -14,6 +14,8 @@ import { Public } from '../../auth/decorators/public.decorator';
 import { ThrottleGetEndpoints, ThrottleFormSubmission } from '../../auth/decorators/throttle.decorator';
 import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
+import { MenuPermissionGuard } from '../../auth/better-auth/guards/menu-permission.guard';
+import { MenuPermission } from '../../auth/better-auth/decorators/menu-permission.decorator';
 import { ImagesService } from './images.service';
 import { CreateImageDto } from './dto/create-image.dto';
 import { CreateBatchImagesDto } from './dto/create-batch-images.dto';
@@ -47,6 +49,37 @@ export class ImagesController {
   async createBatch(
     @Body() createBatchImagesDto: CreateBatchImagesDto,
   ): Promise<{ message: string; data: ImageResponseDto[] }> {
+    const data = await this.imagesService.createBatch(createBatchImagesDto);
+
+    return {
+      message: `${data.length} image berhasil ditambahkan`,
+      data,
+    };
+  }
+
+  @Post('admin')
+  @UseGuards(MenuPermissionGuard)
+  @MenuPermission({ menuIds: [18, 19, 20, 21], permission: 'create' })
+  @ThrottleFormSubmission()
+  async createAdmin(
+    @Body() createImageDto: CreateImageDto,
+  ): Promise<{ message: string; data: ImageResponseDto }> {
+    // Endpoint khusus untuk admin, tidak menggunakan RecaptchaGuard
+    // Memerlukan permission create untuk menu 18, 19, 20, atau 21
+    const data = await this.imagesService.create(createImageDto);
+
+    return {
+      message: 'Image berhasil ditambahkan',
+      data,
+    };
+  }
+
+  @Post('admin/batch')
+  @ThrottleFormSubmission()
+  async createBatchAdmin(
+    @Body() createBatchImagesDto: CreateBatchImagesDto,
+  ): Promise<{ message: string; data: ImageResponseDto[] }> {
+    // Endpoint khusus untuk admin, tidak menggunakan RecaptchaGuard
     const data = await this.imagesService.createBatch(createBatchImagesDto);
 
     return {

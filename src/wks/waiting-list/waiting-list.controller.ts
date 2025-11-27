@@ -5,8 +5,10 @@ import {
   Delete,
   Get,
   Param,
+  ParseArrayPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -18,6 +20,8 @@ import {
 } from '../../auth/decorators/throttle.decorator';
 import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
+import { MenuPermissionGuard } from '../../auth/better-auth/guards/menu-permission.guard';
+import { MenuPermission } from '../../auth/better-auth/decorators/menu-permission.decorator';
 import { WaitingListService } from './waiting-list.service';
 import { ClaimService } from './services/claim.service';
 import { CreateWaitingListDto } from './dto/create-waiting-list.dto';
@@ -25,6 +29,7 @@ import { WaitingListResponseDto } from './dto/response-waiting-list.dto';
 import { UpdateWaitingListDto } from './dto/update-waiting-list.dto';
 import { WorkshopCategoryResponseDto } from './dto/workshop-category.dto';
 import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availability.dto';
+import { QueryWaitingListDto } from './dto/query-waiting-list.dto';
 
 @Controller('/waiting-list')
 @UseInterceptors(AnonymousIdInterceptor) // Extract anonymous_id untuk tracking
@@ -88,7 +93,76 @@ export class WaitingListController {
   @ThrottleGetEndpoints() // 100 requests per minute
   @Public() // Read operations: public (support anonymous_id)
   @Get()
-  async findAll(): Promise<WaitingListResponseDto[]> {
+  async findAll(
+    @Query('searchTerm') searchTerm?: string,
+    @Query('searchBy') searchBy?: string,
+    @Query(
+      'claimStatus',
+      new ParseArrayPipe({ items: String, separator: ',', optional: true }),
+    )
+    claimStatus?: string[],
+    @Query(
+      'category_id',
+      new ParseArrayPipe({ items: String, separator: ',', optional: true }),
+    )
+    category_id?: string[],
+    @Query(
+      'province_id',
+      new ParseArrayPipe({ items: String, separator: ',', optional: true }),
+    )
+    province_id?: string[],
+    @Query(
+      'city_id',
+      new ParseArrayPipe({ items: String, separator: ',', optional: true }),
+    )
+    city_id?: string[],
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('orderBy') orderBy?: string,
+    @Query('orderDir') orderDir?: 'asc' | 'desc',
+  ): Promise<
+    | WaitingListResponseDto[]
+    | { data: WaitingListResponseDto[]; totalRecords: number; total: number }
+  > {
+    // Build query object
+    const query: QueryWaitingListDto = {
+      searchTerm,
+      searchBy,
+      claimStatus,
+      category_id,
+      province_id,
+      city_id,
+      start_date,
+      end_date,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      orderBy,
+      orderDir,
+    };
+
+    // Jika ada query params (search, filter, pagination), gunakan findAllWithFilters
+    // Jika tidak ada query params, gunakan findAll (backward compatible)
+    const hasQueryParams =
+      query.searchTerm ||
+      query.searchBy ||
+      query.claimStatus?.length ||
+      query.category_id?.length ||
+      query.province_id?.length ||
+      query.city_id?.length ||
+      query.start_date ||
+      query.end_date ||
+      query.page ||
+      query.limit ||
+      query.orderBy ||
+      query.orderDir;
+
+    if (hasQueryParams) {
+      return this.waitingListService.findAllWithFilters(query);
+    }
+
+    // Backward compatible: return array jika tidak ada query params
     return this.waitingListService.findAll();
   }
 
@@ -184,10 +258,13 @@ export class WaitingListController {
     return await this.claimService.resendOtp(body.claimRequestId);
   }
   @Patch(':id')
+  @UseGuards(MenuPermissionGuard)
+  @MenuPermission({ menuIds: [18, 19, 20, 21], permission: 'edit' })
   async update(
     @Param('id') id: string,
     @Body() updateWaitingListDto: UpdateWaitingListDto,
   ): Promise<{ message: string; data: WaitingListResponseDto }> {
+    // Memerlukan permission edit untuk menu 18, 19, 20, atau 21
     const data = await this.waitingListService.update(id, updateWaitingListDto);
 
     return {
@@ -197,9 +274,12 @@ export class WaitingListController {
   }
 
   @Delete(':id')
+  @UseGuards(MenuPermissionGuard)
+  @MenuPermission({ menuIds: [18, 19, 20, 21], permission: 'delete' })
   async remove(
     @Param('id') id: string,
   ): Promise<{ message: string; data: WaitingListResponseDto }> {
+    // Memerlukan permission delete untuk menu 18, 19, 20, atau 21
     const data = await this.waitingListService.softDelete(id);
 
     return {

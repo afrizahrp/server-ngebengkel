@@ -19,6 +19,7 @@ import {
 } from './dto/workshop-category.dto';
 import { EmailService } from '../../email/email.service';
 import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availability.dto';
+import { QueryWaitingListDto } from './dto/query-waiting-list.dto';
 
 const createWaitingListId = init({ length: 10 });
 const WAITING_LIST_SELECT = {
@@ -247,6 +248,174 @@ export class WaitingListService {
     });
 
     return waitingLists.map((entry) => this.toResponse(entry));
+  }
+
+  async findAllWithFilters(query: QueryWaitingListDto): Promise<{
+    data: WaitingListResponseDto[];
+    totalRecords: number;
+    total: number;
+  }> {
+    const {
+      searchTerm,
+      searchBy = 'name',
+      claimStatus,
+      category_id,
+      province_id,
+      city_id,
+      start_date,
+      end_date,
+      page = 1,
+      limit = 10,
+      orderBy = 'name',
+      orderDir = 'asc',
+    } = query;
+
+    // Build where clause
+    const where: Prisma.wks_waitingListWhereInput = {
+      isDeleted: false,
+    };
+
+    // Search filter
+    if (searchTerm && searchBy) {
+      switch (searchBy) {
+        case 'name':
+          where.name = {
+            contains: searchTerm,
+            mode: 'insensitive',
+          };
+          break;
+        case 'phone':
+          where.OR = [
+            { phone: { contains: searchTerm, mode: 'insensitive' } },
+            { mobile: { contains: searchTerm, mode: 'insensitive' } },
+          ];
+          break;
+        case 'email':
+          where.email = {
+            contains: searchTerm,
+            mode: 'insensitive',
+          };
+          break;
+        case 'address':
+          where.address = {
+            contains: searchTerm,
+            mode: 'insensitive',
+          };
+          break;
+        case 'city':
+          where.city = {
+            contains: searchTerm,
+            mode: 'insensitive',
+          };
+          break;
+        case 'district':
+          where.district = {
+            contains: searchTerm,
+            mode: 'insensitive',
+          };
+          break;
+        case 'province':
+          where.province = {
+            contains: searchTerm,
+            mode: 'insensitive',
+          };
+          break;
+        default:
+          // Default: search in name
+          where.name = {
+            contains: searchTerm,
+            mode: 'insensitive',
+          };
+      }
+    }
+
+    // Claim status filter
+    if (claimStatus && claimStatus.length > 0) {
+      // Validate claim status values
+      const validClaimStatuses = [
+        'UNCLAIMED',
+        'PRE_APPROVED',
+        'PENDING_VERIFICATION',
+        'CLAIMED',
+        'REJECTED',
+      ];
+      const filteredStatuses = claimStatus.filter((status) =>
+        validClaimStatuses.includes(status),
+      );
+      if (filteredStatuses.length > 0) {
+        where.claimStatus = {
+          in: filteredStatuses as any, // Prisma will validate enum values
+        };
+      }
+    }
+
+    // Category filter
+    if (category_id && category_id.length > 0) {
+      where.category_id = {
+        in: category_id,
+      };
+    }
+
+    // Province filter
+    if (province_id && province_id.length > 0) {
+      where.province = {
+        in: province_id,
+      };
+    }
+
+    // City filter
+    if (city_id && city_id.length > 0) {
+      where.city = {
+        in: city_id,
+      };
+    }
+
+    // Date range filter
+    if (start_date || end_date) {
+      where.createdAt = {};
+      if (start_date) {
+        where.createdAt.gte = new Date(start_date);
+      }
+      if (end_date) {
+        where.createdAt.lte = new Date(end_date);
+      }
+    }
+
+    // Build orderBy
+    const orderByClause: Prisma.wks_waitingListOrderByWithRelationInput = {};
+    if (orderBy === 'name') {
+      orderByClause.name = orderDir;
+    } else if (orderBy === 'createdAt') {
+      orderByClause.createdAt = orderDir;
+    } else if (orderBy === 'claimStatus') {
+      orderByClause.claimStatus = orderDir;
+    } else if (orderBy === 'claimedAt') {
+      orderByClause.claimedAt = orderDir;
+    } else {
+      // Default
+      orderByClause.name = 'asc';
+    }
+
+    // Get total count
+    const totalRecords = await this.prisma.wks_waitingList.count({
+      where,
+    });
+
+    // Get paginated data
+    const skip = (page - 1) * limit;
+    const waitingLists = await this.prisma.wks_waitingList.findMany({
+      where,
+      select: this.waitingListSelect,
+      orderBy: orderByClause,
+      skip,
+      take: limit,
+    });
+
+    return {
+      data: waitingLists.map((entry) => this.toResponse(entry)),
+      totalRecords,
+      total: totalRecords,
+    };
   }
 
   async findOne(idOrSlug: string): Promise<WaitingListResponseDto> {

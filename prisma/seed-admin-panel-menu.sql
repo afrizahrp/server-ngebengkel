@@ -215,13 +215,13 @@ SELECT
   true,  -- can_delete
   false,  -- can_print
   true,  -- can_approve
-  'Active',  -- iStatus
+  '1',  -- iStatus
   'system',  -- createdBy
   NOW()  -- createdAt
 FROM "sys_UserCompanyRole" ucr
 JOIN "sys_UserRole" ur ON ucr."userRole_id" = ur."id"
 WHERE ur."role_id" IN ('ADMIN', 'SUPER_ADMIN', 'OWNER')  -- Sesuaikan dengan role yang ada
-  AND ucr."iStatus" = 'Active'
+  AND ucr."iStatus" = '1'
   AND NOT EXISTS (
     SELECT 1 FROM "sys_Menu_Permission" 
     WHERE "userCompanyRole_id" = ucr."id" AND "menu_id" = 18
@@ -239,13 +239,13 @@ SELECT
   true,  -- can_delete
   false,  -- can_print
   true,  -- can_approve
-  'Active',  -- iStatus
+  '1',  -- iStatus
   'system',  -- createdBy
   NOW()  -- createdAt
 FROM "sys_UserCompanyRole" ucr
 JOIN "sys_UserRole" ur ON ucr."userRole_id" = ur."id"
 WHERE ur."role_id" IN ('ADMIN', 'SUPER_ADMIN', 'OWNER')  -- Sesuaikan dengan role yang ada
-  AND ucr."iStatus" = 'Active'
+  AND ucr."iStatus" = '1'
   AND NOT EXISTS (
     SELECT 1 FROM "sys_Menu_Permission" 
     WHERE "userCompanyRole_id" = ucr."id" AND "menu_id" = 19
@@ -287,13 +287,13 @@ SELECT
   false,  -- can_delete
   true,  -- can_print
   false,  -- can_approve
-  'Active',  -- iStatus
+  '1',  -- iStatus
   'system',  -- createdBy
   NOW()  -- createdAt
 FROM "sys_UserCompanyRole" ucr
 JOIN "sys_UserRole" ur ON ucr."userRole_id" = ur."id"
 WHERE ur."role_id" IN ('ADMIN', 'SUPER_ADMIN', 'OWNER')  -- Sesuaikan dengan role yang ada
-  AND ucr."iStatus" = 'Active'
+  AND ucr."iStatus" = '1'
   AND NOT EXISTS (
     SELECT 1 FROM "sys_Menu_Permission" 
     WHERE "userCompanyRole_id" = ucr."id" AND "menu_id" = 21

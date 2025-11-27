@@ -117,10 +117,45 @@ export class sys_MenuService {
   async findMenusWithPermissions(
     userCompanyRole_id: number,
   ): Promise<{ sidebarNav: { classic: MenuItemDto[] } }> {
-    const menus = await this.prisma.sys_Menu.findMany({
-      where: {
-        permissions: { some: { userCompanyRole_id } },
+    // Get UserCompanyRole untuk mengetahui role_id
+    const userCompanyRole = await this.prisma.sys_UserCompanyRole.findUnique({
+      where: { id: userCompanyRole_id },
+      include: {
+        userRole: {
+          include: {
+            role: true,
+          },
+        },
       },
+    });
+
+    if (!userCompanyRole) {
+      throw new NotFoundException(
+        `UserCompanyRole with ID ${userCompanyRole_id} not found`,
+      );
+    }
+
+    const roleId = userCompanyRole.userRole?.role?.id?.trim();
+    const isSuperAdmin = roleId === 'SUPER_ADMIN';
+
+    // Menu IDs yang hanya untuk SUPER_ADMIN
+    const SUPER_ADMIN_MENU_IDS = [18, 19, 20, 21];
+
+    // Build where clause berdasarkan role
+    const whereClause: any = {
+      permissions: { some: { userCompanyRole_id } },
+    };
+
+    if (isSuperAdmin) {
+      // SUPER_ADMIN: hanya tampilkan menu 18, 19, 20, 21
+      whereClause.id = { in: SUPER_ADMIN_MENU_IDS };
+    } else {
+      // Client: tampilkan semua menu KECUALI 18, 19, 20, 21
+      whereClause.id = { notIn: SUPER_ADMIN_MENU_IDS };
+    }
+
+    const menus = await this.prisma.sys_Menu.findMany({
+      where: whereClause,
       orderBy: {
         id: 'asc',
       },
