@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -20,6 +19,7 @@ import {
 import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
 import { WaitingListService } from './waiting-list.service';
+import { ClaimService } from './services/claim.service';
 import { CreateWaitingListDto } from './dto/create-waiting-list.dto';
 import { WaitingListResponseDto } from './dto/response-waiting-list.dto';
 import { UpdateWaitingListDto } from './dto/update-waiting-list.dto';
@@ -29,7 +29,10 @@ import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availa
 @Controller('/waiting-list')
 @UseInterceptors(AnonymousIdInterceptor) // Extract anonymous_id untuk tracking
 export class WaitingListController {
-  constructor(private readonly waitingListService: WaitingListService) {}
+  constructor(
+    private readonly waitingListService: WaitingListService,
+    private readonly claimService: ClaimService,
+  ) {}
 
   @Post()
   @Public()
@@ -117,27 +120,68 @@ export class WaitingListController {
     return { message: 'Daftar promo berhasil dimuat', data };
   }
 
-  // TODO: Endpoint claim - sementara sederhana untuk testing
   @Post(':id/claim')
   @Public()
   @ThrottleFormSubmission() // 10 requests per hour
   async initiateClaim(
     @Param('id') id: string,
     @Body() body: { phone: string; name: string; email?: string },
-  ): Promise<{ message: string; claimToken?: string }> {
+  ): Promise<{ message: string; claimRequestId: string }> {
     const trimmedId = id.trim();
     if (!trimmedId) {
       throw new BadRequestException('ID waiting list wajib diisi');
     }
 
-    // Simpan status klaim ke database (MVP: langsung CLAIMED)
-    await this.waitingListService.claim(trimmedId, body);
+    const result = await this.claimService.initiateClaim({
+      waitingListId: trimmedId,
+      phone: body.phone,
+      name: body.name,
+      email: body.email,
+    });
 
-    // Response masih sederhana untuk testing end-to-end
     return {
-      message: 'Klaim bengkel berhasil. Silakan cek WhatsApp untuk kode verifikasi.',
-      claimToken: 'temp-token-for-testing',
+      message: result.message,
+      claimRequestId: result.claimRequestId,
     };
+  }
+
+  @Post(':id/claim/verify')
+  @Public()
+  @ThrottleFormSubmission() // 10 requests per 15 minutes
+  async verifyClaim(
+    @Param('id') id: string,
+    @Body() body: { claimRequestId: string; verificationCode: string },
+  ): Promise<{ message: string; waitingListId: string }> {
+    const trimmedId = id.trim();
+    if (!trimmedId) {
+      throw new BadRequestException('ID waiting list wajib diisi');
+    }
+
+    if (!body.claimRequestId || !body.verificationCode) {
+      throw new BadRequestException(
+        'claimRequestId dan verificationCode wajib diisi',
+      );
+    }
+
+    return await this.claimService.verifyClaim({
+      waitingListId: trimmedId,
+      claimRequestId: body.claimRequestId,
+      verificationCode: body.verificationCode,
+    });
+  }
+
+  @Post(':id/claim/resend')
+  @Public()
+  @ThrottleFormSubmission() // 10 requests per hour
+  async resendOtp(
+    @Param('id') id: string,
+    @Body() body: { claimRequestId: string },
+  ): Promise<{ message: string }> {
+    if (!body.claimRequestId) {
+      throw new BadRequestException('claimRequestId wajib diisi');
+    }
+
+    return await this.claimService.resendOtp(body.claimRequestId);
   }
   @Patch(':id')
   async update(

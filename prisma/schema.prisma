@@ -4461,7 +4461,7 @@ model wks_ClaimRequest {
   phone             String                  @db.VarChar(20)
   email             String?                 @db.VarChar(100)
   name              String                  @db.VarChar(100)
-  verificationCode  String                  @db.VarChar(10) // Hashed
+  verificationCode  String                  @db.VarChar(100) // SHA-256 hash (64 chars) + buffer
   verificationCodeExpiresAt DateTime
   status            wks_ClaimRequestStatus   @default(PENDING)
   verifiedAt        DateTime?

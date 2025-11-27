@@ -31,12 +31,21 @@ export class WablasService {
     @Inject(wablasConfig.KEY)
     private wablasConfiguration: ConfigType<typeof wablasConfig>,
   ) {
+    const headers: Record<string, string> = {
+      Authorization: this.wablasConfiguration.apiKey,
+      'Content-Type': 'application/json',
+    };
+
+    // Tambahkan secret key ke header jika ada
+    if (this.wablasConfiguration.secretKey) {
+      headers['X-Secret-Key'] = this.wablasConfiguration.secretKey;
+      // Alternatif: beberapa implementasi Wablas menggunakan header ini
+      headers['Secret-Key'] = this.wablasConfiguration.secretKey;
+    }
+
     this.httpClient = axios.create({
       baseURL: this.wablasConfiguration.apiUrl,
-      headers: {
-        Authorization: this.wablasConfiguration.apiKey,
-        'Content-Type': 'application/json',
-      },
+      headers,
       timeout: 30000, // 30 seconds
     });
   }
@@ -93,10 +102,18 @@ export class WablasService {
     const formattedPhone = this.formatPhoneNumber(phone);
 
     try {
-      const response = await this.httpClient.post('/send-message', {
+      // Prepare request body
+      const requestBody: any = {
         phone: formattedPhone,
         message: message,
-      });
+      };
+
+      // Tambahkan secret key ke body jika diperlukan (beberapa implementasi Wablas)
+      if (this.wablasConfiguration.secretKey) {
+        requestBody.secret_key = this.wablasConfiguration.secretKey;
+      }
+
+      const response = await this.httpClient.post('/send-message', requestBody);
 
       this.logger.log(`✅ WhatsApp message sent to ${formattedPhone}`);
       return {
