@@ -1,8 +1,8 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { isEmail } from 'class-validator';
@@ -87,6 +87,8 @@ type WaitingListTypeRelation = { id: string; name: string | null } | null;
 
 @Injectable()
 export class WaitingListService {
+  private readonly logger = new Logger(WaitingListService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
@@ -247,13 +249,63 @@ export class WaitingListService {
     return waitingLists.map((entry) => this.toResponse(entry));
   }
 
-  async findOne(id: string): Promise<WaitingListResponseDto> {
-    const waitingList = await this.prisma.wks_waitingList.findFirst({
-      where: { id, isDeleted: false },
+  async findOne(idOrSlug: string): Promise<WaitingListResponseDto> {
+    const trimmed = idOrSlug.trim();
+
+    // Coba cari berdasarkan ID dulu (format CUID biasanya 21 karakter)
+    let waitingList = await this.prisma.wks_waitingList.findFirst({
+      where: {
+        id: trimmed,
+        isDeleted: false,
+      },
       select: this.waitingListSelect,
     });
 
+    // Jika tidak ditemukan berdasarkan ID, coba cari berdasarkan slug (case-insensitive)
     if (!waitingList) {
+      waitingList = await this.prisma.wks_waitingList.findFirst({
+        where: {
+          slug: {
+            equals: trimmed,
+            mode: 'insensitive', // Case-insensitive search
+          },
+          isDeleted: false,
+        },
+        select: this.waitingListSelect,
+      });
+    }
+
+    // Jika masih tidak ditemukan, coba cari berdasarkan nama (fallback)
+    // Ini untuk backward compatibility jika slug belum di-generate
+    if (!waitingList) {
+      // Generate slug dari input untuk matching
+      const slugFromInput = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      waitingList = await this.prisma.wks_waitingList.findFirst({
+        where: {
+          OR: [
+            {
+              slug: {
+                equals: slugFromInput,
+                mode: 'insensitive',
+              },
+            },
+            {
+              name: {
+                contains: trimmed,
+                mode: 'insensitive',
+              },
+            },
+          ],
+          isDeleted: false,
+        },
+        select: this.waitingListSelect,
+      });
+    }
+
+    if (!waitingList) {
+      this.logger.warn(
+        `Waiting list not found for: ${trimmed} (tried ID, slug, and name)`,
+      );
       throw new NotFoundException('Data waiting list tidak ditemukan');
     }
 
