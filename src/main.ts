@@ -13,6 +13,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Security Headers dengan Helmet
+  // IMPORTANT: Helmet harus dikonfigurasi sebelum CORS untuk menghindari konflik
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -21,7 +22,11 @@ async function bootstrap() {
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc: ["'self'"],
           imgSrc: ["'self'", 'data:', 'https:'],
-          connectSrc: ["'self'"],
+          connectSrc: [
+            "'self'",
+            'https://rest.ngebengkel.com',
+            'https://admin.ngebengkel.com',
+          ],
           fontSrc: ["'self'"],
           objectSrc: ["'none'"],
           mediaSrc: ["'self'"],
@@ -30,6 +35,7 @@ async function bootstrap() {
       },
       crossOriginEmbedderPolicy: false, // Disable untuk compatibility
       crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginOpenerPolicy: false, // Disable untuk CORS compatibility
       hsts: {
         maxAge: 31536000, // 1 year
         includeSubDomains: true,
