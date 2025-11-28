@@ -30,6 +30,7 @@ import { ReminderModule } from './wks/reminder/reminder.module';
 import { WaitingListModule } from './wks/waiting-list/waiting-list.module';
 import { ImagesModule } from './wks/images/images.module';
 import { VideosModule } from './wks/videos/videos.module';
+import { WorkingHourModule } from './wks/working-hour/working-hour.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { CommonModule } from './common/common.module';
 
@@ -94,6 +95,7 @@ import { CommonModule } from './common/common.module';
     WaitingListModule,
     ImagesModule,
     VideosModule,
+    WorkingHourModule,
     sys_CompanyModule,
     sys_BranchModule,
     sys_UserModule,

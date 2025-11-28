@@ -358,6 +358,7 @@ model sys_Branch {
   subdistrict    sys_SubDistrict?       @relation(fields: [subdistrict_id], references: [id], onUpdate: NoAction)
   images         wks_Images[]
   videos         wks_videos[]
+  workingHours   wks_WorkingHour[]
 
   @@index([company_id], map: "idx_sys_Branch_company_id")
   @@index([province_id], map: "idx_sys_branch_province")
@@ -4438,6 +4439,7 @@ model wks_waitingList {
   images       wks_Images[]
   videos       wks_videos[]
   claimRequests wks_ClaimRequest[]
+  workingHours wks_WorkingHour[]
 
   @@index([category_id], map: "idx_wks_waitinglist_category")
   @@index([claimStatus], map: "idx_wks_waitinglist_claimstatus")
@@ -4520,6 +4522,33 @@ model wks_videos {
   @@index([waitingList_id], map: "idx_wks_videos_waitinglist")
   @@index([branch_id], map: "idx_wks_videos_branch")
   @@index([waitingList_id, isActive], map: "idx_wks_videos_waitinglist_active")
+}
+
+// Office Hours untuk Waiting List dan Branch (unified model)
+model wks_WorkingHour {
+  id                  String        @id @default(cuid()) @db.Char(21)
+  waitingList_id      String        @db.Char(21)
+  branch_id           String?       @db.Char(10)
+  company_id          String?       @db.Char(10) // Untuk kemudahan query jika sudah jadi branch
+  weekday             Int           @db.SmallInt // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  isOpen              Boolean       @default(true)
+  openTime            String?       @db.Char(5) // Format: "08:00"
+  closeTime           String?       @db.Char(5) // Format: "17:00"
+  bookingBufferMinutes Int?         @default(0) // buffer antar booking dalam menit
+  remarks             String?       @db.VarChar(250)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  createdBy           String?       @db.VarChar(50)
+  updatedBy           String?       @db.VarChar(50)
+
+  waitingList         wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  branch              sys_Branch?   @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+
+  @@unique([waitingList_id, weekday], map: "unique_wks_workinghour_waitinglist_weekday")
+  @@unique([company_id, branch_id, weekday], map: "unique_wks_workinghour_branch_weekday")
+  @@index([waitingList_id], map: "idx_wks_workinghour_waitinglist")
+  @@index([branch_id], map: "idx_wks_workinghour_branch")
+  @@index([company_id, branch_id], map: "idx_wks_workinghour_company_branch")
 }
 
 model tmp_customer {
