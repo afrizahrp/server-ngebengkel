@@ -34,4 +34,6 @@ export class WaitingListResponseDto {
   claimedBy?: string | null;
   claimedAt?: string | null;
   isPublicData?: boolean;
+  // Promo linked field
+  isPromoLinked?: boolean;
 }

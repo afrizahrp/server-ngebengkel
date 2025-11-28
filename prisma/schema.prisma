@@ -4419,6 +4419,7 @@ model wks_waitingList {
   claimTokenExpiresAt    DateTime?
   claimVerificationMethod wks_VerificationMethod?
   isPublicData           Boolean                @default(true)
+  isPromoLinked           Boolean                @default(false)
   
   // Pre-approval fields (untuk data dari DM FB)
   preApprovedPhone       String?                @db.VarChar(20) // Nomor WhatsApp owner

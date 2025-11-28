@@ -78,6 +78,8 @@ const WAITING_LIST_SELECT = {
   claimedBy: true,
   claimedAt: true,
   isPublicData: true,
+  // Promo linked field
+  isPromoLinked: true,
 } as const satisfies Prisma.wks_waitingListSelect;
 
 type WaitingListWithRelations = Prisma.wks_waitingListGetPayload<{
@@ -240,11 +242,49 @@ export class WaitingListService {
     }));
   }
 
+  /**
+   * Helper function untuk sorting waiting list dengan prioritas promo
+   * - Item dengan isPromoLinked = true di atas, di-sort alphabetically
+   * - Item dengan isPromoLinked = false di bawah, di-sort alphabetically
+   */
+  private sortByNameWithPromoPriority(
+    items: WaitingListResponseDto[],
+  ): WaitingListResponseDto[] {
+    // Pisahkan item dengan promo linked dan tanpa promo linked
+    const withPromoLinked: WaitingListResponseDto[] = [];
+    const withoutPromoLinked: WaitingListResponseDto[] = [];
+
+    items.forEach((item) => {
+      // Gunakan isPromoLinked dari database (lebih reliable daripada cek relasi)
+      if (item.isPromoLinked) {
+        withPromoLinked.push(item);
+      } else {
+        withoutPromoLinked.push(item);
+      }
+    });
+
+    // Sort alphabetically untuk masing-masing grup
+    withPromoLinked.sort((a, b) =>
+      a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }),
+    );
+    withoutPromoLinked.sort((a, b) =>
+      a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }),
+    );
+
+    // Gabungkan: dengan promo linked di atas, tanpa promo linked di bawah
+    return [...withPromoLinked, ...withoutPromoLinked];
+  }
+
   async findAll(): Promise<WaitingListResponseDto[]> {
+    // Gunakan ORDER BY di database untuk performa lebih baik
+    // isPromoLinked DESC untuk prioritas promo di atas, lalu name ASC untuk alphabetical
     const waitingLists = await this.prisma.wks_waitingList.findMany({
       where: { isDeleted: false },
       select: this.waitingListSelect,
-      orderBy: { name: 'asc' }, // Urutkan berdasarkan nama, bukan ID
+      orderBy: [
+        { isPromoLinked: 'desc' }, // Promo linked items di atas (true > false)
+        { name: 'asc' }, // Lalu sort alphabetically
+      ],
     });
 
     return waitingLists.map((entry) => this.toResponse(entry));
@@ -382,18 +422,24 @@ export class WaitingListService {
     }
 
     // Build orderBy
-    const orderByClause: Prisma.wks_waitingListOrderByWithRelationInput = {};
-    if (orderBy === 'name') {
-      orderByClause.name = orderDir;
+    // Untuk sorting by name, gunakan isPromoLinked DESC lalu name ASC untuk prioritas promo
+    const orderByClause: Prisma.wks_waitingListOrderByWithRelationInput[] = [];
+    const isSortingByName = orderBy === 'name' || !orderBy;
+
+    if (isSortingByName) {
+      // Sorting by name dengan prioritas promo: isPromoLinked DESC, lalu name ASC/DESC
+      orderByClause.push({ isPromoLinked: 'desc' }); // Promo linked items di atas
+      orderByClause.push({ name: orderDir }); // Lalu sort alphabetically sesuai orderDir
     } else if (orderBy === 'createdAt') {
-      orderByClause.createdAt = orderDir;
+      orderByClause.push({ createdAt: orderDir });
     } else if (orderBy === 'claimStatus') {
-      orderByClause.claimStatus = orderDir;
+      orderByClause.push({ claimStatus: orderDir });
     } else if (orderBy === 'claimedAt') {
-      orderByClause.claimedAt = orderDir;
+      orderByClause.push({ claimedAt: orderDir });
     } else {
-      // Default
-      orderByClause.name = 'asc';
+      // Default: sorting by name dengan prioritas promo
+      orderByClause.push({ isPromoLinked: 'desc' });
+      orderByClause.push({ name: 'asc' });
     }
 
     // Get total count
@@ -401,7 +447,7 @@ export class WaitingListService {
       where,
     });
 
-    // Get paginated data
+    // Fetch data dengan pagination dan sorting dari database (lebih efisien)
     const skip = (page - 1) * limit;
     const waitingLists = await this.prisma.wks_waitingList.findMany({
       where,
@@ -835,6 +881,8 @@ export class WaitingListService {
       claimedBy: rest.claimedBy ?? null,
       claimedAt: rest.claimedAt ? rest.claimedAt.toISOString() : null,
       isPublicData: rest.isPublicData ?? true,
+      // Promo linked field (from database, lebih reliable)
+      isPromoLinked: rest.isPromoLinked ?? false,
     };
   }
 
