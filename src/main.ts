@@ -53,8 +53,8 @@ async function bootstrap() {
           'https://www.ngebengkel.com',
           'https://workshop.ngebengkel.com',
           'https://workshop.ngebengkel.com',
-           'https://admin.ngebengkel.com',
-           'https://app.ngebengkel.com',
+          'https://admin.ngebengkel.com',
+          'https://app.ngebengkel.com',
         ]
       : [
           'http://localhost:3000',
@@ -64,8 +64,8 @@ async function bootstrap() {
           'https://ngebengkel.com',
           'https://www.ngebengkel.com',
           'https://www.workshop.ngebengkel.com',
-          'https://www.admin.ngebengkel.com',          
-           'https://www.app.ngebengkel.com',
+          'https://www.admin.ngebengkel.com',
+          'https://www.app.ngebengkel.com',
         ];
 
   app.enableCors({
