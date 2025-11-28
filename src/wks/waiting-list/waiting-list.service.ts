@@ -422,19 +422,31 @@ export class WaitingListService {
     }
 
     // Build orderBy
-    // Untuk sorting by name, gunakan isPromoLinked DESC lalu name ASC untuk prioritas promo
+    // PENTING: Item dengan isPromoLinked = true SELALU di atas dan SELALU di-sort A-Z
+    // Item dengan isPromoLinked = false di bawah dan mengikuti orderDir
     const orderByClause: Prisma.wks_waitingListOrderByWithRelationInput[] = [];
     const isSortingByName = orderBy === 'name' || !orderBy;
 
     if (isSortingByName) {
-      // Sorting by name dengan prioritas promo: isPromoLinked DESC, lalu name ASC/DESC
+      // Sorting by name dengan prioritas promo:
+      // 1. isPromoLinked DESC (promo di atas)
+      // 2. name ASC untuk promo (selalu A-Z, tidak peduli orderDir)
+      // 3. name ASC/DESC untuk regular (mengikuti orderDir)
+      // Karena Prisma tidak support conditional sorting, kita akan sort di memory setelah fetch
+      // Untuk sekarang, kita sort: isPromoLinked DESC, lalu name ASC (promo akan tetap di atas)
       orderByClause.push({ isPromoLinked: 'desc' }); // Promo linked items di atas
-      orderByClause.push({ name: orderDir }); // Lalu sort alphabetically sesuai orderDir
+      orderByClause.push({ name: 'asc' }); // Default A-Z untuk semua (akan di-adjust di memory jika perlu)
     } else if (orderBy === 'createdAt') {
+      // Untuk sorting by createdAt, tetap prioritaskan promo di atas
+      orderByClause.push({ isPromoLinked: 'desc' });
       orderByClause.push({ createdAt: orderDir });
     } else if (orderBy === 'claimStatus') {
+      // Untuk sorting by claimStatus, tetap prioritaskan promo di atas
+      orderByClause.push({ isPromoLinked: 'desc' });
       orderByClause.push({ claimStatus: orderDir });
     } else if (orderBy === 'claimedAt') {
+      // Untuk sorting by claimedAt, tetap prioritaskan promo di atas
+      orderByClause.push({ isPromoLinked: 'desc' });
       orderByClause.push({ claimedAt: orderDir });
     } else {
       // Default: sorting by name dengan prioritas promo
@@ -447,15 +459,72 @@ export class WaitingListService {
       where,
     });
 
-    // Fetch data dengan pagination dan sorting dari database (lebih efisien)
-    const skip = (page - 1) * limit;
-    const waitingLists = await this.prisma.wks_waitingList.findMany({
-      where,
-      select: this.waitingListSelect,
-      orderBy: orderByClause,
-      skip,
-      take: limit,
-    });
+    let waitingLists: WaitingListWithRelations[];
+
+    // Jika sorting by name, perlu fetch semua data dulu untuk sorting di memory yang benar
+    // karena kita perlu sort semua data (promo A-Z, regular sesuai orderDir) sebelum pagination
+    if (isSortingByName) {
+      // Fetch semua data yang sesuai dengan filter (tanpa pagination)
+      const allWaitingLists = await this.prisma.wks_waitingList.findMany({
+        where,
+        select: this.waitingListSelect,
+        orderBy: [{ isPromoLinked: 'desc' }, { name: 'asc' }], // Temporary order untuk fetch
+      });
+
+      // Pisahkan item promo dan regular
+      const promoLinked: WaitingListWithRelations[] = [];
+      const regular: WaitingListWithRelations[] = [];
+
+      allWaitingLists.forEach((item) => {
+        if (item.isPromoLinked === true) {
+          promoLinked.push(item);
+        } else {
+          regular.push(item);
+        }
+      });
+
+      // Sort promo linked items alphabetically (A-Z) - SELALU
+      promoLinked.sort((a, b) =>
+        a.name.localeCompare(b.name, 'id', {
+          sensitivity: 'base',
+          numeric: true,
+        }),
+      );
+
+      // Sort regular items sesuai orderDir
+      if (orderDir === 'desc') {
+        regular.sort((a, b) =>
+          b.name.localeCompare(a.name, 'id', {
+            sensitivity: 'base',
+            numeric: true,
+          }),
+        );
+      } else {
+        regular.sort((a, b) =>
+          a.name.localeCompare(b.name, 'id', {
+            sensitivity: 'base',
+            numeric: true,
+          }),
+        );
+      }
+
+      // Gabungkan: promo di atas, regular di bawah
+      const sortedLists = [...promoLinked, ...regular];
+
+      // Lakukan pagination setelah sorting
+      const skip = (page - 1) * limit;
+      waitingLists = sortedLists.slice(skip, skip + limit);
+    } else {
+      // Untuk sorting selain name, gunakan database sorting dengan pagination
+      const skip = (page - 1) * limit;
+      waitingLists = await this.prisma.wks_waitingList.findMany({
+        where,
+        select: this.waitingListSelect,
+        orderBy: orderByClause,
+        skip,
+        take: limit,
+      });
+    }
 
     return {
       data: waitingLists.map((entry) => this.toResponse(entry)),
@@ -981,6 +1050,48 @@ export class WaitingListService {
       startAt: p.startAt ? p.startAt.toISOString() : null,
       endAt: p.endAt ? p.endAt.toISOString() : null,
     }));
+  }
+
+  /**
+   * Update isPromoLinked field untuk waiting list berdasarkan promo aktif
+   * Dipanggil saat promo dibuat/diaktifkan/dinonaktifkan
+   * @param waitingListId ID waiting list yang akan di-update
+   */
+  async updatePromoLinkedStatus(waitingListId: string): Promise<void> {
+    const trimmedId = waitingListId.trim();
+    if (!trimmedId) {
+      this.logger.warn('[UPDATE PROMO LINKED] Invalid waiting list ID');
+      return;
+    }
+
+    // Cek apakah ada promo aktif untuk waiting list ini
+    const activePromo = await this.prisma.wks_promo.findFirst({
+      where: {
+        waitingList_id: trimmedId,
+        isActive: true,
+        AND: [
+          {
+            OR: [{ startAt: null }, { startAt: { lte: new Date() } }],
+          },
+          {
+            OR: [{ endAt: null }, { endAt: { gte: new Date() } }],
+          },
+        ],
+      },
+      select: { id: true },
+    });
+
+    const hasActivePromo = Boolean(activePromo);
+
+    // Update isPromoLinked field
+    await this.prisma.wks_waitingList.update({
+      where: { id: trimmedId },
+      data: { isPromoLinked: hasActivePromo },
+    });
+
+    this.logger.debug(
+      `[UPDATE PROMO LINKED] Waiting list ${trimmedId}: isPromoLinked = ${hasActivePromo}`,
+    );
   }
 
   private validateNameAndEmail(

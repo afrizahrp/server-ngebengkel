@@ -194,6 +194,7 @@ export class WaitingListController {
     return { message: 'Daftar promo berhasil dimuat', data };
   }
 
+
   @Post(':id/claim')
   @Public()
   @ThrottleFormSubmission() // 10 requests per hour

@@ -14,6 +14,7 @@ import { Public } from '../../auth/decorators/public.decorator';
 import {
   ThrottleGetEndpoints,
   ThrottleFormSubmission,
+  ThrottleWorkingHours,
 } from '../../auth/decorators/throttle.decorator';
 import { RecaptchaGuard } from '../../common/guards/recaptcha.guard';
 import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
@@ -96,7 +97,7 @@ export class WorkingHourController {
 
   @Get()
   @Public()
-  @ThrottleGetEndpoints()
+  @ThrottleWorkingHours() // 300 requests per minute (lebih tinggi dari default 100)
   async findAll(
     @Query('waitingListId') waitingListId?: string,
     @Query('branchId') branchId?: string,
@@ -107,7 +108,7 @@ export class WorkingHourController {
 
   @Get(':id')
   @Public()
-  @ThrottleGetEndpoints()
+  @ThrottleWorkingHours() // 300 requests per minute
   async findOne(
     @Param('id') id: string,
   ): Promise<WorkingHourResponseDto> {
@@ -116,7 +117,7 @@ export class WorkingHourController {
 
   @Get('waiting-list/:waitingListId/weekday/:weekday')
   @Public()
-  @ThrottleGetEndpoints()
+  @ThrottleWorkingHours() // 300 requests per minute
   async findByWaitingListAndWeekday(
     @Param('waitingListId') waitingListId: string,
     @Param('weekday') weekday: string,

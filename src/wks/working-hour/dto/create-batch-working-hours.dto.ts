@@ -9,3 +9,5 @@ export class CreateBatchWorkingHoursDto {
   workingHours!: CreateWorkingHourDto[];
 }
 
+
+

@@ -41,10 +41,17 @@ export const ThrottleCheckAvailability = () =>
 
 /**
  * Rate limit untuk GET endpoints (location, system)
- * 100 requests per minute
+ * 5000 requests per minute (ditingkatkan untuk handle listing page dengan banyak request paralel)
  */
 export const ThrottleGetEndpoints = () =>
-  Throttle({ 'get-endpoints': { limit: 100, ttl: 60 } });
+  Throttle({ 'get-endpoints': { limit: 5000, ttl: 60 } });
+
+/**
+ * Rate limit untuk batch endpoints (POST untuk batch fetch)
+ * 10000 requests per minute (untuk batch endpoints yang sering dipanggil paralel)
+ */
+export const ThrottleBatchEndpoints = () =>
+  Throttle({ 'batch-endpoints': { limit: 10000, ttl: 60 } });
 
 /**
  * Rate limit untuk strict endpoints
@@ -52,3 +59,10 @@ export const ThrottleGetEndpoints = () =>
  */
 export const ThrottleStrict = () =>
   Throttle({ strict: { limit: 10, ttl: 60 } });
+
+/**
+ * Rate limit untuk working hours endpoints (GET)
+ * 5000 requests per minute (ditingkatkan untuk handle listing page dengan banyak request paralel saat reload/sorting)
+ */
+export const ThrottleWorkingHours = () =>
+  Throttle({ 'working-hours': { limit: 5000, ttl: 60 } });

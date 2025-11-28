@@ -22,3 +22,5 @@ export interface MenuPermissionOptions {
 export const MenuPermission = (options: MenuPermissionOptions) =>
   SetMetadata(MENU_PERMISSION_KEY, options);
 
+
+

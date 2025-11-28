@@ -424,7 +424,11 @@ Sekarang Anda dapat:
 ✅ Membuat promo
 ✅ Mengupdate informasi bengkel
 
+📩 Silakan kirim foto, detail informasi, permintaan ubah data,
+atau jika diinginkan, permintaan hapus listing Anda,
+langsung melalui WhatsApp ini.
+
 Terima kasih,
-Tim Ngebengkel`;
+Tim ngebengkel.com`;
   }
 }

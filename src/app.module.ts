@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { sys_UserModule } from './sys/sys_user/sys_User.module';
 import { Sys_UserRoleModule } from './sys/sys_userRole/sys_UserRole.module';
 import { Sys_UserCompanyRoleModule } from './sys/sys_userCompanyRole/sys_UserCompanyRole.module';
@@ -40,48 +41,61 @@ import { CommonModule } from './common/common.module';
       isGlobal: true,
     }),
     CommonModule, // Global module untuk shared services dan guards
-    ThrottlerModule.forRoot([
-      {
-        name: 'default',
-        ttl: 60, // 1 minute
-        limit: 100, // 100 requests per minute
-      },
-      {
-        name: 'strict',
-        ttl: 60, // 1 minute
-        limit: 10, // 10 requests per minute
-      },
-      {
-        name: 'auth',
-        ttl: 900, // 15 minutes
-        limit: 10, // 10 requests per 15 minutes
-      },
-      {
-        name: 'auth-strict',
-        ttl: 3600, // 1 hour
-        limit: 5, // 5 requests per hour
-      },
-      {
-        name: 'auth-very-strict',
-        ttl: 3600, // 1 hour
-        limit: 3, // 3 requests per hour
-      },
-      {
-        name: 'form-submission',
-        ttl: 3600, // 1 hour
-        limit: 10, // 10 requests per hour
-      },
-      {
-        name: 'get-endpoints',
-        ttl: 60, // 1 minute
-        limit: 100, // 100 requests per minute
-      },
-      {
-        name: 'check-availability',
-        ttl: 60, // 1 minute
-        limit: 30, // 30 requests per minute
-      },
-    ]),
+    // TEMPORARY DISABLED FOR DEVELOPMENT PURPOSE - Afriza
+    // Rate limiting dinonaktifkan sementara untuk development
+    // TODO: Re-enable setelah optimasi request selesai
+    // ThrottlerModule.forRoot([
+    //   {
+    //     name: 'default',
+    //     ttl: 60, // 1 minute
+    //     limit: 100, // 100 requests per minute
+    //   },
+    //   {
+    //     name: 'strict',
+    //     ttl: 60, // 1 minute
+    //     limit: 10, // 10 requests per minute
+    //   },
+    //   {
+    //     name: 'auth',
+    //     ttl: 900, // 15 minutes
+    //     limit: 10, // 10 requests per 15 minutes
+    //   },
+    //   {
+    //     name: 'auth-strict',
+    //     ttl: 3600, // 1 hour
+    //     limit: 5, // 5 requests per hour
+    //   },
+    //   {
+    //     name: 'auth-very-strict',
+    //     ttl: 3600, // 1 hour
+    //     limit: 3, // 3 requests per hour
+    //   },
+    //   {
+    //     name: 'form-submission',
+    //     ttl: 3600, // 1 hour
+    //     limit: 10, // 10 requests per hour
+    //   },
+    //   {
+    //     name: 'get-endpoints',
+    //     ttl: 60, // 1 minute
+    //     limit: 5000, // 5000 requests per minute (ditingkatkan untuk handle listing page dengan banyak request paralel)
+    //   },
+    //   {
+    //     name: 'batch-endpoints',
+    //     ttl: 60, // 1 minute
+    //     limit: 10000, // 10000 requests per minute (untuk batch endpoints yang sering dipanggil paralel)
+    //   },
+    //   {
+    //     name: 'check-availability',
+    //     ttl: 60, // 1 minute
+    //     limit: 30, // 30 requests per minute
+    //   },
+    //   {
+    //     name: 'working-hours',
+    //     ttl: 60, // 1 minute
+    //     limit: 5000, // 5000 requests per minute (ditingkatkan untuk handle listing page dengan banyak request paralel saat reload/sorting)
+    //   },
+    // ]),
     ScheduleModule.forRoot(),
     EmailModule,
     WhatsAppModule,
@@ -112,10 +126,13 @@ import { CommonModule } from './common/common.module';
   providers: [
     AppService,
     PrismaService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    // TEMPORARY DISABLED FOR DEVELOPMENT PURPOSE - Afriza
+    // Rate limiting dinonaktifkan sementara untuk development
+    // TODO: Re-enable setelah optimasi request selesai
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: CustomThrottlerGuard,
+    // },
   ],
 })
 export class AppModule {}

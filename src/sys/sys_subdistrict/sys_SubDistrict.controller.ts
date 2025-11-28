@@ -13,7 +13,10 @@ import {
 } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { ThrottleGetEndpoints } from '../../auth/decorators/throttle.decorator';
+import {
+  ThrottleGetEndpoints,
+  ThrottleBatchEndpoints,
+} from '../../auth/decorators/throttle.decorator';
 import { AnonymousIdInterceptor } from '../../common/interceptors/anonymous-id.interceptor';
 import { Sys_SubDistrictService } from './sys_SubDistrict.service';
 import { Sys_CreateSubDistrictDto } from './dto/sys_CreateSubDistrict.dto';
@@ -68,7 +71,7 @@ export class sys_SubDistrictController {
     return this.subdistrictService.findByCityId(city_id);
   }
 
-  @ThrottleGetEndpoints() // 100 requests per minute
+  @ThrottleBatchEndpoints() // 10000 requests per minute (untuk batch endpoints yang sering dipanggil paralel)
   @Public() // Read operations: public (support anonymous_id)
   @HttpCode(HttpStatus.OK) // 200 OK untuk read operation
   @Post('batch')
