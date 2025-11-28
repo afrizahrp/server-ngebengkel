@@ -79,6 +79,11 @@ async function bootstrap() {
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        // Log untuk debugging (hanya di development)
+        if (!isProduction) {
+          console.log(`[CORS] Blocked origin: ${origin}`);
+          console.log(`[CORS] Allowed origins:`, allowedOrigins);
+        }
         callback(new Error('Not allowed by CORS'));
       }
     },
@@ -98,11 +103,14 @@ async function bootstrap() {
       'X-RateLimit-Limit',
       'X-RateLimit-Remaining',
       'X-RateLimit-Reset',
+      'x-access-token', // Untuk token refresh di frontend
+      'x-refresh-token', // Untuk token refresh di frontend
+      'x-token-refreshed', // Flag untuk token refresh
     ],
     credentials: true, // Allow cookies and credentials
     maxAge: 86400, // 24 hours
     preflightContinue: false,
-    optionsSuccessStatus: 204,
+    optionsSuccessStatus: 200, // Beberapa browser/axios memerlukan 200 untuk preflight
   });
 
   // Add logging middleware
