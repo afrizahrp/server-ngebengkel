@@ -58,7 +58,6 @@ async function bootstrap() {
           'https://ngebengkel.com',
           'https://www.ngebengkel.com',
           'https://workshop.ngebengkel.com',
-          'https://workshop.ngebengkel.com',
           'https://admin.ngebengkel.com',
           'https://app.ngebengkel.com',
         ]
@@ -74,9 +73,14 @@ async function bootstrap() {
           'https://www.app.ngebengkel.com',
         ];
 
-  // CORS Configuration - menggunakan array langsung untuk lebih reliable
+  // CORS Configuration - menggunakan array origins langsung untuk lebih reliable dengan preflight
+  // Log allowed origins untuk debugging
+  if (!isProduction) {
+    console.log('[CORS] Allowed origins:', allowedOrigins);
+  }
+
   app.enableCors({
-    origin: allowedOrigins, // Gunakan array langsung, lebih reliable untuk preflight
+    origin: allowedOrigins, // Gunakan array langsung - lebih reliable untuk preflight
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
@@ -84,6 +88,8 @@ async function bootstrap() {
       'X-Requested-With',
       'Accept',
       'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
       'X-Anonymous-Id', // For anonymous login
       'x-anonymous-id', // Case-insensitive support
       'X-Refresh-Token', // For refresh token
@@ -97,25 +103,31 @@ async function bootstrap() {
       'x-refresh-token', // Untuk token refresh di frontend
       'x-token-refreshed', // Flag untuk token refresh
     ],
-    credentials: true, // Allow cookies and credentials
-    maxAge: 86400, // 24 hours
-    preflightContinue: false,
-    optionsSuccessStatus: 200, // Beberapa browser/axios memerlukan 200 untuk preflight
+    credentials: true, // Allow cookies and credentials - IMPORTANT for CORS with credentials
+    maxAge: 86400, // 24 hours - cache preflight response
+    preflightContinue: false, // End preflight request immediately (jangan lanjutkan ke route handler)
+    optionsSuccessStatus: 204, // Use 204 No Content for OPTIONS (standard untuk preflight)
   });
 
-  // Add logging middleware
-  // app.use(
-  //   (
-  //     req: { method: any; url: any; headers: any; body: any },
-  //     res: any,
-  //     next: () => void,
-  //   ) => {
-  //     console.log(`Received ${req.method} request to ${req.url}`);
-  //     console.log('Headers:', req.headers);
-  //     console.log('Body:', req.body);
-  //     next();
-  //   },
-  // );
+  // Add logging middleware untuk debugging CORS (hanya di development)
+  if (!isProduction) {
+    app.use((req: any, res: any, next: () => void) => {
+      // Log CORS preflight requests
+      if (req.method === 'OPTIONS') {
+        console.log(`[CORS Preflight] ${req.method} ${req.url}`);
+        console.log(
+          `[CORS Preflight] Origin: ${req.headers.origin || 'no origin'}`,
+        );
+        console.log(
+          `[CORS Preflight] Access-Control-Request-Method: ${req.headers['access-control-request-method'] || 'N/A'}`,
+        );
+        console.log(
+          `[CORS Preflight] Access-Control-Request-Headers: ${req.headers['access-control-request-headers'] || 'N/A'}`,
+        );
+      }
+      next();
+    });
+  }
 
   // Global Exception Filter untuk sanitize error messages
   app.useGlobalFilters(new HttpExceptionFilter());
