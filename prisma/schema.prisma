@@ -302,7 +302,7 @@ model sys_Company {
   id               String                     @id @db.Char(10)
   name             String?                    @db.VarChar(50)
   description      String?                    @db.VarChar(250)
-  slug              String?                    @db.VarChar(50)
+  slug             String?                    @db.VarChar(50)
   iStatus          MasterRecordStatusEnum     @default(Active)
   isMain           Boolean?                   @default(false)
   email1           String?                    @db.VarChar(100)
@@ -320,7 +320,7 @@ model sys_Company {
   usageTracking    saas_UsageTracking[]
   companyAddons    saas_CompanyAddon[]
   branches         sys_Branch[]
-  
+
   @@index([seq_no], map: "idx_sys_Company_seq_no")
 }
 
@@ -328,7 +328,7 @@ model sys_Branch {
   company_id     String                 @db.Char(10)
   id             String                 @id @db.Char(10)
   name           String                 @db.VarChar(50)
-  slug           String?             @db.VarChar(50)
+  slug           String?                @db.VarChar(50)
   isMain         Boolean?               @default(false)
   iStatus        MasterRecordStatusEnum @default(Active)
   remarks        String?                @db.VarChar(255)
@@ -401,7 +401,7 @@ model sys_User {
   twoFactorEnabled   Boolean                 @default(false)
   // Employee Reference (setiap user harus terdaftar sebagai employee)
   employee_id        String?                 @db.Char(20)
-  updatedAt         DateTime?               
+  updatedAt          DateTime?
   // Relations
   employee           cmf_Employee?           @relation(fields: [company_id, employee_id], references: [company_id, id], onUpdate: NoAction)
   userRoles          sys_UserRole[]
@@ -489,28 +489,28 @@ model sys_Session {
 }
 
 model sys_AnonymousSession {
-  company_id        String?                @db.Char(10)
-  branch_id         String?                @db.Char(10)
-  id                String                 @id @default(uuid()) @db.Uuid // UUID v4
-  anonymous_id      String                 @unique @db.Uuid // UUID v4 untuk client-side
-  deviceName        String?                @db.VarChar(255)
-  deviceType        String?                @db.VarChar(50) // mobile, desktop, tablet
-  browser           String?                @db.VarChar(100)
-  os                String?                @db.VarChar(100)
-  ipAddress         String?                @db.VarChar(45) // IPv6 support
-  userAgent         String?                @db.Text
-  source            String?                @db.VarChar(20) // web, app, mobile
+  company_id     String?                @db.Char(10)
+  branch_id      String?                @db.Char(10)
+  id             String                 @id @default(uuid()) @db.Uuid // UUID v4
+  anonymous_id   String                 @unique @db.Uuid // UUID v4 untuk client-side
+  deviceName     String?                @db.VarChar(255)
+  deviceType     String?                @db.VarChar(50) // mobile, desktop, tablet
+  browser        String?                @db.VarChar(100)
+  os             String?                @db.VarChar(100)
+  ipAddress      String?                @db.VarChar(45) // IPv6 support
+  userAgent      String?                @db.Text
+  source         String?                @db.VarChar(20) // web, app, mobile
   // Merge tracking
-  mergedToUserId    Int?                   @db.Integer // user_id setelah merge
-  mergedAt          DateTime?
-  isMerged          Boolean                @default(false)
+  mergedToUserId Int?                   @db.Integer // user_id setelah merge
+  mergedAt       DateTime?
+  isMerged       Boolean                @default(false)
   // Activity tracking
-  lastActivityAt    DateTime               @default(now())
-  createdAt         DateTime               @default(now())
-  expiresAt         DateTime?             // Optional: bisa expire setelah X hari
-  iStatus           MasterRecordStatusEnum @default(Active)
+  lastActivityAt DateTime               @default(now())
+  createdAt      DateTime               @default(now())
+  expiresAt      DateTime? // Optional: bisa expire setelah X hari
+  iStatus        MasterRecordStatusEnum @default(Active)
   // Relations (optional, jika merged)
-  mergedToUser     sys_User?               @relation(fields: [mergedToUserId], references: [id], onDelete: SetNull)
+  mergedToUser   sys_User?              @relation(fields: [mergedToUserId], references: [id], onDelete: SetNull)
 
   @@index([anonymous_id])
   @@index([mergedToUserId])
@@ -764,7 +764,7 @@ model imc_Category {
   type          Int                    @db.SmallInt
   id            String                 @db.Char(10)
   name          String?                @db.VarChar(50)
-  slug         String                  @db.VarChar(50)
+  slug          String                 @db.VarChar(50)
   seq           Int?                   @default(0)
   remarks       String?                @db.VarChar(250)
   iStatus       MasterRecordStatusEnum @default(Active)
@@ -785,23 +785,23 @@ model imc_Category {
 }
 
 model imc_SubCategory {
-  company_id   String                 @db.Char(10)
-  branch_id    String                 @db.Char(10)
-  id           String                 @db.Char(10)
-  seq          Int?                   @default(0)
-  imageURL     String?                @db.VarChar(250)
-  category_id  String                 @db.Char(10)
-  name         String                 @db.VarChar(80)
-  slug         String                 @db.VarChar(50)
-  description  String?                @db.VarChar(250)
-  iStatus      MasterRecordStatusEnum @default(Active)
-  remarks      String?                @db.VarChar(250)
-  createdBy    String?                @db.Char(10)
-  createdAt    DateTime               @default(now())
-  updatedBy    String?                @db.Char(10)
-  updatedAt    DateTime
-  category     imc_Category           @relation(fields: [company_id, category_id], references: [company_id, id])
-  products     imc_Product[]
+  company_id  String                 @db.Char(10)
+  branch_id   String                 @db.Char(10)
+  id          String                 @db.Char(10)
+  seq         Int?                   @default(0)
+  imageURL    String?                @db.VarChar(250)
+  category_id String                 @db.Char(10)
+  name        String                 @db.VarChar(80)
+  slug        String                 @db.VarChar(50)
+  description String?                @db.VarChar(250)
+  iStatus     MasterRecordStatusEnum @default(Active)
+  remarks     String?                @db.VarChar(250)
+  createdBy   String?                @db.Char(10)
+  createdAt   DateTime               @default(now())
+  updatedBy   String?                @db.Char(10)
+  updatedAt   DateTime
+  category    imc_Category           @relation(fields: [company_id, category_id], references: [company_id, id])
+  products    imc_Product[]
 
   @@id([company_id, category_id, id], map: "pk_imc_SubCategories")
 }
@@ -1418,23 +1418,24 @@ model cmf_CustomerVehicle {
 
 // Master Tipe Service (Service Rutin, Ganti Oli, Tune Up, dll)
 model wks_ServiceType {
-  company_id          String                   @db.Char(10)
-  branch_id           String                   @db.Char(10)
-  id                  String                   @db.Char(10)
-  name                String                   @db.VarChar(100) // Service Rutin, Ganti Oli, Tune Up, Body Repair, dll
+  company_id          String                     @db.Char(10)
+  branch_id           String                     @db.Char(10)
+  id                  String                     @db.Char(10)
+  name                String                     @db.VarChar(100) // Service Rutin, Ganti Oli, Tune Up, Body Repair, dll
   category            ServiceCategoryEnum? // MAINTENANCE, REPAIR, BODYWORK, WASH, INSPECTION
-  description         String?                  @db.VarChar(250)
+  description         String?                    @db.VarChar(250)
   estimatedTime       Int? // Estimasi waktu dalam menit
-  defaultPrice        Decimal?                 @db.Decimal(21, 4) // Harga standar
-  iStatus             MasterRecordStatusEnum   @default(Active)
-  remarks             String?                  @db.VarChar(250)
-  seq                 Int?                     @default(0)
-  createdBy           String?                  @db.Char(10)
-  createdAt           DateTime                 @default(now())
-  updatedBy           String?                  @db.Char(10)
+  defaultPrice        Decimal?                   @db.Decimal(21, 4) // Harga standar
+  iStatus             MasterRecordStatusEnum     @default(Active)
+  remarks             String?                    @db.VarChar(250)
+  seq                 Int?                       @default(0)
+  createdBy           String?                    @db.Char(10)
+  createdAt           DateTime                   @default(now())
+  updatedBy           String?                    @db.Char(10)
   updatedAt           DateTime
   serviceOrderDetails wks_ServiceOrderDetail[]
   wks_ServiceBooking  wks_ServiceBooking[]
+  painPoints          wks_PainPointServiceType[] // Pain points yang bisa diselesaikan oleh service type ini
 
   @@id([company_id, id], map: "pk_wks_ServiceType")
 }
@@ -1497,16 +1498,16 @@ model wks_ServiceBay {
 }
 
 model wks_WorkshopCategory {
-  id            String                @id @db.Char(5)
-  code          String                @db.VarChar(20)
-  name          String                @db.VarChar(120)
-  description   String?               @db.VarChar(250)
-  seq           Int?                  @default(0)
-  isActive      Boolean               @default(true)
-  createdBy     String?               @db.Char(10)
-  createdAt     DateTime              @default(now())
-  updatedBy     String?               @db.Char(10)
-  updatedAt     DateTime              @updatedAt
+  id            String             @id @db.Char(5)
+  code          String             @db.VarChar(20)
+  name          String             @db.VarChar(120)
+  description   String?            @db.VarChar(250)
+  seq           Int?               @default(0)
+  isActive      Boolean            @default(true)
+  createdBy     String?            @db.Char(10)
+  createdAt     DateTime           @default(now())
+  updatedBy     String?            @db.Char(10)
+  updatedAt     DateTime           @updatedAt
   workshopTypes wks_WorkshopType[]
   waitingLists  wks_waitingList[]
 
@@ -1514,23 +1515,24 @@ model wks_WorkshopCategory {
 }
 
 model wks_WorkshopType {
-  company_id   String?               @db.Char(10)
-  branch_id    String?               @db.Char(10)
-  id           String                @id @db.Char(10)
-  category_id  String                @db.Char(5)
-  name         String                @db.VarChar(150)
-  description  String?               @db.Text
-  iconName     String?               @db.VarChar(100)
-  seq          Int?                  @default(0)
-  isActive     Boolean               @default(true)
-  createdBy    String?               @db.Char(10)
-  createdAt    DateTime              @default(now())
-  updatedBy    String?               @db.Char(10)
-  updatedAt    DateTime              @updatedAt
-  category     wks_WorkshopCategory  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
-  branch       sys_Branch?           @relation(fields: [branch_id], references: [id], onUpdate: NoAction)
+  company_id  String?              @db.Char(10)
+  branch_id   String?              @db.Char(10)
+  id          String               @id @db.Char(10)
+  category_id String               @db.Char(5)
+  name        String               @db.VarChar(150)
+  description String?              @db.Text
+  iconName    String?              @db.VarChar(100)
+  seq         Int?                 @default(0)
+  isActive    Boolean              @default(true)
+  createdBy   String?              @db.Char(10)
+  createdAt   DateTime             @default(now())
+  updatedBy   String?              @db.Char(10)
+  updatedAt   DateTime             @updatedAt
+  category    wks_WorkshopCategory @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  branch      sys_Branch?          @relation(fields: [branch_id], references: [id], onUpdate: NoAction)
   // waitingLists wks_WaitingListType[]
-  waitngList   wks_waitingList[]
+  waitngList  wks_waitingList[]
+  painPoints  wks_PainPointWorkshopType[] // Pain points yang bisa diselesaikan oleh workshop type ini
 
   @@index([category_id], map: "idx_workshop_type_category")
   @@index([branch_id], map: "idx_workshop_type_branch")
@@ -1538,12 +1540,12 @@ model wks_WorkshopType {
 }
 
 model wks_WaitingListType {
-  id              Int              @id @default(autoincrement())
-  waitingList_id  String           @db.Char(10)
-  workshopType_id String           @db.Char(10)
-  assignedAt      DateTime         @default(now())
-  createdBy       String?          @db.Char(10)
-  createdAt       DateTime         @default(now())
+  id              Int      @id @default(autoincrement())
+  waitingList_id  String   @db.Char(10)
+  workshopType_id String   @db.Char(10)
+  assignedAt      DateTime @default(now())
+  createdBy       String?  @db.Char(10)
+  createdAt       DateTime @default(now())
   // waitingList     wks_waitingList  @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
   // workshopType    wks_WorkshopType @relation(fields: [workshopType_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
@@ -4376,70 +4378,70 @@ model tmp_sys_Branch {
 // =========================
 
 enum wks_ClaimStatus {
-  UNCLAIMED           // Data publik, belum ada yang claim
-  PRE_APPROVED        // Owner sudah setuju via DM, bisa claim mudah
+  UNCLAIMED // Data publik, belum ada yang claim
+  PRE_APPROVED // Owner sudah setuju via DM, bisa claim mudah
   PENDING_VERIFICATION // Sedang proses verifikasi
-  CLAIMED             // Sudah diklaim dan verified
-  REJECTED            // Klaim ditolak
+  CLAIMED // Sudah diklaim dan verified
+  REJECTED // Klaim ditolak
 }
 
 enum wks_VerificationMethod {
   WHATSAPP
   EMAIL
   PHONE
-  MAGIC_LINK         // Untuk PRE_APPROVED
+  MAGIC_LINK // Untuk PRE_APPROVED
 }
 
 model wks_waitingList {
-  id           String                 @id @default(cuid()) @db.Char(21)
-  name         String                 @db.VarChar(50)
-  slug         String?                @db.VarChar(50)
-  description  String?                @db.VarChar(250)
-  category_id  String?                @db.Char(5)
-  type_id      String?                @db.Char(10)
-  logo         String?                @db.VarChar(255)
-  address      String                 @db.VarChar(250)
-  province     String                 @db.Char(5)
-  city         String                 @db.Char(15)
-  district     String                 @db.Char(15)
-  subdistrict  String                 @db.Char(20)
-  email        String                 @db.VarChar(100)
-  phone        String                 @db.VarChar(20)
-  mobile       String                 @db.VarChar(20)
-  isDeleted    Boolean                @default(false)
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  createdBy    String?                @db.Char(10)
-  updatedBy    String?                @db.Char(10)
-  
+  id          String   @id @default(cuid()) @db.Char(21)
+  name        String   @db.VarChar(50)
+  slug        String?  @db.VarChar(50)
+  description String?  @db.VarChar(250)
+  category_id String?  @db.Char(5)
+  type_id     String?  @db.Char(10)
+  logo        String?  @db.VarChar(255)
+  address     String   @db.VarChar(250)
+  province    String   @db.Char(5)
+  city        String   @db.Char(15)
+  district    String   @db.Char(15)
+  subdistrict String   @db.Char(20)
+  email       String   @db.VarChar(100)
+  phone       String   @db.VarChar(20)
+  mobile      String   @db.VarChar(20)
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?  @db.Char(10)
+  updatedBy   String?  @db.Char(10)
+
   // Claim fields
-  claimedBy              String?                @db.VarChar(50) // Phone number atau user ID
-  claimedAt              DateTime?
-  claimStatus            wks_ClaimStatus         @default(UNCLAIMED)
-  claimToken             String?                 @db.VarChar(100)
-  claimTokenExpiresAt    DateTime?
+  claimedBy               String?                 @db.VarChar(50) // Phone number atau user ID
+  claimedAt               DateTime?
+  claimStatus             wks_ClaimStatus         @default(UNCLAIMED)
+  claimToken              String?                 @db.VarChar(100)
+  claimTokenExpiresAt     DateTime?
   claimVerificationMethod wks_VerificationMethod?
-  isPublicData           Boolean                @default(true)
-  isPromoLinked           Boolean                @default(false)
-  
+  isPublicData            Boolean                 @default(true)
+  isPromoLinked           Boolean                 @default(false)
+
   // Pre-approval fields (untuk data dari DM FB)
-  preApprovedPhone       String?                @db.VarChar(20) // Nomor WhatsApp owner
-  preApprovedName        String?                @db.VarChar(100)
-  preApprovedAt          DateTime?
-  preApprovedBy          String?                @db.VarChar(50) // Admin yang approve
-  
+  preApprovedPhone String?   @db.VarChar(20) // Nomor WhatsApp owner
+  preApprovedName  String?   @db.VarChar(100)
+  preApprovedAt    DateTime?
+  preApprovedBy    String?   @db.VarChar(50) // Admin yang approve
+
   // Management token untuk WhatsApp-only flow
-  managementToken        String?                @db.VarChar(100)
+  managementToken          String?   @db.VarChar(100)
   managementTokenExpiresAt DateTime?
-  
+
   // Relations
-  types        wks_WorkshopType?      @relation(fields: [type_id], references: [id], onUpdate: NoAction)
-  category     wks_WorkshopCategory?  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
-  promos       wks_promo[]
-  images       wks_Images[]
-  videos       wks_videos[]
+  types         wks_WorkshopType?     @relation(fields: [type_id], references: [id], onUpdate: NoAction)
+  category      wks_WorkshopCategory? @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  promos        wks_promo[]
+  images        wks_Images[]
+  videos        wks_videos[]
   claimRequests wks_ClaimRequest[]
-  workingHours wks_WorkingHour[]
+  workingHours  wks_WorkingHour[]
 
   @@index([category_id], map: "idx_wks_waitinglist_category")
   @@index([claimStatus], map: "idx_wks_waitinglist_claimstatus")
@@ -4459,41 +4461,41 @@ enum wks_ClaimRequestStatus {
 }
 
 model wks_ClaimRequest {
-  id                String                  @id @default(cuid()) @db.Char(21)
-  waitingList_id    String                  @db.Char(21)
-  phone             String                  @db.VarChar(20)
-  email             String?                 @db.VarChar(100)
-  name              String                  @db.VarChar(100)
-  verificationCode  String                  @db.VarChar(100) // SHA-256 hash (64 chars) + buffer
+  id                        String                 @id @default(cuid()) @db.Char(21)
+  waitingList_id            String                 @db.Char(21)
+  phone                     String                 @db.VarChar(20)
+  email                     String?                @db.VarChar(100)
+  name                      String                 @db.VarChar(100)
+  verificationCode          String                 @db.VarChar(100) // SHA-256 hash (64 chars) + buffer
   verificationCodeExpiresAt DateTime
-  status            wks_ClaimRequestStatus   @default(PENDING)
-  verifiedAt        DateTime?
-  createdAt         DateTime                @default(now())
-  updatedAt         DateTime                @updatedAt
-  
-  waitingList       wks_waitingList         @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
-  
+  status                    wks_ClaimRequestStatus @default(PENDING)
+  verifiedAt                DateTime?
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+
+  waitingList wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+
   @@index([waitingList_id], map: "idx_wks_claimrequest_waitinglist")
   @@index([phone, status], map: "idx_wks_claimrequest_phone_status")
   @@index([verificationCode], map: "idx_wks_claimrequest_verificationcode")
 }
 
 model wks_Images {
-  id              String        @id @default(cuid()) @db.Char(21)
-  waitingList_id  String        @db.Char(21)
-  branch_id       String?       @db.Char(10)
-  imageURL        String        @db.VarChar(500)
-  title           String?       @db.VarChar(100)
-  description     String?       @db.VarChar(500)
-  isPrimary       Boolean       @default(false)
-  seq             Int?          @default(0)
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  createdBy       String?       @db.VarChar(50)
-  updatedBy       String?       @db.VarChar(50)
-  waitingList     wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
-  branch          sys_Branch?   @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  id             String          @id @default(cuid()) @db.Char(21)
+  waitingList_id String          @db.Char(21)
+  branch_id      String?         @db.Char(10)
+  imageURL       String          @db.VarChar(500)
+  title          String?         @db.VarChar(100)
+  description    String?         @db.VarChar(500)
+  isPrimary      Boolean         @default(false)
+  seq            Int?            @default(0)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  createdBy      String?         @db.VarChar(50)
+  updatedBy      String?         @db.VarChar(50)
+  waitingList    wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  branch         sys_Branch?     @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
 
   @@index([waitingList_id], map: "idx_wks_images_waitinglist")
   @@index([branch_id], map: "idx_wks_images_branch")
@@ -4501,23 +4503,23 @@ model wks_Images {
 }
 
 model wks_videos {
-  id              String        @id @default(cuid()) @db.Char(21)
-  waitingList_id  String        @db.Char(21)
-  branch_id       String?       @db.Char(10)
-  videoURL        String        @db.VarChar(500)
-  thumbnailURL    String?       @db.VarChar(500)
-  title           String?       @db.VarChar(100)
-  description     String?       @db.VarChar(500)
-  duration        Int?          // Duration in seconds
-  isPrimary       Boolean       @default(false)
-  seq             Int?          @default(0)
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  createdBy       String?       @db.VarChar(50)
-  updatedBy       String?       @db.VarChar(50)
-  waitingList     wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
-  branch          sys_Branch?   @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  id             String          @id @default(cuid()) @db.Char(21)
+  waitingList_id String          @db.Char(21)
+  branch_id      String?         @db.Char(10)
+  videoURL       String          @db.VarChar(500)
+  thumbnailURL   String?         @db.VarChar(500)
+  title          String?         @db.VarChar(100)
+  description    String?         @db.VarChar(500)
+  duration       Int? // Duration in seconds
+  isPrimary      Boolean         @default(false)
+  seq            Int?            @default(0)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  createdBy      String?         @db.VarChar(50)
+  updatedBy      String?         @db.VarChar(50)
+  waitingList    wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  branch         sys_Branch?     @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
 
   @@index([waitingList_id], map: "idx_wks_videos_waitinglist")
   @@index([branch_id], map: "idx_wks_videos_branch")
@@ -4526,23 +4528,23 @@ model wks_videos {
 
 // Office Hours untuk Waiting List dan Branch (unified model)
 model wks_WorkingHour {
-  id                  String        @id @default(cuid()) @db.Char(21)
-  waitingList_id      String        @db.Char(21)
-  branch_id           String?       @db.Char(10)
-  company_id          String?       @db.Char(10) // Untuk kemudahan query jika sudah jadi branch
-  weekday             Int           @db.SmallInt // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-  isOpen              Boolean       @default(true)
-  openTime            String?       @db.Char(5) // Format: "08:00"
-  closeTime           String?       @db.Char(5) // Format: "17:00"
-  bookingBufferMinutes Int?         @default(0) // buffer antar booking dalam menit
-  remarks             String?       @db.VarChar(250)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  createdBy           String?       @db.VarChar(50)
-  updatedBy           String?       @db.VarChar(50)
+  id                   String   @id @default(cuid()) @db.Char(21)
+  waitingList_id       String   @db.Char(21)
+  branch_id            String?  @db.Char(10)
+  company_id           String?  @db.Char(10) // Untuk kemudahan query jika sudah jadi branch
+  weekday              Int      @db.SmallInt // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  isOpen               Boolean  @default(true)
+  openTime             String?  @db.Char(5) // Format: "08:00"
+  closeTime            String?  @db.Char(5) // Format: "17:00"
+  bookingBufferMinutes Int?     @default(0) // buffer antar booking dalam menit
+  remarks              String?  @db.VarChar(250)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  createdBy            String?  @db.VarChar(50)
+  updatedBy            String?  @db.VarChar(50)
 
-  waitingList         wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
-  branch              sys_Branch?   @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  waitingList wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  branch      sys_Branch?     @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
 
   @@unique([waitingList_id, weekday], map: "unique_wks_workinghour_waitinglist_weekday")
   @@unique([company_id, branch_id, weekday], map: "unique_wks_workinghour_branch_weekday")
@@ -4568,13 +4570,13 @@ model tmp_customer {
 }
 
 model sys_Province {
-  company_id String        @db.Char(10)
-  id         String        @id @db.Char(5)
-  name       String        @db.VarChar(100)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  createdBy  String?       @db.Char(10)
-  updatedBy  String?       @db.Char(10)
+  company_id String       @db.Char(10)
+  id         String       @id @db.Char(5)
+  name       String       @db.VarChar(100)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  createdBy  String?      @db.Char(10)
+  updatedBy  String?      @db.Char(10)
   cities     sys_City[]
   branches   sys_Branch[]
 }
@@ -4613,16 +4615,16 @@ model sys_District {
 }
 
 model sys_SubDistrict {
-  company_id  String        @db.Char(10)
-  id          String        @id @db.Char(20)
-  name        String        @db.VarChar(100)
-  district_id String        @db.Char(15)
-  city_id     String        @db.Char(15)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  createdBy   String?       @db.Char(10)
-  updatedBy   String?       @db.Char(10)
-  district    sys_District  @relation(fields: [district_id], references: [id])
+  company_id  String       @db.Char(10)
+  id          String       @id @db.Char(20)
+  name        String       @db.VarChar(100)
+  district_id String       @db.Char(15)
+  city_id     String       @db.Char(15)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   String?      @db.Char(10)
+  updatedBy   String?      @db.Char(10)
+  district    sys_District @relation(fields: [district_id], references: [id])
   branches    sys_Branch[]
 
   @@index([district_id])
@@ -4642,31 +4644,137 @@ enum wks_PromoType {
 }
 
 model wks_promo {
-  id              String          @id @default(cuid()) @db.Char(21)
-  waitingList_id  String          @db.Char(21)
-  waitingList     wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction)
+  id             String          @id @default(cuid()) @db.Char(21)
+  waitingList_id String          @db.Char(21)
+  waitingList    wks_waitingList @relation(fields: [waitingList_id], references: [id], onUpdate: NoAction)
 
-  title           String          @db.VarChar(80)
-  description     String?         @db.Text
-  promoType       wks_PromoType
+  title       String        @db.VarChar(80)
+  description String?       @db.Text
+  promoType   wks_PromoType
 
   // Nilai diskon opsional (gunakan salah satu sesuai promoType)
-  valuePercent    Decimal?        @db.Decimal(5, 2)
-  valueNominal    Int?
+  valuePercent Decimal? @db.Decimal(5, 2)
+  valueNominal Int?
 
   // Konten fleksibel untuk berbagai tipe promo
-  checklist       Json?           // Untuk FREE_CHECKLIST: array string
-  applicableItems Json?           // Untuk DISCOUNT/BUNDLE/OTHER: array objek { code?, name, note? }
+  checklist       Json? // Untuk FREE_CHECKLIST: array string
+  applicableItems Json? // Untuk DISCOUNT/BUNDLE/OTHER: array objek { code?, name, note? }
 
-  startAt         DateTime?
-  endAt           DateTime?
-  isActive        Boolean         @default(true)
+  startAt  DateTime?
+  endAt    DateTime?
+  isActive Boolean   @default(true)
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  createdBy       String?         @db.VarChar(50)
-  updatedBy       String?         @db.VarChar(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?  @db.VarChar(50)
+  updatedBy String?  @db.VarChar(50)
 
   @@index([waitingList_id, isActive])
   @@index([isActive, startAt, endAt])
+}
+
+// =========================
+// Pain Point Model - Untuk SEO & User Journey
+// =========================
+
+enum PainPointCategoryEnum {
+  URGENT      @map("URGENT") // Mesin mati, rem blong, ban bocor
+  GENERAL     @map("GENERAL") // AC rusak, rem bunyi, lampu mati
+  MAINTENANCE @map("MAINTENANCE") // Service berkala, ganti oli, tune up
+  BODYWORK    @map("BODYWORK") // Body repair, cat, dempul
+  ELECTRICAL  @map("ELECTRICAL") // Masalah kelistrikan
+}
+
+model wks_PainPoint {
+  id          String  @id @default(cuid()) @db.Char(21)
+  slug        String  @unique @db.VarChar(100) // "ac-tidak-dingin", "mesin-mati", "rem-bunyi"
+  title       String  @db.VarChar(150) // "AC Tidak Dingin"
+  description String? @db.Text // Deskripsi masalah
+
+  // Kategori pain point
+  category PainPointCategoryEnum @default(GENERAL)
+
+  // Keywords untuk matching (JSON array)
+  keywords Json // ["bunyi", "gludak", "gluduk", "suspensi", "shock", ...]
+
+  // Visual
+  iconName String? @db.VarChar(100) // Nama icon (lucide-react)
+  imageUrl String? @db.VarChar(255) // Gambar ilustrasi masalah
+
+  // Popularity & Analytics
+  popularityScore Int @default(0) // Untuk sorting "masalah populer"
+  viewCount       Int @default(0) // Tracking popularitas
+  searchCount     Int @default(0) // Berapa kali dicari
+
+  // Urgency & Priority
+  isUrgent Boolean @default(false) // Masalah urgent (mesin mati, rem blong)
+  priority Int     @default(0) // 0-10, untuk urutan custom
+
+  // Status
+  isActive  Boolean @default(true)
+  isPopular Boolean @default(false) // Tampilkan di quick filter chips
+  isDeleted Boolean @default(false) // Soft delete
+  isDraft   Boolean @default(false) // Draft status untuk review
+
+  // Audit
+  createdBy String?  @db.Char(10)
+  createdAt DateTime @default(now())
+  updatedBy String?  @db.Char(10)
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  serviceTypes    wks_PainPointServiceType[]    // Service types yang bisa menyelesaikan (untuk company)
+  workshopTypes   wks_PainPointWorkshopType[]   // Workshop types yang bisa menyelesaikan (untuk waitingList)
+  // Full-text search index akan ditambahkan via raw SQL migration
+
+  @@index([slug], map: "idx_painpoint_slug")
+  @@index([isActive, isPopular, priority], map: "idx_painpoint_active_popular")
+  @@index([category], map: "idx_painpoint_category")
+  @@index([isDeleted], map: "idx_painpoint_deleted")
+}
+
+// Junction table: Pain Point <-> Service Type
+// Satu pain point bisa diselesaikan oleh beberapa service type
+model wks_PainPointServiceType {
+  id             String @id @default(cuid()) @db.Char(21)
+  painPoint_id   String @db.Char(21)
+  company_id     String @db.Char(10)
+  serviceType_id String @db.Char(10)
+
+  // Relevansi: seberapa cocok service type ini untuk pain point (1-10)
+  relevance Int @default(5) // 10 = sangat cocok
+
+  painPoint   wks_PainPoint   @relation(fields: [painPoint_id], references: [id], onDelete: Cascade)
+  serviceType wks_ServiceType @relation(fields: [company_id, serviceType_id], references: [company_id, id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  createdBy String?  @db.Char(10)
+
+  @@unique([painPoint_id, company_id, serviceType_id], map: "unique_painpoint_servicetype")
+  @@index([painPoint_id], map: "idx_painpoint_servicetype_painpoint")
+  @@index([company_id, serviceType_id], map: "idx_painpoint_servicetype_servicetype")
+  @@index([relevance], map: "idx_painpoint_servicetype_relevance")
+}
+
+// Junction table: Pain Point <-> Workshop Type
+// Untuk mapping pain points ke workshop types (untuk waitingList yang belum subscribe)
+// Workshop types bersifat global, tidak per company
+model wks_PainPointWorkshopType {
+  id             String @id @default(cuid()) @db.Char(21)
+  painPoint_id   String @db.Char(21)
+  workshopType_id String @db.Char(10)
+
+  // Relevansi: seberapa cocok workshop type ini untuk pain point (1-10)
+  relevance Int @default(5) // 10 = sangat cocok
+
+  painPoint    wks_PainPoint   @relation(fields: [painPoint_id], references: [id], onDelete: Cascade)
+  workshopType wks_WorkshopType @relation(fields: [workshopType_id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  createdBy String?  @db.Char(10)
+
+  @@unique([painPoint_id, workshopType_id], map: "unique_painpoint_workshoptype")
+  @@index([painPoint_id], map: "idx_painpoint_workshoptype_painpoint")
+  @@index([workshopType_id], map: "idx_painpoint_workshoptype_workshoptype")
+  @@index([relevance], map: "idx_painpoint_workshoptype_relevance")
 }

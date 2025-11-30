@@ -49,85 +49,50 @@ async function bootstrap() {
     prefix: '/public/',
   });
 
-  // CORS Configuration dengan environment variables
+  // CORS Configuration - SEDERHANA & STANDAR
   const isProduction = process.env.NODE_ENV === 'production';
+
+  // Daftar allowed origins - bisa dari env variable atau default
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
-    : isProduction
-      ? [
-          'https://ngebengkel.com',
-          'https://www.ngebengkel.com',
-          'https://workshop.ngebengkel.com',
-          'https://admin.ngebengkel.com',
-          'https://app.ngebengkel.com',
-        ]
-      : [
-          'http://localhost:3000',
-          'http://localhost:3100',
-          'http://localhost:3200',
-          'http://localhost:3300',
-          'https://ngebengkel.com',
-          'https://www.ngebengkel.com',
-          'https://www.workshop.ngebengkel.com',
-          'https://www.admin.ngebengkel.com',
-          'https://www.app.ngebengkel.com',
-        ];
+    : [
+        // Development
+        'http://localhost:3000',
+        'http://localhost:3100',
+        'http://localhost:3200',
+        'http://localhost:3300',
+        // Production
+        'https://admin.ngebengkel.com',
+        'https://workshop.ngebengkel.com',
+        'https://ngebengkel.com',
+      ];
 
-  // CORS Configuration - menggunakan array origins langsung untuk lebih reliable dengan preflight
-  // Log allowed origins untuk debugging
+  // Log untuk debugging di development
   if (!isProduction) {
     console.log('[CORS] Allowed origins:', allowedOrigins);
   }
 
+  // Enable CORS - konfigurasi sederhana & standar
   app.enableCors({
-    origin: allowedOrigins, // Gunakan array langsung - lebih reliable untuk preflight
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Accept',
-      'Origin',
-      'Access-Control-Request-Method',
-      'Access-Control-Request-Headers',
-      'X-Anonymous-Id', // For anonymous login
-      'x-anonymous-id', // Case-insensitive support
-      'X-Refresh-Token', // For refresh token
-      'x-refresh-token', // Case-insensitive support
-    ],
-    exposedHeaders: [
-      'X-RateLimit-Limit',
-      'X-RateLimit-Remaining',
-      'X-RateLimit-Reset',
-      'x-access-token', // Untuk token refresh di frontend
-      'x-refresh-token', // Untuk token refresh di frontend
-      'x-token-refreshed', // Flag untuk token refresh
-    ],
-    credentials: true, // Allow cookies and credentials - IMPORTANT for CORS with credentials
-    maxAge: 86400, // 24 hours - cache preflight response
-    preflightContinue: false, // End preflight request immediately (jangan lanjutkan ke route handler)
-    optionsSuccessStatus: 204, // Use 204 No Content for OPTIONS (standard untuk preflight)
-  });
+    origin: (origin, callback) => {
+      // Allow requests tanpa origin (mobile apps, Postman)
+      if (!origin) return callback(null, true);
 
-  // Add logging middleware untuk debugging CORS (hanya di development)
-  if (!isProduction) {
-    app.use((req: any, res: any, next: () => void) => {
-      // Log CORS preflight requests
-      if (req.method === 'OPTIONS') {
-        console.log(`[CORS Preflight] ${req.method} ${req.url}`);
-        console.log(
-          `[CORS Preflight] Origin: ${req.headers.origin || 'no origin'}`,
-        );
-        console.log(
-          `[CORS Preflight] Access-Control-Request-Method: ${req.headers['access-control-request-method'] || 'N/A'}`,
-        );
-        console.log(
-          `[CORS Preflight] Access-Control-Request-Headers: ${req.headers['access-control-request-headers'] || 'N/A'}`,
-        );
+      // Check jika origin ada di allowed list
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        if (!isProduction) {
+          console.warn(`[CORS] Blocked origin: ${origin}`);
+        }
+        callback(new Error('Not allowed by CORS'));
       }
-      next();
-    });
-  }
+    },
+    credentials: true, // Penting: harus true untuk cookies & Authorization header
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Accept,Authorization,Origin,X-Requested-With',
+    exposedHeaders: 'x-access-token,x-refresh-token,x-token-refreshed',
+  });
 
   // Global Exception Filter untuk sanitize error messages
   app.useGlobalFilters(new HttpExceptionFilter());

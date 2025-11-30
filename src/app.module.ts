@@ -29,6 +29,7 @@ import { BookingSlotModule } from './wks/booking-slot/booking-slot.module';
 import { ServiceOrderModule } from './wks/service-order/service-order.module';
 import { ReminderModule } from './wks/reminder/reminder.module';
 import { WaitingListModule } from './wks/waiting-list/waiting-list.module';
+import { PainPointModule } from './wks/pain-point/pain-point.module';
 import { ImagesModule } from './wks/images/images.module';
 import { VideosModule } from './wks/videos/videos.module';
 import { WorkingHourModule } from './wks/working-hour/working-hour.module';
@@ -107,6 +108,7 @@ import { CommonModule } from './common/common.module';
     ServiceOrderModule,
     ReminderModule,
     WaitingListModule,
+    PainPointModule,
     ImagesModule,
     VideosModule,
     WorkingHourModule,
