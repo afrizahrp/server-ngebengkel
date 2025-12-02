@@ -16,6 +16,23 @@ class PrismaServiceMock extends PrismaClient {
   async onModuleInit() {
     await this.$connect();
   }
+
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
+
+  async enableShutdownHooks(app: any) {
+    // Not needed for standalone script
+    process.on('SIGTERM', async () => {
+      await this.$disconnect();
+      if (app) await app.close();
+    });
+
+    process.on('SIGINT', async () => {
+      await this.$disconnect();
+      if (app) await app.close();
+    });
+  }
 }
 
 const prisma = new PrismaServiceMock();
