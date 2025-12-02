@@ -36,4 +36,8 @@ export class WaitingListResponseDto {
   isPublicData?: boolean;
   // Promo linked field
   isPromoLinked?: boolean;
+  // Google Business Profile fields
+  gbp_rating?: number | null;
+  gbb_reviews_count?: number | null;
+  priority?: number | null;
 }

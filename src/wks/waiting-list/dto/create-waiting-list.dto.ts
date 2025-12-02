@@ -6,6 +6,7 @@ import {
   IsArray,
   IsEmail,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Length,
@@ -101,4 +102,19 @@ export class CreateWaitingListDto {
   @IsOptional()
   @IsString()
   recaptchaAction?: string; // Action untuk reCAPTCHA v3 (default: 'submit')
+
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => (value !== undefined && value !== null && value !== '' ? Number(value) : undefined))
+  gbp_rating?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => (value !== undefined && value !== null && value !== '' ? Number(value) : undefined))
+  gbb_reviews_count?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => (value !== undefined && value !== null && value !== '' ? Number(value) : undefined))
+  priority?: number;
 }

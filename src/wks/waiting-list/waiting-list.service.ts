@@ -80,6 +80,10 @@ const WAITING_LIST_SELECT = {
   isPublicData: true,
   // Promo linked field
   isPromoLinked: true,
+  // Google Business Profile fields
+  gbp_rating: true,
+  gbb_reviews_count: true,
+  priority: true,
 } as const satisfies Prisma.wks_waitingListSelect;
 
 type WaitingListWithRelations = Prisma.wks_waitingListGetPayload<{
@@ -160,6 +164,9 @@ export class WaitingListService {
           email: normalizedEmail,
           phone: createWaitingListDto.phone ?? '',
           mobile: createWaitingListDto.mobile ?? '',
+          gbp_rating: createWaitingListDto.gbp_rating ?? null,
+          gbb_reviews_count: createWaitingListDto.gbb_reviews_count ?? null,
+          priority: createWaitingListDto.priority ?? null,
           createdBy: 'website',
           updatedBy: 'website',
           types: selectedTypeId
@@ -738,6 +745,18 @@ export class WaitingListService {
         updateData.name = updateWaitingListDto.name;
       }
 
+      if (updateWaitingListDto.gbp_rating !== undefined) {
+        updateData.gbp_rating = updateWaitingListDto.gbp_rating ?? null;
+      }
+
+      if (updateWaitingListDto.gbb_reviews_count !== undefined) {
+        updateData.gbb_reviews_count = updateWaitingListDto.gbb_reviews_count ?? null;
+      }
+
+      if (updateWaitingListDto.priority !== undefined) {
+        updateData.priority = updateWaitingListDto.priority ?? null;
+      }
+
       if (updateWaitingListDto.slug) {
         updateData.slug = updateWaitingListDto.slug;
       }
@@ -952,6 +971,10 @@ export class WaitingListService {
       isPublicData: rest.isPublicData ?? true,
       // Promo linked field (from database, lebih reliable)
       isPromoLinked: rest.isPromoLinked ?? false,
+      // Google Business Profile fields
+      gbp_rating: rest.gbp_rating ? Number(rest.gbp_rating) : null,
+      gbb_reviews_count: rest.gbb_reviews_count ?? null,
+      priority: rest.priority ?? null,
     };
   }
 
