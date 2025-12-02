@@ -4683,6 +4683,7 @@ enum PainPointCategoryEnum {
   MAINTENANCE @map("MAINTENANCE") // Service berkala, ganti oli, tune up
   BODYWORK    @map("BODYWORK") // Body repair, cat, dempul
   ELECTRICAL  @map("ELECTRICAL") // Masalah kelistrikan
+  STEERING    @map("STEERING")// Masalah stir
 }
 
 model wks_PainPoint {
