@@ -6,7 +6,7 @@ const createPainPointWorkshopTypeId = init({ length: 21 });
 
 /**
  * Service untuk mapping pain points ke workshop types
- * 
+ *
  * Digunakan untuk:
  * - Auto-map pain points ke workshop types saat seed
  * - Mapping berdasarkan category dan keywords matching
@@ -32,9 +32,7 @@ export class PainPointWorkshopTypeMapperService {
     skipped: number;
     mappings: Array<{ workshopTypeId: string; relevance: number }>;
   }> {
-    this.logger.log(
-      `Auto-mapping pain point ${painPointId} to workshop types`,
-    );
+    this.logger.log(`Auto-mapping pain point ${painPointId} to workshop types`);
 
     // Get all active workshop types
     const workshopTypes = await this.prisma.wks_WorkshopType.findMany({
@@ -100,6 +98,7 @@ export class PainPointWorkshopTypeMapperService {
       MAINTENANCE: ['MOBIL', 'MOTOR'],
       BODYWORK: ['MOBIL', 'MOTOR'],
       ELECTRICAL: ['MOBIL', 'MOTOR'],
+      STEERING: ['MOBIL', 'MOTOR'], // Masalah stir/kemudi
     };
 
     if (workshopType.category) {
@@ -235,6 +234,3 @@ export class PainPointWorkshopTypeMapperService {
     }));
   }
 }
-
-
-

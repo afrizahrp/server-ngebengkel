@@ -6,6 +6,7 @@ import { join } from 'path';
 import * as dotenv from 'dotenv';
 import helmet from 'helmet';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { PrismaService } from './prisma.service';
 
 dotenv.config();
 
@@ -125,6 +126,10 @@ async function bootstrap() {
 
   // set all routes with /api prefix
   app.setGlobalPrefix('api');
+
+  // Enable graceful shutdown for Prisma
+  const prismaService = app.get(PrismaService);
+  await prismaService.enableShutdownHooks(app);
 
   // const port = process.env.PORT ?? 4000;
   await app.listen(process.env.PORT ?? 4000);
