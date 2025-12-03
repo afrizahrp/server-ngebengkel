@@ -159,7 +159,7 @@ export class BetterAuthController {
   /**
    * Protected route untuk testing
    */
-  @Roles('ADMIN', 'MANAGER', 'USER')
+  @Roles('ADMIN','SUPER_ADMIN', 'MANAGER', 'USER')
   @Get('protected')
   getProtected(@Request() req: AuthRequest): any {
     return {
@@ -270,7 +270,7 @@ export class BetterAuthController {
         name: loginResult.user.name,
         email: loginResult.user.email,
         image: loginResult.user.image || '',
-        company_id: loginResult.user.company?.company_id || 'BIS',
+        company_id: loginResult.user.company?.company_id || 'NGB',
         role_id: loginResult.user.company?.role_id || 'ADMIN',
         role_name: loginResult.user.company?.role_name || 'ADMINISTRATOR',
       });
