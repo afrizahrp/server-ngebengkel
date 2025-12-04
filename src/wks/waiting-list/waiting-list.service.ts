@@ -230,6 +230,8 @@ export class WaitingListService {
       .map((type) => type.name)
       .filter((name): name is string => Boolean(name));
 
+    // Send thank you email asynchronously
+    if(response.email)
     void this.emailService
       .sendWaitingListThankYouEmail({
         email: response.email,
@@ -1350,15 +1352,12 @@ export class WaitingListService {
       throw new BadRequestException('Nama wajib diisi');
     }
 
-            const normalizedEmail = email?.trim().toLowerCase();
-            if (!normalizedEmail) {
-              throw new BadRequestException('Email wajib diisi');
-            }
+    const normalizedEmail = email?.trim().toLowerCase();
+    // Email is optional - only validate if provided
+    if (normalizedEmail && !isEmail(normalizedEmail)) {
+      throw new BadRequestException('Format email tidak valid');
+    }
 
-          if (!isEmail(normalizedEmail)) {
-            throw new BadRequestException('Format email tidak valid');
-          }
-
-    return { name: trimmedName, email: normalizedEmail };
+    return { name: trimmedName, email: normalizedEmail || undefined };
   }
 }

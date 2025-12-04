@@ -128,6 +128,7 @@ export class EmailService {
       ),
     };
 
+    if (email) {
     try {
       await this.transporter.sendMail(mailOptions);
       console.log(`✅ Waiting list thank you email sent to ${email}`);
@@ -136,6 +137,7 @@ export class EmailService {
       throw new InternalServerErrorException(
         'Failed to send waiting list thank you email',
       );
+    }
     }
   }
 
