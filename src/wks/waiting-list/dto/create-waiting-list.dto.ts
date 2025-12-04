@@ -64,11 +64,14 @@ export class CreateWaitingListDto {
   @Transform(({ value }) => value?.trim())
   subdistrict!: string;
 
-  // @IsNotEmpty()
-  @IsEmail()
   @IsOptional()
+  @IsEmail()
   @MaxLength(100)
-  @Transform(({ value }) => value?.trim().toLowerCase())
+  @Transform(({ value }) => {
+    const trimmed = value?.trim().toLowerCase();
+    // Convert empty string to undefined so @IsOptional() works properly
+    return trimmed === '' ? undefined : trimmed;
+  })
   email?: string;
 
   @IsString()
