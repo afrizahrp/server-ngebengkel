@@ -20,6 +20,7 @@ import {
 import { EmailService } from '../../email/email.service';
 import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availability.dto';
 import { QueryWaitingListDto } from './dto/query-waiting-list.dto';
+import { generateUniqueSlug } from '../../utils/generateSlug';
 
 const createWaitingListId = init({ length: 10 });
 const WAITING_LIST_SELECT = {
@@ -122,6 +123,11 @@ export class WaitingListService {
 
     const id = await this.generateId();
 
+    // Generate unique slug from name if not provided
+    const slug = createWaitingListDto.slug
+      ? createWaitingListDto.slug
+      : await generateUniqueSlug(name, this.prisma);
+
     const waitingList = await this.prisma.$transaction(async (tx) => {
       const category = await tx.wks_WorkshopCategory.findFirst({
         where: { id: createWaitingListDto.categoryId, isActive: true },
@@ -155,7 +161,7 @@ export class WaitingListService {
           id,
           name,
           description: createWaitingListDto.description,
-          slug: createWaitingListDto.slug,
+          slug,
           address: createWaitingListDto.address,
           city: createWaitingListDto.city,
           district: createWaitingListDto.district,

@@ -8,3 +8,5 @@ export {
   findPrefixByModuleId,
   type GenerateDocumentNumberParams,
 } from './generateDocumentNumber';
+
+export { generateSlug, generateUniqueSlug } from './generateSlug';
