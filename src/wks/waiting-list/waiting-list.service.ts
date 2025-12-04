@@ -541,66 +541,81 @@ export class WaitingListService {
   }
 
   async findOne(idOrSlug: string): Promise<WaitingListResponseDto> {
-    const trimmed = idOrSlug.trim();
+    try {
+      const trimmed = idOrSlug?.trim();
+      if (!trimmed) {
+        throw new BadRequestException('ID atau slug waiting list wajib diisi');
+      }
 
-    // Coba cari berdasarkan ID dulu (format CUID biasanya 21 karakter)
-    let waitingList = await this.prisma.wks_waitingList.findFirst({
-      where: {
-        id: trimmed,
-        isDeleted: false,
-      },
-      select: this.waitingListSelect,
-    });
-
-    // Jika tidak ditemukan berdasarkan ID, coba cari berdasarkan slug (case-insensitive)
-    if (!waitingList) {
-      waitingList = await this.prisma.wks_waitingList.findFirst({
+      // Cari berdasarkan ID
+      let waitingList = await this.prisma.wks_waitingList.findFirst({
         where: {
-          slug: {
-            equals: trimmed,
-            mode: 'insensitive', // Case-insensitive search
+          id: trimmed,
+          isDeleted: false,
+        },
+        select: this.waitingListSelect,
+      });
+
+      // Cari berdasarkan slug jika tidak ditemukan
+      if (!waitingList && trimmed) {
+        waitingList = await this.prisma.wks_waitingList.findFirst({
+          where: {
+            slug: {
+              equals: trimmed,
+              mode: 'insensitive',
+            },
+            isDeleted: false,
           },
-          isDeleted: false,
-        },
-        select: this.waitingListSelect,
-      });
-    }
+          select: this.waitingListSelect,
+        });
+      }
 
-    // Jika masih tidak ditemukan, coba cari berdasarkan nama (fallback)
-    // Ini untuk backward compatibility jika slug belum di-generate
-    if (!waitingList) {
-      // Generate slug dari input untuk matching
-      const slugFromInput = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      waitingList = await this.prisma.wks_waitingList.findFirst({
-        where: {
-          OR: [
-            {
-              slug: {
-                equals: slugFromInput,
-                mode: 'insensitive',
+      // Fallback: cari berdasarkan nama atau slug dari input
+      if (!waitingList && trimmed) {
+        const slugFromInput = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        waitingList = await this.prisma.wks_waitingList.findFirst({
+          where: {
+            OR: [
+              {
+                slug: {
+                  equals: slugFromInput,
+                  mode: 'insensitive',
+                },
               },
-            },
-            {
-              name: {
-                contains: trimmed,
-                mode: 'insensitive',
+              {
+                name: {
+                  contains: trimmed,
+                  mode: 'insensitive',
+                },
               },
-            },
-          ],
-          isDeleted: false,
-        },
-        select: this.waitingListSelect,
-      });
-    }
+            ],
+            isDeleted: false,
+          },
+          select: this.waitingListSelect,
+        });
+      }
 
-    if (!waitingList) {
-      this.logger.warn(
-        `Waiting list not found for: ${trimmed} (tried ID, slug, and name)`,
-      );
-      throw new NotFoundException('Data waiting list tidak ditemukan');
-    }
+      if (!waitingList) {
+        this.logger.warn(
+          `Waiting list not found for: ${trimmed} (tried ID, slug, and name)`,
+        );
+        throw new NotFoundException('Data waiting list tidak ditemukan');
+      }
 
-    return this.toResponse(waitingList);
+      // Null-safe mapping
+      try {
+        return this.toResponse(waitingList);
+      } catch (err) {
+        this.logger.error('Error mapping waiting list response', err);
+        throw new InternalServerErrorException('Gagal memproses data waiting list.');
+      }
+    } catch (err) {
+      if (err instanceof NotFoundException || err instanceof BadRequestException) {
+        throw err;
+      }
+      this.logger.error('Unexpected error in findOne', err);
+      throw new InternalServerErrorException('Terjadi kesalahan pada server saat mengambil data waiting list.');
+    }
   }
 
   /**
