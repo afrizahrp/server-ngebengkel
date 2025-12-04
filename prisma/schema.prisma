@@ -387,7 +387,7 @@ model sys_WhiteListEmail {
 model sys_User {
   company_id         String?                 @db.Char(10)
   branch_id          String?                 @db.Char(10)
-  id                 Int                     @id @db.SmallInt
+  id                 Int                     @id @db.Integer
   name               String                  @db.VarChar(50)
   email              String                  @unique @db.VarChar(100)
   emailVerified      Boolean                 @default(false)
@@ -418,7 +418,7 @@ model sys_EmailVerification {
   company_id String?  @db.Char(10)
   branch_id  String?  @db.Char(10)
   id         String   @id @default(cuid()) @db.VarChar(50)
-  user_id    Int      @db.SmallInt
+  user_id    Int      @db.Integer
   token      String   @unique @db.VarChar(255)
   expiresAt  DateTime
   createdAt  DateTime @default(now())
@@ -432,7 +432,7 @@ model sys_TwoFactorToken {
   company_id String?  @db.Char(10)
   branch_id  String?  @db.Char(10)
   id         String   @id @default(cuid()) @db.VarChar(50)
-  user_id    Int      @db.SmallInt
+  user_id    Int      @db.Integer
   code       String   @db.VarChar(6) // 6-digit OTP
   expiresAt  DateTime
   used       Boolean  @default(false)
@@ -448,7 +448,7 @@ model sys_PasswordReset {
   company_id String?  @db.Char(10)
   branch_id  String?  @db.Char(10)
   id         Int      @id @default(autoincrement())
-  user_id    Int      @db.SmallInt
+  user_id    Int      @db.Integer
   token      String   @unique @db.VarChar(255)
   expiresAt  DateTime
   createdAt  DateTime @default(now())
@@ -523,7 +523,7 @@ model sys_UserRole {
   company_id    String?                @db.Char(10)
   branch_id     String?                @db.Char(10)
   id            Int                    @id @db.SmallInt
-  user_id       Int                    @db.SmallInt
+  user_id       Int                    @db.Integer
   role_id       String                 @db.Char(20)
   iStatus       MasterRecordStatusEnum @default(Active)
   isDefault     Boolean?               @default(false)
