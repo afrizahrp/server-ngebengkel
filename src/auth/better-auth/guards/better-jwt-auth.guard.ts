@@ -78,24 +78,31 @@ export class BetterJwtAuthGuard implements CanActivate {
 
       console.log('[JwtAuthGuard] ⏰ Access token expired, attempting auto-refresh...');
 
-      // Ambil refresh token dari cookie (httpOnly) atau header
-      // Priority: cookie > header (untuk security)
+      // Ambil refresh token dari cookie (httpOnly), header, atau body
+      // Priority: cookie > header > body (untuk security, tapi body perlu untuk frontend axios)
       const refreshToken =
         request.cookies?.refreshToken ||
         request.headers['x-refresh-token'] ||
-        this.extractTokenFromHeader(request);
+        this.extractTokenFromHeader(request) ||
+        request.body?.refresh; // CRITICAL FIX: Also check request body
 
       console.log('[JwtAuthGuard] Refresh token from cookie:', request.cookies?.refreshToken ? 'EXISTS' : 'NOT FOUND');
       console.log('[JwtAuthGuard] Refresh token from header:', request.headers['x-refresh-token'] ? 'EXISTS' : 'NOT FOUND');
+      console.log('[JwtAuthGuard] Refresh token from body:', request.body?.refresh ? 'EXISTS' : 'NOT FOUND');
 
       if (!refreshToken || typeof refreshToken !== 'string') {
         console.error('[JwtAuthGuard] ❌ No refresh token available for auto-refresh');
+        console.error('[JwtAuthGuard]   - Cookie:', !!request.cookies?.refreshToken);
+        console.error('[JwtAuthGuard]   - Header:', !!request.headers['x-refresh-token']);
+        console.error('[JwtAuthGuard]   - Auth header:', !!this.extractTokenFromHeader(request));
+        console.error('[JwtAuthGuard]   - Body:', !!request.body?.refresh);
         throw new UnauthorizedException(
           'Access token expired and no refresh token available',
         );
       }
 
       console.log('[JwtAuthGuard] ✅ Refresh token found, proceeding with auto-refresh...');
+      console.log('[JwtAuthGuard] Refresh token (first 30 chars):', refreshToken.substring(0, 30));
 
       // Verify refresh token dan rotasi token
       const refreshPayload =

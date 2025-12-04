@@ -34,10 +34,11 @@ export class CreateWaitingListDto {
 
 
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
+  @IsOptional()
   @MaxLength(250)
   @Transform(({ value }) => value?.trim())
-  description!: string;
+  description?: string;
 
   @IsString()
   @IsNotEmpty()

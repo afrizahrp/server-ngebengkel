@@ -19,22 +19,31 @@ export class BetterRefreshGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    // Ambil refresh token dari cookie (httpOnly) atau header
-    // Priority: cookie > header (untuk security)
+    // Ambil refresh token dari:
+    // Priority: cookie > header > Authorization header > body
     const token =
       request.cookies?.refreshToken ||
       request.headers['x-refresh-token'] ||
-      this.extractTokenFromHeader(request);
+      this.extractTokenFromHeader(request) ||
+      request.body?.refresh; // Also check request body
 
     if (!token) {
+      console.error('[RefreshGuard] ❌ No refresh token found in:');
+      console.error('[RefreshGuard]   - Cookie: refreshToken?', !!request.cookies?.refreshToken);
+      console.error('[RefreshGuard]   - Header: x-refresh-token?', !!request.headers['x-refresh-token']);
+      console.error('[RefreshGuard]   - Auth header: Bearer token?', !!this.extractTokenFromHeader(request));
+      console.error('[RefreshGuard]   - Body: refresh?', !!request.body?.refresh);
       throw new UnauthorizedException('No refresh token provided');
     }
 
     try {
-      console.log('[RefreshGuard] Verifying refresh token (first 30 chars):', token.substring(0, 30));
+      console.log('[RefreshGuard] 🔍 Verifying refresh token (first 30 chars):', token.substring(0, 30));
+      console.log('[RefreshGuard] Token length:', token.length);
       
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.refreshTokenConfig.secret,
+        ignoreExpiration: false,
+        clockTolerance: 5,
       });
 
       console.log('[RefreshGuard] ✅ Refresh token valid for user:', payload.sub);
@@ -52,19 +61,28 @@ export class BetterRefreshGuard implements CanActivate {
     } catch (error) {
       const errorName = (error as any)?.name;
       const errorMessage = (error as any)?.message;
+      const timestamp = new Date().toISOString();
       
-      console.error('[RefreshGuard] ❌ Refresh token verification failed');
+      console.error(
+        `\n${'='.repeat(80)}\n[${timestamp}] [RefreshGuard] ❌ REFRESH TOKEN VERIFICATION FAILED`,
+      );
+      console.error('[RefreshGuard] Token (first 50 chars):', token.substring(0, 50));
+      console.error('[RefreshGuard] Token length:', token.length);
       console.error('[RefreshGuard] Error name:', errorName);
       console.error('[RefreshGuard] Error message:', errorMessage);
       
       if (errorName === 'TokenExpiredError') {
         console.error('[RefreshGuard] ⏰ Refresh token expired');
+        console.error(`${'='.repeat(80)}\n`);
         throw new UnauthorizedException('Refresh token expired');
       } else if (errorName === 'JsonWebTokenError') {
         console.error('[RefreshGuard] 🔒 Invalid refresh token format or signature');
+        console.error('[RefreshGuard] ⚠️ This usually means: WRONG SECRET or CORRUPTED TOKEN');
+        console.error(`${'='.repeat(80)}\n`);
         throw new UnauthorizedException('Invalid refresh token');
       } else {
         console.error('[RefreshGuard] ⚠️ Unknown error:', error);
+        console.error(`${'='.repeat(80)}\n`);
         throw new UnauthorizedException('Invalid refresh token');
       }
     }

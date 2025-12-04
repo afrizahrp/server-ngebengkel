@@ -86,7 +86,10 @@ export class AuthTokenService {
    */
   async verifyRefreshToken(token: string): Promise<UserPayload> {
     try {
-      console.log('[AuthTokenService] Verifying refresh token (first 30 chars):', token.substring(0, 30));
+      const timestamp = new Date().toISOString();
+      console.log(
+        `\n${'='.repeat(80)}\n[${timestamp}] [AuthTokenService] 🔍 REFRESH TOKEN VERIFICATION STARTED`,
+      );
 
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.refreshTokenConfig.secret,
@@ -94,13 +97,16 @@ export class AuthTokenService {
         clockTolerance: 5, // 5 second tolerance for clock skew
       });
 
-      console.log('[AuthTokenService] ✅ Refresh token valid for user:', payload.sub);
       return payload;
     } catch (error) {
       const errorName = (error as any)?.name;
       const errorMessage = (error as any)?.message;
+      const timestamp = new Date().toISOString();
 
-      console.error('[AuthTokenService] ❌ Refresh token verification failed:', {
+      console.error(
+        `\n${'='.repeat(80)}\n[${timestamp}] [AuthTokenService] ❌ REFRESH TOKEN VERIFICATION FAILED`,
+      );
+      console.error('[AuthTokenService] Error details:', {
         errorName,
         errorMessage,
         secretConfigured: !!this.refreshTokenConfig.secret,
@@ -109,15 +115,22 @@ export class AuthTokenService {
 
       if (errorName === 'TokenExpiredError') {
         console.error('[AuthTokenService] ⏰ Refresh token expired');
+        console.error(`${'='.repeat(80)}\n`);
         throw new UnauthorizedException('Refresh token expired');
       } else if (errorName === 'JsonWebTokenError') {
         console.error('[AuthTokenService] 🔒 Invalid refresh token format or signature');
+        console.error(
+          '[AuthTokenService] ⚠️ This usually means: WRONG SECRET or CORRUPTED TOKEN',
+        );
+        console.error(`${'='.repeat(80)}\n`);
         throw new UnauthorizedException('Invalid refresh token (signature/format)');
       } else if (errorName === 'NotBeforeError') {
         console.error('[AuthTokenService] ⚠️ Token not yet valid (clock skew?)');
+        console.error(`${'='.repeat(80)}\n`);
         throw new UnauthorizedException('Token not yet valid');
       } else {
         console.error('[AuthTokenService] ⚠️ Unknown JWT error:', error);
+        console.error(`${'='.repeat(80)}\n`);
         throw new UnauthorizedException('Invalid refresh token');
       }
     }
