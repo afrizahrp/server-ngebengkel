@@ -775,9 +775,9 @@ export class WaitingListService {
       if (updateWaitingListDto.slug) {
         updateData.slug = updateWaitingListDto.slug;
       }
-
-      if (updateWaitingListDto.description) {
-        updateData.description = updateWaitingListDto.description;
+      
+      if (updateWaitingListDto.description !== undefined) {
+        updateData.description = updateWaitingListDto.description ?? null;
       }
 
       if (updateWaitingListDto.address) {
