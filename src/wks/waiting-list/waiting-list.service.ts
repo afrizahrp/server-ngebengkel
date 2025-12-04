@@ -21,6 +21,7 @@ import { EmailService } from '../../email/email.service';
 import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availability.dto';
 import { QueryWaitingListDto } from './dto/query-waiting-list.dto';
 import { generateUniqueSlug } from '../../utils/generateSlug';
+import { calculatePriorityScore } from '../../utils/priority.utils';
 
 const createWaitingListId = init({ length: 10 });
 const WAITING_LIST_SELECT = {
@@ -474,9 +475,12 @@ export class WaitingListService {
 
     let waitingLists: WaitingListWithRelations[];
 
-    // Jika sorting by name, perlu fetch semua data dulu untuk sorting di memory yang benar
+    // Check if sorting by priority (requires in-memory calculation)
+    const isSortingByPriority = orderBy === 'priority';
+
+    // Jika sorting by name atau priority, perlu fetch semua data dulu untuk sorting di memory yang benar
     // karena kita perlu sort semua data (promo A-Z, regular sesuai orderDir) sebelum pagination
-    if (isSortingByName) {
+    if (isSortingByName || isSortingByPriority) {
       // Fetch semua data yang sesuai dengan filter (tanpa pagination)
       const allWaitingLists = await this.prisma.wks_waitingList.findMany({
         where,
@@ -484,51 +488,104 @@ export class WaitingListService {
         orderBy: [{ isPromoLinked: 'desc' }, { name: 'asc' }], // Temporary order untuk fetch
       });
 
-      // Pisahkan item promo dan regular
-      const promoLinked: WaitingListWithRelations[] = [];
-      const regular: WaitingListWithRelations[] = [];
+      let sortedLists: WaitingListWithRelations[];
 
-      allWaitingLists.forEach((item) => {
-        if (item.isPromoLinked === true) {
-          promoLinked.push(item);
-        } else {
-          regular.push(item);
-        }
-      });
+      if (isSortingByPriority) {
+        // Sort by priority score (calculated on-demand)
+        // Items without GBP data are sorted to the bottom
+        const withGbpData: WaitingListWithRelations[] = [];
+        const withoutGbpData: WaitingListWithRelations[] = [];
 
-      // Sort promo linked items alphabetically (A-Z) - SELALU
-      promoLinked.sort((a, b) =>
-        a.name.localeCompare(b.name, 'id', {
-          sensitivity: 'base',
-          numeric: true,
-        }),
-      );
+        allWaitingLists.forEach((item) => {
+          if (
+            item.gbp_rating !== null &&
+            item.gbp_rating !== undefined &&
+            item.gbb_reviews_count !== null &&
+            item.gbb_reviews_count !== undefined
+          ) {
+            withGbpData.push(item);
+          } else {
+            withoutGbpData.push(item);
+          }
+        });
 
-      // Sort regular items sesuai orderDir
-      if (orderDir === 'desc') {
-        regular.sort((a, b) =>
-          b.name.localeCompare(a.name, 'id', {
-            sensitivity: 'base',
-            numeric: true,
-          }),
-        );
-      } else {
-        regular.sort((a, b) =>
+        // Sort items with GBP data by calculated priority score
+        withGbpData.sort((a, b) => {
+          const scoreA = calculatePriorityScore(
+            Number(a.gbp_rating),
+            Number(a.gbb_reviews_count),
+          );
+          const scoreB = calculatePriorityScore(
+            Number(b.gbp_rating),
+            Number(b.gbb_reviews_count),
+          );
+
+          // Higher score = higher priority = should come first
+          if (orderDir === 'desc') {
+            return scoreA - scoreB; // Lowest priority first
+          } else {
+            return scoreB - scoreA; // Highest priority first (default)
+          }
+        });
+
+        // Sort items without GBP data alphabetically
+        withoutGbpData.sort((a, b) =>
           a.name.localeCompare(b.name, 'id', {
             sensitivity: 'base',
             numeric: true,
           }),
         );
-      }
 
-      // Gabungkan: promo di atas, regular di bawah
-      const sortedLists = [...promoLinked, ...regular];
+        // Combine: items with GBP data first, then items without
+        sortedLists = [...withGbpData, ...withoutGbpData];
+      } else {
+        // Original name sorting logic
+        // Pisahkan item promo dan regular
+        const promoLinked: WaitingListWithRelations[] = [];
+        const regular: WaitingListWithRelations[] = [];
+
+        allWaitingLists.forEach((item) => {
+          if (item.isPromoLinked === true) {
+            promoLinked.push(item);
+          } else {
+            regular.push(item);
+          }
+        });
+
+        // Sort promo linked items alphabetically (A-Z) - SELALU
+        promoLinked.sort((a, b) =>
+          a.name.localeCompare(b.name, 'id', {
+            sensitivity: 'base',
+            numeric: true,
+          }),
+        );
+
+        // Sort regular items sesuai orderDir
+        if (orderDir === 'desc') {
+          regular.sort((a, b) =>
+            b.name.localeCompare(a.name, 'id', {
+              sensitivity: 'base',
+              numeric: true,
+            }),
+          );
+        } else {
+          regular.sort((a, b) =>
+            a.name.localeCompare(b.name, 'id', {
+              sensitivity: 'base',
+              numeric: true,
+            }),
+          );
+        }
+
+        // Gabungkan: promo di atas, regular di bawah
+        sortedLists = [...promoLinked, ...regular];
+      }
 
       // Lakukan pagination setelah sorting
       const skip = (page - 1) * limit;
       waitingLists = sortedLists.slice(skip, skip + limit);
     } else {
-      // Untuk sorting selain name, gunakan database sorting dengan pagination
+      // Untuk sorting selain name dan priority, gunakan database sorting dengan pagination
       const skip = (page - 1) * limit;
       waitingLists = await this.prisma.wks_waitingList.findMany({
         where,
