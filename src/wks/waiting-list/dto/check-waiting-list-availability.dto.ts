@@ -23,4 +23,16 @@ export class CheckWaitingListAvailabilityDto {
   @MaxLength(100, { message: 'Email must not exceed 100 characters' })
   @Transform(({ value }) => value?.trim().toLowerCase())
   email?: string;
+
+  @IsString({ message: 'Phone must be a string' })
+  @IsOptional()
+  @MaxLength(20, { message: 'Phone must not exceed 20 characters' })
+  @Transform(({ value }) => value?.trim())
+  phone?: string;
+
+  @IsString({ message: 'Mobile must be a string' })
+  @IsOptional()
+  @MaxLength(20, { message: 'Mobile must not exceed 20 characters' })
+  @Transform(({ value }) => value?.trim())
+  mobile?: string;
 }

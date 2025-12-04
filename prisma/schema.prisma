@@ -4405,7 +4405,7 @@ model wks_waitingList {
   city        String   @db.Char(15)
   district    String   @db.Char(15)
   subdistrict String   @db.Char(20)
-  email       String   @db.VarChar(100)
+  email       String?   @db.VarChar(100)
   phone       String   @db.VarChar(20)
   mobile      String   @db.VarChar(20)
   isDeleted   Boolean  @default(false)
@@ -4450,6 +4450,7 @@ model wks_waitingList {
   @@index([claimStatus], map: "idx_wks_waitinglist_claimstatus")
   @@index([claimedBy], map: "idx_wks_waitinglist_claimedby")
   @@index([preApprovedPhone], map: "idx_wks_waitinglist_preapprovedphone")
+  @@index([name], map: "idx_wks_waitinglist_name")
 }
 
 // =========================

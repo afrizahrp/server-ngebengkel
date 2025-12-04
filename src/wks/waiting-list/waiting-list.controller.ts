@@ -39,7 +39,8 @@ export class WaitingListController {
     private readonly claimService: ClaimService,
   ) {}
 
-  @Post()
+  // Public endpoint for user registration (requires CAPTCHA)
+  @Post('register')
   @Public()
   @UseGuards(RecaptchaGuard) // Require CAPTCHA verification
   @ThrottleFormSubmission() // 10 requests per hour
@@ -54,6 +55,25 @@ export class WaitingListController {
 
     return {
       message: 'Pendaftaran waiting list berhasil',
+      data,
+    };
+  }
+
+  // Admin endpoint for creating waiting list (no CAPTCHA required, requires authentication)
+  @Post()
+  @UseGuards(MenuPermissionGuard)
+  @MenuPermission({ menuIds: [18, 19, 20, 21], permission: 'create' })
+  async create(
+    @Body() createWaitingListDto: CreateWaitingListDto,
+  ): Promise<{ message: string; data: WaitingListResponseDto }> {
+    // Remove CAPTCHA token dari DTO sebelum save ke database
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { recaptchaToken, recaptchaAction, ...dataToSave } =
+      createWaitingListDto;
+    const data = await this.waitingListService.create(dataToSave);
+
+    return {
+      message: 'Waiting list berhasil dibuat',
       data,
     };
   }

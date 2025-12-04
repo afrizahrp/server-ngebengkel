@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -22,6 +23,7 @@ import { CheckWaitingListAvailabilityDto } from './dto/check-waiting-list-availa
 import { QueryWaitingListDto } from './dto/query-waiting-list.dto';
 import { generateUniqueSlug } from '../../utils/generateSlug';
 import { calculatePriorityScore } from '../../utils/priority.utils';
+import {distance} from 'fastest-levenshtein';
 
 const createWaitingListId = init({ length: 10 });
 const WAITING_LIST_SELECT = {
@@ -113,14 +115,37 @@ export class WaitingListService {
       createWaitingListDto.email,
     );
 
-    // const existing = await this.prisma.wks_waitingList.findFirst({
-    //   where: { email: normalizedEmail, isDeleted: false },
-    //   select: { id: true },
-    // });
+    // TIER 1: Check exact name match (case-insensitive) - HARD BLOCK
+    const exactNameMatch = await this.prisma.wks_waitingList.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: 'insensitive',
+        },
+        isDeleted: false,
+      },
+      select: { id: true, name: true, phone: true, mobile: true },
+    });
 
-    // if (existing) {
-    //   throw new ConflictException('Email sudah terdaftar dalam waiting list');
-    // }
+    if (exactNameMatch) {
+      // If same phone, definitely duplicate
+      const inputPhone =
+        createWaitingListDto.phone?.trim() ||
+        createWaitingListDto.mobile?.trim();
+      const existingPhone =
+        exactNameMatch.phone?.trim() || exactNameMatch.mobile?.trim();
+
+      if (inputPhone && existingPhone && inputPhone === existingPhone) {
+        throw new ConflictException(
+          'Bengkel dengan nama dan nomor telepon yang sama sudah terdaftar',
+        );
+      }
+
+      // Same name but different/no phone - still block
+      throw new ConflictException(
+        `Nama bengkel "${name}" sudah terdaftar dalam waiting list`,
+      );
+    }
 
     const id = await this.generateId();
 
@@ -168,7 +193,7 @@ export class WaitingListService {
           district: createWaitingListDto.district,
           province: createWaitingListDto.province,
           subdistrict: createWaitingListDto.subdistrict,
-          email: normalizedEmail,
+          email: normalizedEmail ?? '',
           phone: createWaitingListDto.phone ?? '',
           mobile: createWaitingListDto.mobile ?? '',
           gbp_rating: createWaitingListDto.gbp_rating ?? null,
@@ -739,30 +764,58 @@ export class WaitingListService {
   ): Promise<WaitingListResponseDto> {
     const existing = await this.prisma.wks_waitingList.findFirst({
       where: { id, isDeleted: false },
-      select: { id: true, email: true, category_id: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        mobile: true,
+        category_id: true,
+      },
     });
 
     if (!existing) {
       throw new NotFoundException('Data waiting list tidak ditemukan');
     }
 
-    // if (
-    //   updateWaitingListDto.email &&
-    //   updateWaitingListDto.email !== existing.email
-    // ) {
-    //   const conflict = await this.prisma.wks_waitingList.findFirst({
-    //     where: {
-    //       email: updateWaitingListDto.email,
-    //       isDeleted: false,
-    //       NOT: { id },
-    //     },
-    //     select: { id: true },
-    //   });
+    // Check for duplicate name if name is being updated
+    if (
+      updateWaitingListDto.name &&
+      updateWaitingListDto.name.trim().toLowerCase() !==
+        existing.name.toLowerCase()
+    ) {
+      const conflictName = await this.prisma.wks_waitingList.findFirst({
+        where: {
+          name: {
+            equals: updateWaitingListDto.name,
+            mode: 'insensitive',
+          },
+          isDeleted: false,
+          NOT: { id },
+        },
+        select: { id: true, name: true, phone: true, mobile: true },
+      });
 
-    //   if (conflict) {
-    //     throw new ConflictException('Email sudah terdaftar dalam waiting list');
-    //   }
-    // }
+      if (conflictName) {
+        const inputPhone =
+          updateWaitingListDto.phone?.trim() ||
+          updateWaitingListDto.mobile?.trim() ||
+          existing.phone?.trim() ||
+          existing.mobile?.trim();
+        const existingPhone =
+          conflictName.phone?.trim() || conflictName.mobile?.trim();
+
+        if (inputPhone && existingPhone && inputPhone === existingPhone) {
+          throw new ConflictException(
+            'Bengkel dengan nama dan nomor telepon yang sama sudah terdaftar',
+          );
+        }
+
+        throw new ConflictException(
+          `Nama bengkel "${updateWaitingListDto.name}" sudah terdaftar dalam waiting list`,
+        );
+      }
+    }
 
     const waitingList = await this.prisma.$transaction(async (tx) => {
       let targetCategoryId =
@@ -1026,6 +1079,7 @@ export class WaitingListService {
       description: rest.description ?? '',
       typeId: types ? types.id : null,
       categoryId: category_id ?? null,
+      email: rest.email ?? '',
       categoryCode: category?.code ?? null,
       categoryName: category?.name ?? null,
       workshopTypes: this.mapWorkshopTypes(types),
@@ -1058,44 +1112,105 @@ export class WaitingListService {
 
   async checkAvailability(payload: CheckWaitingListAvailabilityDto): Promise<{
     nameAvailable: boolean;
-    // emailAvailable: boolean;
-    conflicts: Array<{ field: 'name' | 'email'; message: string }>;
+    conflicts: Array<{
+      field: 'name' | 'email';
+      message: string;
+      severity: 'error' | 'warning';
+      existingName?: string;
+      similarity?: number;
+    }>;
   }> {
     const trimmedName = payload.name?.trim();
     if (!trimmedName) {
       throw new BadRequestException('Nama wajib diisi');
     }
 
-    const conflicts: Array<{ field: 'name' | 'email'; message: string }> = [];
+    const conflicts: Array<{
+      field: 'name' | 'email';
+      message: string;
+      severity: 'error' | 'warning';
+      existingName?: string;
+      similarity?: number;
+    }> = [];
 
-    const existingName = await this.prisma.wks_waitingList.findFirst({
-      where: { name: trimmedName, isDeleted: false },
-      select: { id: true },
+    // TIER 1: Check exact match (case-insensitive) - HARD BLOCK
+    const exactNameMatch = await this.prisma.wks_waitingList.findFirst({
+      where: {
+        name: {
+          equals: trimmedName,
+          mode: 'insensitive',
+        },
+        isDeleted: false,
+      },
+      select: { id: true, name: true, phone: true, mobile: true },
     });
 
-    if (existingName) {
-      conflicts.push({
-        field: 'name',
-        message: 'Nama bengkel sudah terdaftar dalam waiting list.',
+    if (exactNameMatch) {
+      // Check if same phone number
+      const inputPhone =
+        payload.phone?.trim() || payload.mobile?.trim() || null;
+      const existingPhone =
+        exactNameMatch.phone?.trim() || exactNameMatch.mobile?.trim() || null;
+
+      if (inputPhone && existingPhone && inputPhone === existingPhone) {
+        conflicts.push({
+          field: 'name',
+          message:
+            'Bengkel dengan nama dan nomor telepon yang sama sudah terdaftar.',
+          severity: 'error',
+          existingName: exactNameMatch.name,
+          similarity: 1.0,
+        });
+      } else {
+        conflicts.push({
+          field: 'name',
+          message: 'Nama bengkel sudah terdaftar dalam waiting list.',
+          severity: 'error',
+          existingName: exactNameMatch.name,
+          similarity: 1.0,
+        });
+      }
+
+      return {
+        nameAvailable: false,
+        conflicts,
+      };
+    }
+
+    // TIER 2: Check similar names (fuzzy matching) - SOFT WARNING
+    const normalizedInput = this.normalizeNameForComparison(trimmedName);
+
+    // Only check similarity if normalized name is not empty
+    if (normalizedInput.length > 0) {
+      const allWaitingLists = await this.prisma.wks_waitingList.findMany({
+        where: { isDeleted: false },
+        select: { id: true, name: true },
+      });
+
+      // Find similar names (similarity >= 70%)
+      const similarNames = allWaitingLists
+        .map((wl) => ({
+          id: wl.id,
+          name: wl.name,
+          similarity: this.calculateNameSimilarity(trimmedName, wl.name),
+        }))
+        .filter((item) => item.similarity >= 0.7 && item.similarity < 1.0)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 3); // Top 3 similar names
+
+      similarNames.forEach((item) => {
+        conflicts.push({
+          field: 'name',
+          message: `Nama mirip dengan "${item.name}" (${Math.round(item.similarity * 100)}% kesamaan). Apakah ini bengkel yang sama?`,
+          severity: 'warning',
+          existingName: item.name,
+          similarity: item.similarity,
+        });
       });
     }
 
-    // Skip validasi existingEmail untuk tahap pendaftaran listing by public data
-    // const existingEmail = await this.prisma.wks_waitingList.findFirst({
-    //   where: { email, isDeleted: false },
-    //   select: { id: true },
-    // });
-
-    // if (existingEmail) {
-    //   conflicts.push({
-    //     field: 'email',
-    //     message: 'Email sudah terdaftar dalam waiting list.',
-    //   });
-    // }
-
     return {
-      nameAvailable: !existingName,
-      // emailAvailable: !existingEmail,
+      nameAvailable: true,
       conflicts,
     };
   }
@@ -1195,23 +1310,54 @@ export class WaitingListService {
     );
   }
 
+  /**
+   * Normalize name for comparison by removing common prefixes/suffixes
+   * Example: "Bengkel Motor Anugrah" -> "anugrah"
+   */
+  private normalizeNameForComparison(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/bengkel\s+/gi, '') // Remove "bengkel" prefix
+      .replace(/\s+motor\s*/gi, '') // Remove "motor"
+      .replace(/\s+mobil\s*/gi, '') // Remove "mobil"
+      .replace(/\s+variasi\s*/gi, '') // Remove "variasi"
+      .replace(/[^\w\s]/g, '') // Remove special chars
+      .replace(/\s+/g, ' ') // Normalize spaces
+      .trim();
+  }
+
+  /**
+   * Calculate similarity between two names using Levenshtein distance
+   * Returns a value between 0 (completely different) and 1 (identical)
+   */
+  private calculateNameSimilarity(name1: string, name2: string): number {
+    const normalized1 = this.normalizeNameForComparison(name1);
+    const normalized2 = this.normalizeNameForComparison(name2);
+
+    const maxLen = Math.max(normalized1.length, normalized2.length);
+    if (maxLen === 0) return 1.0;
+
+    const dist = distance(normalized1, normalized2);
+    return 1 - dist / maxLen;
+  }
+
   private validateNameAndEmail(
     name: string | undefined,
     email: string | undefined,
-  ): { name: string; email: string } {
+  ): { name: string; email?: string } {
     const trimmedName = name?.trim();
     if (!trimmedName) {
       throw new BadRequestException('Nama wajib diisi');
     }
 
-    const normalizedEmail = email?.trim().toLowerCase();
-    if (!normalizedEmail) {
-      throw new BadRequestException('Email wajib diisi');
-    }
+            const normalizedEmail = email?.trim().toLowerCase();
+            if (!normalizedEmail) {
+              throw new BadRequestException('Email wajib diisi');
+            }
 
-    if (!isEmail(normalizedEmail)) {
-      throw new BadRequestException('Format email tidak valid');
-    }
+          if (!isEmail(normalizedEmail)) {
+            throw new BadRequestException('Format email tidak valid');
+          }
 
     return { name: trimmedName, email: normalizedEmail };
   }

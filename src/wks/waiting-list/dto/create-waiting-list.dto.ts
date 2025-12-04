@@ -64,11 +64,12 @@ export class CreateWaitingListDto {
   @Transform(({ value }) => value?.trim())
   subdistrict!: string;
 
+  // @IsNotEmpty()
   @IsEmail()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(100)
   @Transform(({ value }) => value?.trim().toLowerCase())
-  email!: string;
+  email?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -97,7 +98,7 @@ export class CreateWaitingListDto {
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
+  @IsOptional() // Changed from @IsNotEmpty() to allow admin creation without captcha
   recaptchaToken?: string; // reCAPTCHA token dari frontend
 
   @IsOptional()
