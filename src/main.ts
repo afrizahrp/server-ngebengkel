@@ -74,25 +74,41 @@ async function bootstrap() {
   }
 
    // Enable CORS - konfigurasi sederhana & standar
-  app.enableCors({
+   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests tanpa origin (mobile apps, Postman)
-      if (!origin) return callback(null, true);
+      // Allow requests with no origin (mobile apps, Postman, curl, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
 
-      // Check jika origin ada di allowed list
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      // Check if origin is in allowed list
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        if (!isProduction) {
-          console.warn(`[CORS] Blocked origin: ${origin}`);
-        }
         callback(new Error('Not allowed by CORS'));
       }
     },
-    credentials: true, // Penting: harus true untuk cookies & Authorization header
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Accept,Authorization,Origin,X-Requested-With,x-refresh-token,x-access-token', // ✅ Added custom token headers
-    exposedHeaders: 'x-access-token,x-refresh-token,x-token-refreshed',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'X-Anonymous-Id', // For anonymous login
+      'x-anonymous-id', // Case-insensitive support
+      'X-Refresh-Token', // For refresh token
+      'x-refresh-token', // Case-insensitive support
+    ],
+    exposedHeaders: [
+      'X-RateLimit-Limit',
+      'X-RateLimit-Remaining',
+      'X-RateLimit-Reset',
+    ],
+    credentials: true, // Allow cookies and credentials
+    maxAge: 86400, // 24 hours
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   // Global Exception Filter untuk sanitize error messages
