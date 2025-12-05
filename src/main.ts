@@ -73,7 +73,7 @@ async function bootstrap() {
     console.log('[CORS] Allowed origins:', allowedOrigins);
   }
 
-  // Enable CORS - konfigurasi sederhana & standar
+   // Enable CORS - konfigurasi sederhana & standar
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests tanpa origin (mobile apps, Postman)
@@ -91,7 +91,7 @@ async function bootstrap() {
     },
     credentials: true, // Penting: harus true untuk cookies & Authorization header
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Accept,Authorization,Origin,X-Requested-With',
+    allowedHeaders: 'Content-Type,Accept,Authorization,Origin,X-Requested-With,x-refresh-token,x-access-token', // ✅ Added custom token headers
     exposedHeaders: 'x-access-token,x-refresh-token,x-token-refreshed',
   });
 
