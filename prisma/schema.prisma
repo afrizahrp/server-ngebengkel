@@ -410,6 +410,7 @@ model sys_User {
   twoFactorTokens    sys_TwoFactorToken[]
   passwordResets     sys_PasswordReset[]
   anonymousSessions  sys_AnonymousSession[] // Anonymous sessions yang sudah di-merge
+  // publishedArticles  wks_Article[]          // Articles published by this user
 
   @@unique([company_id, employee_id], map: "unique_user_employee")
 }
@@ -4690,6 +4691,12 @@ enum PainPointCategoryEnum {
   STEERING    @map("STEERING")// Masalah stir
 }
 
+enum ArticleStatusEnum {
+  DRAFT     @map("DRAFT") // Draft artikel, belum direview
+  PUBLISHED @map("PUBLISHED") // Artikel sudah dipublish
+  ARCHIVED  @map("ARCHIVED") // Artikel diarsipkan
+}
+
 model wks_PainPoint {
   id          String  @id @default(cuid()) @db.Char(21)
   slug        String  @unique @db.VarChar(100) // "ac-tidak-dingin", "mesin-mati", "rem-bunyi"
@@ -4735,6 +4742,7 @@ model wks_PainPoint {
   // Relations
   serviceTypes    wks_PainPointServiceType[]    // Service types yang bisa menyelesaikan (untuk company)
   workshopTypes   wks_PainPointWorkshopType[]   // Workshop types yang bisa menyelesaikan (untuk waitingList)
+  articles        wks_Article[]                 // Articles generated for this pain point
   // Full-text search index akan ditambahkan via raw SQL migration
 
   @@index([slug], map: "idx_painpoint_slug")
@@ -4787,4 +4795,58 @@ model wks_PainPointWorkshopType {
   @@index([painPoint_id], map: "idx_painpoint_workshoptype_painpoint")
   @@index([workshopType_id], map: "idx_painpoint_workshoptype_workshoptype")
   @@index([relevance], map: "idx_painpoint_workshoptype_relevance")
+}
+
+// =========================
+// Article Model - AI-generated articles for pain points
+// =========================
+model wks_Article {
+  id          String  @id @default(cuid()) @db.VarChar(25)
+  slug        String  @unique @db.VarChar(150) // URL-friendly slug for article
+  painPoint_id String @db.VarChar(25) // FK to pain point
+
+  // Article content
+  title          String  @db.VarChar(200) // Article title (SEO-optimized)
+  metaTitle      String  @db.VarChar(70) // SEO meta title (max 70 chars)
+  metaDescription String @db.VarChar(160) // SEO meta description (max 160 chars)
+
+  // JSON content structure:
+  // {
+  //   causes: string[] - Common causes of the problem
+  //   diagnosis: string[] - Diagnosis steps
+  //   costEstimate: { minIDR: number, maxIDR: number, notes: string } - Cost estimation
+  //   safety: string - Safety assessment
+  //   prevention: string[] - Prevention tips
+  //   faq: Array<{ question: string, answer: string }> - Frequently asked questions
+  // }
+  content         Json  // Article content sections (editable)
+  contentOriginal Json? // Original AI-generated content (backup for comparison)
+
+  // Visual
+  imageUrl String? @db.VarChar(500) // ImageKit URL (manually uploaded in admin)
+
+  // Status & Publishing
+  status      ArticleStatusEnum @default(DRAFT)
+  viewCount   Int               @default(0) // Page view tracking
+  generatedAt DateTime          @default(now()) // When AI generated this
+  publishedAt DateTime? // When article was published
+  publishedBy String?           @db.VarChar(15) // User ID who published (FK to sys_User)
+
+  // Review & Quality Control
+  reviewNotes String? @db.Text // Admin notes during review
+
+  // Audit
+  createdBy String?  @db.VarChar(15)
+  createdAt DateTime @default(now())
+  updatedBy String?  @db.VarChar(15)
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  painPoint wks_PainPoint @relation(fields: [painPoint_id], references: [id], onDelete: Cascade)
+  // publisher sys_User?     @relation(fields: [publishedBy], references: [id], onUpdate: NoAction)
+
+  @@index([status, publishedAt], map: "idx_article_status_published")
+  @@index([painPoint_id], map: "idx_article_painpoint")
+  @@index([slug], map: "idx_article_slug")
+  @@index([viewCount], map: "idx_article_viewcount")
 }

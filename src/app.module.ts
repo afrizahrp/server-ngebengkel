@@ -33,6 +33,7 @@ import { PainPointModule } from './wks/pain-point/pain-point.module';
 import { ImagesModule } from './wks/images/images.module';
 import { VideosModule } from './wks/videos/videos.module';
 import { WorkingHourModule } from './wks/working-hour/working-hour.module';
+import { ArticlesModule } from './wks/articles/articles.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { CommonModule } from './common/common.module';
 
@@ -109,6 +110,7 @@ import { CommonModule } from './common/common.module';
     ReminderModule,
     WaitingListModule,
     PainPointModule,
+    ArticlesModule,
     ImagesModule,
     VideosModule,
     WorkingHourModule,
