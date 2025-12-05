@@ -73,25 +73,27 @@ async function bootstrap() {
   console.log('[CORS] Allowed origins:', allowedOrigins);
 
    // Enable CORS - konfigurasi sederhana & standar
-   app.enableCors({
+  app.enableCors({
     origin: (origin, callback) => {
       // Log origin untuk debugging di production
       if (isProduction) {
         console.log('[CORS] Request from origin:', origin || 'no-origin');
       }
-
+  
       // Allow requests with no origin (mobile apps, Postman, curl, etc.)
       if (!origin) {
         return callback(null, true);
       }
-
+  
       // Check if origin is in allowed list
       if (allowedOrigins.includes(origin)) {
         console.log('[CORS] ✅ Origin allowed:', origin);
         callback(null, true);
       } else {
         console.log('[CORS] ❌ Origin blocked:', origin);
-        callback(new Error('Not allowed by CORS'));
+        // FIX: Return false instead of throwing error
+        // This allows CORS middleware to properly reject with headers
+        callback(null, false);
       }
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -101,21 +103,23 @@ async function bootstrap() {
       'X-Requested-With',
       'Accept',
       'Origin',
-      'X-Anonymous-Id', // For anonymous login
-      'x-anonymous-id', // Case-insensitive support
-      'X-Refresh-Token', // For refresh token
-      'x-refresh-token', // Case-insensitive support
+      'X-Anonymous-Id',
+      'x-anonymous-id',
+      'X-Refresh-Token',
+      'x-refresh-token',
     ],
     exposedHeaders: [
       'X-RateLimit-Limit',
       'X-RateLimit-Remaining',
       'X-RateLimit-Reset',
     ],
-    credentials: true, // Allow cookies and credentials
-    maxAge: 86400, // 24 hours
+    credentials: true,
+    maxAge: 86400,
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
+  
+  // ...existing code...
 
   // Global Exception Filter untuk sanitize error messages
   app.useGlobalFilters(new HttpExceptionFilter());
