@@ -43,7 +43,7 @@ export class WaitingListController {
   @Post('register')
   @Public()
   @UseGuards(RecaptchaGuard) // Require CAPTCHA verification
-  @ThrottleFormSubmission() // 10 requests per hour
+  // @ThrottleFormSubmission() // 10 requests per hour
   async register(
     @Body() createWaitingListDto: CreateWaitingListDto,
   ): Promise<{ message: string; data: WaitingListResponseDto }> {
@@ -80,7 +80,7 @@ export class WaitingListController {
 
   @Get('categories')
   @Public()
-  @ThrottleGetEndpoints() // 100 requests per minute
+  // @ThrottleGetEndpoints() // 100 requests per minute
   async categories(): Promise<{
     message: string;
     data: WorkshopCategoryResponseDto[];
@@ -95,7 +95,7 @@ export class WaitingListController {
 
   @Post('check-availability')
   @Public()
-  @ThrottleCheckAvailability() // 30 requests per minute
+  // @ThrottleCheckAvailability() // 30 requests per minute
   async checkAvailability(
     @Body() payload: CheckWaitingListAvailabilityDto,
   ): Promise<{
@@ -110,7 +110,7 @@ export class WaitingListController {
     };
   }
 
-  @ThrottleGetEndpoints() // 100 requests per minute
+  // @ThrottleGetEndpoints() // 100 requests per minute
   @Public() // Read operations: public (support anonymous_id)
   @Get()
   async findAll(
@@ -186,14 +186,14 @@ export class WaitingListController {
     return this.waitingListService.findAll();
   }
 
-  @ThrottleGetEndpoints() // 100 requests per minute
+  // @ThrottleGetEndpoints() // 100 requests per minute
   @Public() // Read operations: public (support anonymous_id)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<WaitingListResponseDto> {
     return this.waitingListService.findOne(id);
   }
 
-  @ThrottleGetEndpoints() // 100 requests per minute
+  // @ThrottleGetEndpoints() // 100 requests per minute
   @Public() // Read operations: public (support anonymous_id, used for SEO)
   @Get(':id/promo')
   async getPromos(@Param('id') id: string): Promise<{
@@ -217,7 +217,7 @@ export class WaitingListController {
 
   @Post(':id/claim')
   @Public()
-  @ThrottleFormSubmission() // 10 requests per hour
+  // @ThrottleFormSubmission() // 10 requests per hour
   async initiateClaim(
     @Param('id') id: string,
     @Body() body: { phone: string; name: string; email?: string },
@@ -242,7 +242,7 @@ export class WaitingListController {
 
   @Post(':id/claim/verify')
   @Public()
-  @ThrottleFormSubmission() // 10 requests per 15 minutes
+  // @ThrottleFormSubmission() // 10 requests per 15 minutes
   async verifyClaim(
     @Param('id') id: string,
     @Body() body: { claimRequestId: string; verificationCode: string },
@@ -267,7 +267,7 @@ export class WaitingListController {
 
   @Post(':id/claim/resend')
   @Public()
-  @ThrottleFormSubmission() // 10 requests per hour
+  // @ThrottleFormSubmission() // 10 requests per hour
   async resendOtp(
     @Param('id') id: string,
     @Body() body: { claimRequestId: string },

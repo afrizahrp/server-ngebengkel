@@ -68,14 +68,18 @@ async function bootstrap() {
         'https://ngebengkel.com',
       ];
 
-  // Log untuk debugging di development
-  if (!isProduction) {
-    console.log('[CORS] Allowed origins:', allowedOrigins);
-  }
+  // Log untuk debugging (always log in production to help troubleshoot)
+  console.log('[CORS] Environment:', process.env.NODE_ENV);
+  console.log('[CORS] Allowed origins:', allowedOrigins);
 
    // Enable CORS - konfigurasi sederhana & standar
    app.enableCors({
     origin: (origin, callback) => {
+      // Log origin untuk debugging di production
+      if (isProduction) {
+        console.log('[CORS] Request from origin:', origin || 'no-origin');
+      }
+
       // Allow requests with no origin (mobile apps, Postman, curl, etc.)
       if (!origin) {
         return callback(null, true);
@@ -83,8 +87,10 @@ async function bootstrap() {
 
       // Check if origin is in allowed list
       if (allowedOrigins.includes(origin)) {
+        console.log('[CORS] ✅ Origin allowed:', origin);
         callback(null, true);
       } else {
+        console.log('[CORS] ❌ Origin blocked:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },

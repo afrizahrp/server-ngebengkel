@@ -11,6 +11,13 @@ export class BetterRolesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    
+    // Always allow OPTIONS requests (CORS preflight)
+    if (request.method === 'OPTIONS') {
+      return true;
+    }
+
     // Use getAllAndOverride to get roles from handler first, then class if handler doesn't have it
     // This should properly merge both levels
     const handler = context.getHandler();

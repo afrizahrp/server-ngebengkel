@@ -25,6 +25,14 @@ export class BetterJwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const http = context.switchToHttp();
+    const request = http.getRequest();
+    
+    // Always allow OPTIONS requests (CORS preflight)
+    if (request.method === 'OPTIONS') {
+      return true;
+    }
+
     // Check if route is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -35,8 +43,6 @@ export class BetterJwtAuthGuard implements CanActivate {
       return true;
     }
 
-    const http = context.switchToHttp();
-    const request = http.getRequest();
     const response: Response = http.getResponse();
     const token = this.extractTokenFromHeader(request);
 

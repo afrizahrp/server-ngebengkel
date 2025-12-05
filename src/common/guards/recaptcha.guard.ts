@@ -20,6 +20,13 @@ export class RecaptchaGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    
+    // Always allow OPTIONS requests (CORS preflight)
+    if (request.method === 'OPTIONS') {
+      return true;
+    }
+
     // Skip untuk public endpoints yang tidak perlu CAPTCHA
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -30,8 +37,6 @@ export class RecaptchaGuard implements CanActivate {
     if (!this.recaptchaService.isEnabled()) {
       return true;
     }
-
-    const request = context.switchToHttp().getRequest();
     const { body, headers, ip } = request;
 
     // Extract CAPTCHA token dari body atau header
