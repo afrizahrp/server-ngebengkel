@@ -78,6 +78,7 @@ export class WaitingListController {
     };
   }
 
+  // All specific named routes BEFORE generic parameter routes
   @Get('categories')
   @Public()
   // @ThrottleGetEndpoints() // 100 requests per minute
@@ -110,6 +111,7 @@ export class WaitingListController {
     };
   }
 
+  // Generic routes (GET all, GET by ID, etc.) come AFTER specific named routes
   // @ThrottleGetEndpoints() // 100 requests per minute
   @Public() // Read operations: public (support anonymous_id)
   @Get()
@@ -186,35 +188,7 @@ export class WaitingListController {
     return this.waitingListService.findAll();
   }
 
-  // @ThrottleGetEndpoints() // 100 requests per minute
-  @Public() // Read operations: public (support anonymous_id)
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<WaitingListResponseDto> {
-    return this.waitingListService.findOne(id);
-  }
-
-  // @ThrottleGetEndpoints() // 100 requests per minute
-  @Public() // Read operations: public (support anonymous_id, used for SEO)
-  @Get(':id/promo')
-  async getPromos(@Param('id') id: string): Promise<{
-    message: string;
-    data: Array<{
-      id: string;
-      title: string;
-      description: string | null;
-      promoType: string;
-      checklist?: string[] | null;
-      valuePercent?: number | null;
-      valueNominal?: number | null;
-      startAt?: string | null;
-      endAt?: string | null;
-    }>;
-  }> {
-    const data = await this.waitingListService.findPromosByWaitingList(id);
-    return { message: 'Daftar promo berhasil dimuat', data };
-  }
-
-
+  // All :id/xxx routes before generic :id route
   @Post(':id/claim')
   @Public()
   // @ThrottleFormSubmission() // 10 requests per hour
@@ -277,6 +251,34 @@ export class WaitingListController {
     }
 
     return await this.claimService.resendOtp(body.claimRequestId);
+  }
+
+  @Get(':id/promo')
+  @Public() // Read operations: public (support anonymous_id, used for SEO)
+  async getPromos(@Param('id') id: string): Promise<{
+    message: string;
+    data: Array<{
+      id: string;
+      title: string;
+      description: string | null;
+      promoType: string;
+      checklist?: string[] | null;
+      valuePercent?: number | null;
+      valueNominal?: number | null;
+      startAt?: string | null;
+      endAt?: string | null;
+    }>;
+  }> {
+    const data = await this.waitingListService.findPromosByWaitingList(id);
+    return { message: 'Daftar promo berhasil dimuat', data };
+  }
+
+  // Generic :id route LAST
+  // @ThrottleGetEndpoints() // 100 requests per minute
+  @Public() // Read operations: public (support anonymous_id)
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<WaitingListResponseDto> {
+    return this.waitingListService.findOne(id);
   }
   @Patch(':id')
   @UseGuards(MenuPermissionGuard)
