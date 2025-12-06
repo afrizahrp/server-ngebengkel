@@ -430,13 +430,27 @@ export class ArticlesService {
         take: 8,
       });
 
+      // Fetch city names for workshops
+      const cityIds = [...new Set(workshops.map((w) => w.city).filter(Boolean))];
+      const cities = await this.prisma.sys_City.findMany({
+        where: {
+          id: { in: cityIds },
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
+      const cityMap = new Map(cities.map((c) => [c.id, c.name]));
+
       return workshops.map((w) => ({
         id: w.id,
         name: w.name,
         slug: w.slug,
         address: w.address || '',
         logo: w.logo || null,
-        city: w.city || 'N/A',
+        city: cityMap.get(w.city) || 'N/A',
         isDemo: w.name.toLowerCase().includes('demo'),
         rating: w.gbp_rating ? parseFloat(w.gbp_rating.toString()) : 0,
         phone: w.phone || '',
