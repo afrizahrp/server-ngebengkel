@@ -13,8 +13,16 @@ export class ArticlesController {
    * Body: { painPointIds: string[] }
    */
   @Post('generate')
-  async generateArticles(@Body() body: { painPointIds: string[] }) {
-    return this.articlesService.generateArticles(body.painPointIds);
+  async generateArticles(
+    @Body()
+    body: {
+      generationType?: 'painPoint' | 'seasonal';
+      painPointIds?: string[];
+      seasonalTopicId?: string;
+      prompt?: string | null;
+    },
+  ) {
+    return this.articlesService.generateArticles(body);
   }
 
   /**

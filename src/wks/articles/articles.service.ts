@@ -1,7 +1,8 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { OpenAIArticleService } from './openai-article.service';
-import { ArticleStatusEnum } from '@prisma/client';
+import { ArticleGenerationTypeEnum, ArticleStatusEnum } from '@prisma/client';
+import { getSeasonalTopicById, slugifyTopicTitle } from './seasonal-topics';
 
 @Injectable()
 export class ArticlesService {
@@ -16,7 +17,99 @@ export class ArticlesService {
    * Generate articles untuk pain points (batch atau single)
    * Menyimpan sebagai DRAFT dengan contentOriginal backup
    */
-  async generateArticles(painPointIds: string[]) {
+  async generateArticles(body: {
+    generationType?: 'painPoint' | 'seasonal';
+    painPointIds?: string[];
+    seasonalTopicId?: string;
+    prompt?: string | null;
+  }) {
+    const generationType = body.generationType || 'painPoint';
+
+    if (generationType === 'seasonal') {
+      const topicId = body.seasonalTopicId;
+      if (!topicId) {
+        throw new BadRequestException('seasonalTopicId diperlukan untuk seasonal generation');
+      }
+
+      const topic = getSeasonalTopicById(topicId);
+      if (!topic) {
+        throw new BadRequestException('Seasonal topic tidak ditemukan');
+      }
+
+      const results = {
+        success: 0,
+        failed: 0,
+        errors: [] as Array<{ topicId: string; error: string }>,
+      };
+
+      try {
+        const generatedContent = await this.openaiService.generateSeasonalArticle(topic);
+
+        const baseSlugFromTitle = slugifyTopicTitle(topic.title) || topic.id.toLowerCase();
+        const baseSlug = `seasonal-${baseSlugFromTitle}`.substring(0, 140);
+        let slug = baseSlug;
+        let counter = 1;
+
+        while (
+          await this.prisma.wks_Article.findUnique({
+            where: { slug },
+          })
+        ) {
+          slug = `${baseSlug}-v${counter}`;
+          counter++;
+        }
+
+        const contentJson = JSON.parse(JSON.stringify({
+          causes: generatedContent.causes || [],
+          diagnosis: generatedContent.diagnosis || [],
+          costEstimate: generatedContent.costEstimate || { minIDR: 0, maxIDR: 0, notes: '' },
+          safety: generatedContent.safety || '',
+          prevention: generatedContent.prevention || [],
+          faq: generatedContent.faq || [],
+        }));
+
+        const truncatedSlug = slug.substring(0, 150);
+        const truncatedTitle = (generatedContent.title || topic.title).substring(0, 200);
+        const truncatedMetaTitle = (generatedContent.metaTitle || truncatedTitle).substring(0, 70);
+        const truncatedMetaDescription = (generatedContent.metaDescription || '').substring(0, 160);
+
+        this.logger.log(`Attempting to create seasonal article with slug: ${truncatedSlug}`);
+
+        await this.prisma.wks_Article.create({
+          data: {
+            slug: truncatedSlug,
+            painPoint_id: null,
+            seasonalTopicId: topic.id,
+            seasonalTopicTitle: topic.title,
+            title: truncatedTitle,
+            metaTitle: truncatedMetaTitle,
+            metaDescription: truncatedMetaDescription,
+            content: contentJson,
+            contentOriginal: contentJson,
+            status: ArticleStatusEnum.DRAFT,
+            generationType: ArticleGenerationTypeEnum.SEASONAL,
+            generatedAt: new Date(),
+            createdBy: 'system',
+          },
+        });
+
+        results.success++;
+        this.logger.log(`✓ Seasonal article generated: ${topic.title}`);
+      } catch (error) {
+        results.failed++;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        results.errors.push({
+          topicId: topicId,
+          error: errorMessage,
+        });
+        this.logger.error(`✗ Failed to generate seasonal article: ${errorMessage}`);
+      }
+
+      return results;
+    }
+
+    // Default: pain point flow (backward compatible)
+    const painPointIds = body.painPointIds;
     if (!painPointIds || painPointIds.length === 0) {
       throw new BadRequestException('Pain point IDs diperlukan');
     }
@@ -27,7 +120,6 @@ export class ArticlesService {
       errors: [] as Array<{ painPointId: string; error: string }>,
     };
 
-    // Fetch pain points dengan related workshop types
     const painPoints = await this.prisma.wks_PainPoint.findMany({
       where: {
         id: { in: painPointIds },
@@ -48,7 +140,6 @@ export class ArticlesService {
 
     this.logger.log(`Starting article generation for ${painPoints.length} pain points`);
 
-    // Generate articles untuk setiap pain point
     for (const painPoint of painPoints) {
       try {
         const workshopTypes = painPoint.workshopTypes.map((wt) => ({
@@ -57,7 +148,6 @@ export class ArticlesService {
           relevance: wt.relevance,
         }));
 
-        // Generate article content via OpenAI
         const generatedContent = await this.openaiService.generateArticle({
           title: painPoint.title,
           description: painPoint.description,
@@ -68,13 +158,10 @@ export class ArticlesService {
           workshopTypes,
         });
 
-        // Create slug dari pain point slug + timestamp untuk uniqueness
-        // Truncate base slug to leave room for version suffix (max 150 chars)
-        const baseSlug = painPoint.slug.substring(0, 140); // Leave 10 chars for -v{counter}
+        const baseSlug = painPoint.slug.substring(0, 140);
         let slug = baseSlug;
         let counter = 1;
 
-        // Check if slug already exists
         while (
           await this.prisma.wks_Article.findUnique({
             where: { slug },
@@ -84,8 +171,6 @@ export class ArticlesService {
           counter++;
         }
 
-        // Save artikel sebagai DRAFT (truncate meta fields to fit DB schema)
-        // Extract only the content fields (causes, diagnosis, etc.) for the JSON columns
         const contentJson = JSON.parse(JSON.stringify({
           causes: generatedContent.causes || [],
           diagnosis: generatedContent.diagnosis || [],
@@ -95,9 +180,6 @@ export class ArticlesService {
           faq: generatedContent.faq || [],
         }));
 
-
-
-        // Truncate all string fields to ensure they fit (now using VARCHAR)
         const truncatedSlug = slug.substring(0, 150);
         const truncatedPainPointId = painPoint.id.substring(0, 25);
         const truncatedTitle = (generatedContent.title || '').substring(0, 200);
@@ -119,7 +201,6 @@ export class ArticlesService {
         }, null, 2));
 
         try {
-          // Use Prisma create (not raw SQL) - let Prisma handle CUID generation
           await this.prisma.wks_Article.create({
             data: {
               slug: truncatedSlug,
@@ -130,6 +211,7 @@ export class ArticlesService {
               content: contentJson,
               contentOriginal: contentJson,
               status: ArticleStatusEnum.DRAFT,
+              generationType: ArticleGenerationTypeEnum.PAIN_POINT,
               generatedAt: new Date(),
               createdBy: 'system',
             },
@@ -337,6 +419,29 @@ export class ArticlesService {
 
     if (!article) {
       throw new BadRequestException('Article tidak ditemukan');
+    }
+
+    // Seasonal articles might not have a linked pain point; return generic recommendations
+    if (!article.painPoint) {
+      const workshops = await this.prisma.wks_waitingList.findMany({
+        where: {
+          isDeleted: false,
+        },
+        take: 8,
+      });
+
+      return workshops.map((w) => ({
+        id: w.id,
+        name: w.name,
+        slug: w.slug,
+        address: w.address || '',
+        logo: w.logo || null,
+        city: w.city || 'N/A',
+        isDemo: w.name.toLowerCase().includes('demo'),
+        rating: w.gbp_rating ? parseFloat(w.gbp_rating.toString()) : 0,
+        phone: w.phone || '',
+        mobile: w.mobile || '',
+      }));
     }
 
     // Get all workshop types (regardless of relevance) for fallback

@@ -1516,21 +1516,21 @@ model wks_WorkshopCategory {
 }
 
 model wks_WorkshopType {
-  company_id  String?              @db.Char(10)
-  branch_id   String?              @db.Char(10)
-  id          String               @id @db.Char(10)
-  category_id String               @db.Char(5)
-  name        String               @db.VarChar(150)
-  description String?              @db.Text
-  iconName    String?              @db.VarChar(100)
-  seq         Int?                 @default(0)
-  isActive    Boolean              @default(true)
-  createdBy   String?              @db.Char(10)
-  createdAt   DateTime             @default(now())
-  updatedBy   String?              @db.Char(10)
-  updatedAt   DateTime             @updatedAt
-  category    wks_WorkshopCategory @relation(fields: [category_id], references: [id], onUpdate: NoAction)
-  branch      sys_Branch?          @relation(fields: [branch_id], references: [id], onUpdate: NoAction)
+  company_id  String?                     @db.Char(10)
+  branch_id   String?                     @db.Char(10)
+  id          String                      @id @db.Char(10)
+  category_id String                      @db.Char(5)
+  name        String                      @db.VarChar(150)
+  description String?                     @db.Text
+  iconName    String?                     @db.VarChar(100)
+  seq         Int?                        @default(0)
+  isActive    Boolean                     @default(true)
+  createdBy   String?                     @db.Char(10)
+  createdAt   DateTime                    @default(now())
+  updatedBy   String?                     @db.Char(10)
+  updatedAt   DateTime                    @updatedAt
+  category    wks_WorkshopCategory        @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  branch      sys_Branch?                 @relation(fields: [branch_id], references: [id], onUpdate: NoAction)
   // waitingLists wks_WaitingListType[]
   waitngList  wks_waitingList[]
   painPoints  wks_PainPointWorkshopType[] // Pain points yang bisa diselesaikan oleh workshop type ini
@@ -4394,29 +4394,29 @@ enum wks_VerificationMethod {
 }
 
 model wks_waitingList {
-  id          String   @id @default(cuid()) @db.Char(21)
-  name        String   @db.VarChar(50)
-  slug        String?  @db.VarChar(50)
-  description String?  @db.VarChar(250)
-  category_id String?  @db.Char(5)
-  type_id     String?  @db.Char(10)
-  logo        String?  @db.VarChar(255)
-  address     String   @db.VarChar(250)
-  province    String   @db.Char(5)
-  city        String   @db.Char(15)
-  district    String   @db.Char(15)
-  subdistrict String   @db.Char(20)
-  email       String?   @db.VarChar(100)
-  phone       String   @db.VarChar(20)
-  mobile      String   @db.VarChar(20)
-  isDeleted   Boolean  @default(false)
-  gbp_rating  Decimal? @db.Decimal(2, 1)
+  id                String   @id @default(cuid()) @db.Char(21)
+  name              String   @db.VarChar(50)
+  slug              String?  @db.VarChar(50)
+  description       String?  @db.VarChar(250)
+  category_id       String?  @db.Char(5)
+  type_id           String?  @db.Char(10)
+  logo              String?  @db.VarChar(255)
+  address           String   @db.VarChar(250)
+  province          String   @db.Char(5)
+  city              String   @db.Char(15)
+  district          String   @db.Char(15)
+  subdistrict       String   @db.Char(20)
+  email             String?  @db.VarChar(100)
+  phone             String   @db.VarChar(20)
+  mobile            String   @db.VarChar(20)
+  isDeleted         Boolean  @default(false)
+  gbp_rating        Decimal? @db.Decimal(2, 1)
   gbb_reviews_count Int?
-  priority Int? @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   String?  @db.Char(10)
-  updatedBy   String?  @db.Char(10)
+  priority          Int?     @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  createdBy         String?  @db.Char(10)
+  updatedBy         String?  @db.Char(10)
 
   // Claim fields
   claimedBy               String?                 @db.VarChar(50) // Phone number atau user ID
@@ -4688,13 +4688,19 @@ enum PainPointCategoryEnum {
   MAINTENANCE @map("MAINTENANCE") // Service berkala, ganti oli, tune up
   BODYWORK    @map("BODYWORK") // Body repair, cat, dempul
   ELECTRICAL  @map("ELECTRICAL") // Masalah kelistrikan
-  STEERING    @map("STEERING")// Masalah stir
+  STEERING    @map("STEERING") // Masalah stir
 }
 
 enum ArticleStatusEnum {
   DRAFT     @map("DRAFT") // Draft artikel, belum direview
   PUBLISHED @map("PUBLISHED") // Artikel sudah dipublish
   ARCHIVED  @map("ARCHIVED") // Artikel diarsipkan
+}
+
+enum ArticleGenerationTypeEnum {
+  PAIN_POINT @map("PAIN_POINT") // Artikel di-generate dari pain point
+  SEASONAL   @map("SEASONAL") // Artikel dibuat manual oleh admin
+  PROMOTION  @map("PROMOTION") // Artikel terkait promo
 }
 
 model wks_PainPoint {
@@ -4740,9 +4746,9 @@ model wks_PainPoint {
   updatedAt DateTime @updatedAt
 
   // Relations
-  serviceTypes    wks_PainPointServiceType[]    // Service types yang bisa menyelesaikan (untuk company)
-  workshopTypes   wks_PainPointWorkshopType[]   // Workshop types yang bisa menyelesaikan (untuk waitingList)
-  articles        wks_Article[]                 // Articles generated for this pain point
+  serviceTypes  wks_PainPointServiceType[] // Service types yang bisa menyelesaikan (untuk company)
+  workshopTypes wks_PainPointWorkshopType[] // Workshop types yang bisa menyelesaikan (untuk waitingList)
+  articles      wks_Article[] // Articles generated for this pain point
   // Full-text search index akan ditambahkan via raw SQL migration
 
   @@index([slug], map: "idx_painpoint_slug")
@@ -4778,14 +4784,14 @@ model wks_PainPointServiceType {
 // Untuk mapping pain points ke workshop types (untuk waitingList yang belum subscribe)
 // Workshop types bersifat global, tidak per company
 model wks_PainPointWorkshopType {
-  id             String @id @default(cuid()) @db.Char(21)
-  painPoint_id   String @db.Char(21)
+  id              String @id @default(cuid()) @db.Char(21)
+  painPoint_id    String @db.Char(21)
   workshopType_id String @db.Char(10)
 
   // Relevansi: seberapa cocok workshop type ini untuk pain point (1-10)
   relevance Int @default(5) // 10 = sangat cocok
 
-  painPoint    wks_PainPoint   @relation(fields: [painPoint_id], references: [id], onDelete: Cascade)
+  painPoint    wks_PainPoint    @relation(fields: [painPoint_id], references: [id], onDelete: Cascade)
   workshopType wks_WorkshopType @relation(fields: [workshopType_id], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -4801,13 +4807,17 @@ model wks_PainPointWorkshopType {
 // Article Model - AI-generated articles for pain points
 // =========================
 model wks_Article {
-  id          String  @id @default(cuid()) @db.VarChar(25)
-  slug        String  @unique @db.VarChar(150) // URL-friendly slug for article
-  painPoint_id String @db.VarChar(25) // FK to pain point
+  id           String  @id @default(cuid()) @db.VarChar(25)
+  slug         String  @unique @db.VarChar(150) // URL-friendly slug for article
+  painPoint_id String? @db.VarChar(25) // FK to pain point (optional for seasonal)
+
+  // Seasonal metadata
+  seasonalTopicId    String? @db.VarChar(100) // Predefined seasonal topic identifier
+  seasonalTopicTitle String? @db.VarChar(200) // Human-friendly seasonal topic title
 
   // Article content
-  title          String  @db.VarChar(200) // Article title (SEO-optimized)
-  metaTitle      String  @db.VarChar(70) // SEO meta title (max 70 chars)
+  title           String @db.VarChar(200) // Article title (SEO-optimized)
+  metaTitle       String @db.VarChar(70) // SEO meta title (max 70 chars)
   metaDescription String @db.VarChar(160) // SEO meta description (max 160 chars)
 
   // JSON content structure:
@@ -4819,7 +4829,7 @@ model wks_Article {
   //   prevention: string[] - Prevention tips
   //   faq: Array<{ question: string, answer: string }> - Frequently asked questions
   // }
-  content         Json  // Article content sections (editable)
+  content         Json // Article content sections (editable)
   contentOriginal Json? // Original AI-generated content (backup for comparison)
 
   // Visual
@@ -4832,8 +4842,9 @@ model wks_Article {
   publishedAt DateTime? // When article was published
   publishedBy String?           @db.VarChar(15) // User ID who published (FK to sys_User)
 
+  generationType ArticleGenerationTypeEnum @default(PAIN_POINT)
   // Review & Quality Control
-  reviewNotes String? @db.Text // Admin notes during review
+  reviewNotes    String?                   @db.Text // Admin notes during review
 
   // Audit
   createdBy String?  @db.VarChar(15)
@@ -4842,7 +4853,7 @@ model wks_Article {
   updatedAt DateTime @updatedAt
 
   // Relations
-  painPoint wks_PainPoint @relation(fields: [painPoint_id], references: [id], onDelete: Cascade)
+  painPoint wks_PainPoint? @relation(fields: [painPoint_id], references: [id], onDelete: Cascade)
   // publisher sys_User?     @relation(fields: [publishedBy], references: [id], onUpdate: NoAction)
 
   @@index([status, publishedAt], map: "idx_article_status_published")

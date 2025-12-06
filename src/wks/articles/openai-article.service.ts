@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
+import type { SeasonalTopic } from './seasonal-topics';
 
 interface CostEstimate {
   minIDR: number;
@@ -177,6 +178,92 @@ ${prompt}
   }
 
   /**
+   * Generate article untuk seasonal topic (predefined)
+   */
+  async generateSeasonalArticle(topic: SeasonalTopic): Promise<GeneratedArticle> {
+    if (!this.openai) {
+      throw new Error('OpenAI client not initialized. Please set OPENAI_API_KEY in .env');
+    }
+
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        this.logger.log(
+          `Generating seasonal article: ${topic.title} (attempt ${attempt}/${maxRetries})`,
+        );
+
+        const userPrompt = this.buildSeasonalPrompt(topic);
+
+        const response = await this.openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a professional automotive mechanic and SEO content writer specializing in Indonesian vehicle problems.
+
+Your responsibilities:
+- Write highly SEO-optimized articles with natural keyword integration
+- Use provided keywords (short + longtail) strategically throughout content
+- Create compelling meta titles and descriptions for search engines
+- Provide accurate technical information for Indonesian automotive context
+- Write in clear, beginner-friendly Indonesian language
+- Output must be valid JSON only, no additional text
+
+SEO Best Practices:
+- Include primary keyword in title, meta description, and first paragraph
+- Distribute longtail keywords naturally across sections
+- Create FAQ questions that target common search queries
+- Use keywords in headings where appropriate`,
+            },
+            {
+              role: 'user',
+              content: userPrompt,
+            },
+          ],
+          temperature: 0.7,
+          response_format: { type: 'json_object' },
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (!content) {
+          throw new Error('Empty response from OpenAI');
+        }
+
+        const parsed = JSON.parse(content);
+
+        if (!parsed.article) {
+          throw new Error('Invalid response format from OpenAI - missing article key');
+        }
+
+        this.logger.log(`Successfully generated seasonal article: ${topic.title}`);
+        return parsed.article;
+      } catch (error: any) {
+        lastError = error;
+        this.logger.warn(`Seasonal attempt ${attempt} failed: ${error.message}`);
+
+        if (error.status === 429) {
+          const retryAfter = error.response?.headers?.['retry-after'] || 60;
+          this.logger.warn(`Rate limited. Waiting ${retryAfter} seconds before retry...`);
+          await this.sleep(retryAfter * 1000);
+          continue;
+        }
+
+        if (attempt < maxRetries) {
+          const backoffDelay = Math.pow(2, attempt) * 1000;
+          this.logger.warn(`Retrying in ${backoffDelay}ms...`);
+          await this.sleep(backoffDelay);
+        }
+      }
+    }
+
+    throw new Error(
+      `Failed to generate seasonal article after ${maxRetries} attempts: ${lastError?.message}`,
+    );
+  }
+
+  /**
    * Build structured prompt untuk OpenAI
    */
   private buildPrompt(
@@ -244,23 +331,52 @@ Buatlah artikel dengan struktur JSON berikut:
       }
     ]
   }
-}
-
-**Requirements:**
-- Title: Catchy, SEO-friendly, dan mengandung keyword utama
-- MetaTitle & MetaDescription: Optimal untuk search engines
-- Causes: Minimal 3, maksimal 5, bullet points jelas
-- Diagnosis: Step-by-step, mudah diikuti oleh pemula
-- Cost: Gunakan range yang diberikan, tambahkan note tentang variasi
-- Safety: Jelas tapi tidak menakut-nakuti, fokus pada awareness
-- Prevention: Tips praktis yang bisa dilakukan user
-- FAQ: Minimal 3, maksimal 5, jawaban lengkap tapi concise
-- Semua text dalam Bahasa Indonesia yang baik dan benar
-- Tone: Profesional tapi friendly, educational, helpful
-- Hindari jargon teknis yang terlalu rumit, jelaskan dengan bahasa awam
-
-Return hanya JSON, tidak ada text tambahan.`;
+}`;
   }
+
+  /**
+   * Build seasonal prompt according to required format with SEO keywords
+   */
+  private buildSeasonalPrompt(topic: SeasonalTopic): string {
+    const jsonStructure = {
+      article: {
+        title: '',
+        metaTitle: '',
+        metaDescription: '',
+        causes: [],
+        diagnosis: [],
+        costEstimate: { minIDR: 0, maxIDR: 0, notes: '' },
+        safety: '',
+        prevention: [],
+        faq: [{ question: '', answer: '' }],
+      },
+    };
+
+    const keywordsText = topic.keywords?.length
+      ? `**SEO Keywords (must be integrated naturally):** ${topic.keywords.join(', ')}`
+      : '';
+
+    return `Write a full SEO-optimized automotive article about this topic for Indonesian readers:
+
+**Topic:** ${topic.title}
+**Category:** ${topic.category === 'RAINY' ? 'Musim Hujan' : 'Mudik / Perjalanan Jauh'}
+${keywordsText}
+
+Requirements:
+- Write in clear, beginner-friendly Indonesian
+- Technically accurate automotive information
+- **MUST naturally integrate the provided SEO keywords throughout the article**
+- Include causes, symptoms, diagnosis steps, prevention, and FAQs
+- Meta title should be SEO-friendly (max 60 characters)
+- Meta description should be compelling (max 160 characters)
+- Cost estimates should be realistic and specific to Indonesia
+- Output must be structured as valid JSON (response_format: json_object)
+
+JSON structure:
+${JSON.stringify(jsonStructure, null, 2)}
+
+Return ONLY valid JSON, no additional text or markdown.`;
+  };
 
   /**
    * Sleep helper untuk retry logic
