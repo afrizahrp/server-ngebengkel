@@ -328,8 +328,7 @@ export class ArticlesService {
         painPoint: {
           include: {
             workshopTypes: {
-              where: { relevance: { gte: 7 } },
-              select: { workshopType_id: true },
+              select: { workshopType_id: true, relevance: true },
             },
           },
         },
@@ -340,22 +339,43 @@ export class ArticlesService {
       throw new BadRequestException('Article tidak ditemukan');
     }
 
-    const workshopTypeIds = article.painPoint.workshopTypes.map((wt) => wt.workshopType_id);
+    // Get all workshop types (regardless of relevance) for fallback
+    const allWorkshopTypes = article.painPoint.workshopTypes;
+    this.logger.log(`Pain point ${article.painPoint.id} has ${allWorkshopTypes.length} workshop types total`);
+    
+    // Filter by relevance >= 7
+    const highRelevanceTypes = allWorkshopTypes.filter((wt) => wt.relevance >= 7);
+    this.logger.log(`High relevance (>= 7): ${highRelevanceTypes.length} types`);
 
-    if (workshopTypeIds.length === 0) {
-      this.logger.warn(`No workshop types found for pain point: ${article.painPoint.id}`);
-      return [];
+    // Use high relevance types first, fallback to all if none found
+    const workshopTypeIds = highRelevanceTypes.length > 0 
+      ? highRelevanceTypes.map((wt) => wt.workshopType_id)
+      : allWorkshopTypes.map((wt) => wt.workshopType_id);
+
+    let workshops: any[] = [];
+
+    // Try to fetch workshops with specific types first
+    if (workshopTypeIds.length > 0) {
+      this.logger.log(`Searching workshops for types: ${workshopTypeIds.join(', ')}`);
+      workshops = await this.prisma.wks_waitingList.findMany({
+        where: {
+          isDeleted: false,
+          type_id: { in: workshopTypeIds },
+        },
+        take: 8,
+      });
     }
 
-    // Fetch workshops dari waiting list yang tidak deleted
-    // Prioritize non-demo workshops (subscribers), fallback ke demo
-    const workshops = await this.prisma.wks_waitingList.findMany({
-      where: {
-        isDeleted: false,
-        type_id: { in: workshopTypeIds },
-      },
-      take: 8,
-    });
+    // Fallback: if no workshops found for specific types, fetch any available workshops
+    if (workshops.length === 0) {
+      this.logger.log(`No workshops found for pain point types, fetching any available workshops...`);
+      workshops = await this.prisma.wks_waitingList.findMany({
+        where: {
+          isDeleted: false,
+        },
+        take: 8,
+      });
+    }
 
     // Fetch city names for workshops
     const cityIds = [...new Set(workshops.map((w) => w.city).filter(Boolean))];
