@@ -46,7 +46,7 @@ export class ArticlesService {
         const generatedContent = await this.openaiService.generateSeasonalArticle(topic);
 
         const baseSlugFromTitle = slugifyTopicTitle(topic.title) || topic.id.toLowerCase();
-        const baseSlug = `seasonal-${baseSlugFromTitle}`.substring(0, 140);
+        const baseSlug = baseSlugFromTitle.substring(0, 140);
         let slug = baseSlug;
         let counter = 1;
 
