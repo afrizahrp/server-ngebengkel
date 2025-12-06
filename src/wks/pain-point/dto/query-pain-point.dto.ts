@@ -4,8 +4,8 @@ import { Type } from 'class-transformer';
 export class QueryPainPointDto {
   @IsOptional()
   @IsString()
-  @IsIn(['URGENT', 'GENERAL', 'MAINTENANCE', 'BODYWORK', 'ELECTRICAL'])
-  category?: 'URGENT' | 'GENERAL' | 'MAINTENANCE' | 'BODYWORK' | 'ELECTRICAL';
+  @IsIn(['URGENT', 'GENERAL', 'MAINTENANCE', 'BODYWORK', 'ELECTRICAL', 'STEERING', 'SUSPENSION', 'TIRES'])
+  category?: 'URGENT' | 'GENERAL' | 'MAINTENANCE' | 'BODYWORK' | 'ELECTRICAL' | 'STEERING' | 'SUSPENSION' | 'TIRES';
 
   @IsOptional()
   @Type(() => Boolean)
