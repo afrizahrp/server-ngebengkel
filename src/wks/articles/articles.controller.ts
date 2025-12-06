@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Patch, Query, Param, Body, UseGuards } from '@nestjs/common';
+import { Public } from '../../auth/decorators/public.decorator';
 import { ArticlesService } from './articles.service';
 import { ArticleStatusEnum } from '@prisma/client';
 
@@ -19,8 +20,11 @@ export class ArticlesController {
   /**
    * Get articles dengan filter status dan pagination
    * GET /api/wks/articles?status=DRAFT&page=1&limit=20
+   * 
+   * Public endpoint - untuk website listing
    */
   @Get()
+  @Public()
   async getArticles(
     @Query('status') status?: ArticleStatusEnum,
     @Query('page') page: string = '1',
@@ -32,8 +36,13 @@ export class ArticlesController {
   /**
    * Get article by slug (for public pages)
    * GET /api/wks/articles/slug/:slug
+   * 
+   * Public endpoint - untuk website listing
+   * 
+   * IMPORTANT: Route ini harus SEBELUM @Get(':id') agar tidak ditangkap sebagai parameter
    */
   @Get('slug/:slug')
+  @Public()
   async getArticleBySlug(@Param('slug') slug: string) {
     return this.articlesService.getArticleBySlug(slug);
   }
@@ -41,8 +50,11 @@ export class ArticlesController {
   /**
    * Get article by ID dengan pain point details
    * GET /api/wks/articles/:id
+   * 
+   * Public endpoint - untuk website listing
    */
   @Get(':id')
+  @Public()
   async getArticleById(@Param('id') id: string) {
     return this.articlesService.getArticleById(id);
   }
@@ -50,8 +62,11 @@ export class ArticlesController {
   /**
    * Get recommended workshops untuk sebuah article
    * GET /api/wks/articles/:id/recommended-workshops
+   * 
+   * Public endpoint - untuk website listing
    */
   @Get(':id/recommended-workshops')
+  @Public()
   async getRecommendedWorkshops(@Param('id') id: string) {
     return this.articlesService.getRecommendedWorkshops(id);
   }
