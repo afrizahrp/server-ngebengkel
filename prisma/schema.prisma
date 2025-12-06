@@ -4689,6 +4689,8 @@ enum PainPointCategoryEnum {
   BODYWORK    @map("BODYWORK") // Body repair, cat, dempul
   ELECTRICAL  @map("ELECTRICAL") // Masalah kelistrikan
   STEERING    @map("STEERING") // Masalah stir
+  SUSPENSION  @map("SUSPENSION") // Masalah suspensi, shockbreaker
+  TIRES       @map("TIRES") // Masalah ban, spooring balancing
 }
 
 enum ArticleStatusEnum {
