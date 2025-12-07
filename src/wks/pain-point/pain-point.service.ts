@@ -406,6 +406,12 @@ export class PainPointService {
       isPopular: true,
       createdAt: true,
       updatedAt: true,
+      articles: {
+        select: {
+          id: true,
+          status: true,
+        },
+      },
     } satisfies Prisma.wks_PainPointSelect;
   }
 
@@ -431,6 +437,7 @@ export class PainPointService {
       isPopular: data.isPopular,
       createdAt: data.createdAt.toISOString(),
       updatedAt: data.updatedAt.toISOString(),
+      articles: data.articles || [],
     };
   }
 

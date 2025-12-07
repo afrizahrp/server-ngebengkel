@@ -246,9 +246,16 @@ export class ArticlesService {
 
   /**
    * Get articles dengan filter status dan pagination
+   * Business rules for pagination limits are enforced here
    */
-  async getArticles(status?: ArticleStatusEnum, page: number = 1, limit: number = 20) {
-    const skip = (page - 1) * limit;
+  async getArticles(status?: ArticleStatusEnum, page: number = 1, limit?: number) {
+    const DEFAULT_LIMIT = 20;
+    const MAX_LIMIT = 100;
+
+    // Enforce business rules: use default if not provided, cap at MAX_LIMIT
+    const finalLimit = Math.min(limit || DEFAULT_LIMIT, MAX_LIMIT);
+    const finalPage = Math.max(page, 1);
+    const skip = (finalPage - 1) * finalLimit;
 
     const [articles, total] = await Promise.all([
       this.prisma.wks_Article.findMany({
@@ -262,7 +269,7 @@ export class ArticlesService {
         },
         orderBy: { createdAt: 'desc' },
         skip,
-        take: limit,
+        take: finalLimit,
       }),
       this.prisma.wks_Article.count({
         where: {
@@ -275,9 +282,9 @@ export class ArticlesService {
       data: articles,
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: finalPage,
+        limit: finalLimit,
+        pages: Math.ceil(total / finalLimit),
       },
     };
   }

@@ -30,15 +30,20 @@ export class ArticlesController {
    * GET /api/wks/articles?status=DRAFT&page=1&limit=20
    * 
    * Public endpoint - untuk website listing
+   * Limit defaults to 20 (set in service), max 100
    */
   @Get()
   @Public()
   async getArticles(
     @Query('status') status?: ArticleStatusEnum,
     @Query('page') page: string = '1',
-    @Query('limit') limit: string = '20',
+    @Query('limit') limit?: string,
   ) {
-    return this.articlesService.getArticles(status, parseInt(page), parseInt(limit));
+    return this.articlesService.getArticles(
+      status,
+      parseInt(page) || 1,
+      limit ? parseInt(limit) : undefined,
+    );
   }
 
   /**

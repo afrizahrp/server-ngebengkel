@@ -29,6 +29,7 @@ export class PainPointResponseDto {
   isPopular!: boolean;
   createdAt!: string;
   updatedAt!: string;
+  articles?: Array<{ id: string; status: string }>;
 }
 
 export class PainPointWorkshopTypeDto {
