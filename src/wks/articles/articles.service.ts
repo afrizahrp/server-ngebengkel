@@ -534,6 +534,7 @@ export class ArticlesService {
       rating: w.gbp_rating ? parseFloat(w.gbp_rating.toString()) : 0,
       phone: w.phone || '',
       mobile: w.mobile || '',
+      claimStatus: w.claimStatus || 'UNCLAIMED',
     }));
   }
 }
