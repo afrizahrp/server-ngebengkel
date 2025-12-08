@@ -183,13 +183,14 @@ export class PainPointService {
         isDeleted: false,
         isActive: true,
       },
-      take: 5,
+      take:5,
       orderBy: [{ isPopular: 'desc' }, { popularityScore: 'desc' }],
       select: {
         id: true,
         title: true,
         slug: true,
         category: true,
+        imageUrl: true,
       },
     });
 
@@ -409,6 +410,7 @@ export class PainPointService {
       articles: {
         select: {
           id: true,
+          slug: true,
           status: true,
         },
       },
